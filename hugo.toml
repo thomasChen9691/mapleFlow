@@ -1,10 +1,13 @@
 # 站点基础配置
-#baseURL = "http://localhost:1313/"  # 本地开发改为本地地址，上线时替换为你的域名
-baseURL = "https://thomasChen9691.github.io/mapleFlow/"
-# 新增：强制使用相对路径（彻底避免路径拼接错误）
-relativeURLs = true
-# 新增：确保资源路径基于 baseURL 拼接
+# 动态baseURL配置
+baseURL = "{{ if getenv "HUGO_BASEURL" }}{{ getenv "HUGO_BASEURL" }}{{ else }}http://localhost:1313/{{ end }}"
+# 开发环境使用相对路径，生产环境根据实际情况配置
+relativeURLs = {{ if getenv "HUGO_ENV" | eq "production" }}false{{ else }}true{{ end }}
+# 确保资源路径基于 baseURL 拼接
 canonifyURLs = false
+# 强制所有链接使用相对路径
+uglyURLs = true
+absoluteURLs = false
 defaultContentLanguage = "zh-cn"
 languageCode = "zh-CN"
 title = "我的 Dream 博客"
