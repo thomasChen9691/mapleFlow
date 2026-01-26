@@ -3,7 +3,19 @@ name: Deploy Hugo site to GitHub Pages
 on:
   push:
     branches:
-      - main  # 👈 每次推送到 main 分支就会自动部署
+      - main  # 推送到 main 分支自动部署
+  workflow_dispatch:  # 新增：允许手动触发部署（方便测试）
+
+# 核心补充：给 Actions 机器人配置足够的权限
+permissions:
+  contents: write       # 允许写入仓库内容（推 gh-pages 分支必需）
+  pages: write          # 允许操作 GitHub Pages
+  id-token: write       # 辅助身份验证，避免权限问题
+
+# 并发控制：避免多次推送时重复部署
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -12,6 +24,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: true  # 新增：如果用了 PaperMod 主题（子模块），必须加这个
+          fetch-depth: 0    # 新增：拉取完整提交记录，避免 Hugo 构建出错
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
@@ -23,7 +38,8 @@ jobs:
         run: hugo --minify
 
       - name: Deploy to GitHub Pages 🚀
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4  # 升级：v4 比 v3 更稳定，适配新版权限
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
+          publish_branch: gh-pages  # 显式指定部署到 gh-pages 分支（更清晰）
