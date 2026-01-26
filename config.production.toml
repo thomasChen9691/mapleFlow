@@ -1,0 +1,6 @@
+# 生产环境配置
+baseURL = "https://thomasChen9691.github.io/mapleFlow/"
+relativeURLs = false
+canonifyURLs = false
+uglyURLs = true
+absoluteURLs = false

@@ -1,8 +1,10 @@
 # 站点基础配置
-# 动态baseURL配置
-baseURL = "{{ if getenv "HUGO_BASEURL" }}{{ getenv "HUGO_BASEURL" }}{{ else }}http://localhost:1313/{{ end }}"
-# 开发环境使用相对路径，生产环境根据实际情况配置
-relativeURLs = {{ if getenv "HUGO_ENV" | eq "production" }}false{{ else }}true{{ end }}
+# 基础配置 (开发环境)
+baseURL = "http://localhost:1313/"
+relativeURLs = true
+
+# 生产环境配置通过hugo --config参数覆盖
+# 例如创建config.production.toml文件
 # 确保资源路径基于 baseURL 拼接
 canonifyURLs = false
 # 强制所有链接使用相对路径
