@@ -1,0 +1,181 @@
+# 站点基础配置
+baseURL = "http://localhost:1313/"  # 本地开发改为本地地址，上线时替换为你的域名
+defaultContentLanguage = "zh-cn"
+languageCode = "zh-CN"
+title = "我的 Dream 博客"
+theme = "PaperMod"
+
+# ================= 服务设置 =================
+# [services]
+#   [services.disqus]
+#     shortname = ""
+#   [services.googleAnalytics]
+#     ID = ""
+
+# ================= 主题参数设置 =================
+[params]
+# 禅模式 (默认关闭。开启后变为双栏布局，关闭为翻转卡片)
+# zenMode = true
+
+# 配色方案
+lightTheme = "emerald"
+darkTheme = "forest"
+
+# 背景图（PaperMod 主题推荐用 cover 配置，此处注释避免冲突）
+# backgroundImage = "img/global-background.jpg"
+# backgroundImageDark = ""
+
+author = "xxsky"
+description = "这是我的博客"
+avatar = "img/tn.png"      # 请确保 static/img/ 目录下有这张图
+headerTitle = "Hugo Theme"
+# motto = ""
+
+# 页脚自定义文字
+# footerBottomText = ""
+
+# RSS 图标
+rss = true
+
+# 评论系统 (按需打开)
+# utterancesRepo = ""
+# valine = true
+# LEANCLOUD_APP_ID = ""
+# LEANCLOUD_APP_KEY = ""
+# waline = true
+# walineServer = ""
+
+# === 联系方式 (原版字段) ===
+email = "xuhxjxhk@gmail.com"  # 取消注释，适配侧边栏邮箱图标显示
+
+siteStartYear = 2016
+
+# favicon = "favicon.ico"
+
+# 代码高亮开关（PaperMod 自带高亮，保持关闭）
+customSyntaxHighlighting = false
+
+# ================= 功能开关 =================
+# 导航栏吸顶
+stickyNav = true
+
+# 导航菜单排序 (PaperMod 适配的菜单名称，修复原配置的兼容性问题)
+reorderNavItems = ["Home", "About", "Posts", "Categories", "Tags", "Search", "RSS"]
+
+# 移动端折叠菜单（适配 PaperMod 命名规范）
+collapseNavItems = ["Posts", "Categories", "Tags"]
+
+# 隐藏默认封面（核心修复：避免 cover 模板解析错误）
+noDefaultSummaryCover = true
+# 新增：全局 cover 配置（字典格式，解决之前的 image 字段解析错误）
+[params.cover]
+image = ""        # 留空表示不设置全局封面，避免字符串格式错误
+hidden = false    # 封面是否隐藏
+relative = false  # 图片路径是否相对
+
+# 显示文章目录
+showTableOfContents = true
+
+# 文章页显示封面图
+showSummaryCoverInPost = true
+
+# 图片点击放大
+imageZoomableInPost = true
+
+# 显示上下篇导航
+showPrevNextPost = true
+
+# 分享按钮 (留空数组 = 关闭)
+reorderShares = []
+
+# ================= 自定义菜单 =================
+[params.navItems]
+# 首页（适配 PaperMod 命名规范，首字母大写）
+home = { href = "/", icon = "home", title = "首页" }
+
+# 文章归档
+posts = { href = "/posts", icon = "book", title = "文章" }
+categories = { href = "/categories", icon = "grid", title = "分类" }
+tags = { href = "/tags", icon = "pricetags", title = "标签" }
+
+# 邮箱
+email = { href = "mailto:xuhxjxhk@gmail.com", icon = "mail", title = "Email" }
+
+# GitHub 按钮
+github = { href = "https://github.com/xuhxjx", icon = "logo-github", title = "GitHub" }
+
+# ================= 高级设置 =================
+[params.advanced]
+# 挂载自定义样式和脚本（确保 static/css/ 和 static/js/ 目录存在对应文件）
+customCSS = ["css/style.css"]
+customJS = ["js/app.js"]
+
+# ================= 实验性功能 =================
+[params.experimental]
+# 开启日期中文显示
+jsDate = true
+jsDateFormat = "yyyy年MM月dd日"
+
+# ======================================================
+# 代码高亮设置 (Markup)
+# ======================================================
+[markup]
+[markup.highlight]
+codeFences = true
+guessSyntax = true
+lineNos = true          # 显示行号
+lineNumbersInTable = true
+noClasses = false       # 使用 CSS 类高亮（适配 customCSS）
+style = "github"        # 替换为更适配中文的高亮风格
+tabWidth = 4
+
+[markup.goldmark]
+[markup.goldmark.renderer]
+unsafe = true         # 允许 HTML 标签在 Markdown 中生效
+
+# ======================================================
+# 新增：PaperMod 主题关键配置（解决导航/样式兼容问题）
+# ======================================================
+# 菜单配置（PaperMod 标准写法，确保导航栏正常显示）
+[[menu.main]]
+identifier = "home"
+name = "首页"
+url = "/"
+weight = 1
+
+[[menu.main]]
+identifier = "posts"
+name = "文章"
+url = "/posts/"
+weight = 2
+
+[[menu.main]]
+identifier = "categories"
+name = "分类"
+url = "/categories/"
+weight = 3
+
+[[menu.main]]
+identifier = "tags"
+name = "标签"
+url = "/tags/"
+weight = 4
+
+[[menu.main]]
+identifier = "github"
+name = "GitHub"
+url = "https://github.com/xuhxjx"
+weight = 5
+
+[[menu.main]]
+identifier = "email"
+name = "Email"
+url = "mailto:xuhxjxhk@gmail.com"
+weight = 6
+
+# 分页配置（避免列表页渲染错误）
+[pagination]
+paginate = 10  # 每页显示10篇文章
+
+# 时区配置（解决日期显示错误）
+timeZone = "Asia/Shanghai"
