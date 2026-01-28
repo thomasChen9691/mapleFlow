@@ -33,9 +33,8 @@ jobs:
         with:
           hugo-version: 'latest'
           extended: true
-
       - name: Build Hugo site
-        run: hugo --minify
+        run: hugo --minify --config hugo.toml,config.production.toml
 
       - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v4  # 升级：v4 比 v3 更稳定，适配新版权限
