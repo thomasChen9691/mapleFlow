@@ -166,6 +166,27 @@ url = "/categories/"
 weight = 3
 
 [[menu.main]]
+identifier = "k8s"
+name = "K8s"
+url = "/categories/k8s/"
+parent = "categories"
+weight = 31
+
+[[menu.main]]
+identifier = "docker"
+name = "Docker"
+url = "/categories/docker/"
+parent = "categories"
+weight = 32
+
+[[menu.main]]
+identifier = "aiops"
+name = "AIOps"
+url = "/categories/aiops/"
+parent = "categories"
+weight = 33
+
+[[menu.main]]
 identifier = "tags"
 name = "标签"
 url = "/tags/"
