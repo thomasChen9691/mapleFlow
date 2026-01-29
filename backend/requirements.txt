@@ -1,0 +1,9 @@
+# This file is for reference only. Use uv to manage dependencies via pyproject.toml
+# Install with: uv pip install -r requirements.txt
+
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+tomli>=2.0.0
