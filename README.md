@@ -80,7 +80,7 @@ hugo server -D
 
 ### 自动提交脚本（可选）
 
-项目根目录下有一个简单的自动提交脚本 `auto_push.py`：
+项目根目录下有一个简单的自动提交脚本 `auto_push.py`（请在项目根目录运行，例如 `.\auto_push.py` 或 `python auto_push.py`）：
 
 ```bash
 python auto_push.py
@@ -89,10 +89,10 @@ python auto_push.py
 脚本会执行：
 
 1. `git add .`
-2. `git commit -m "update: 当前时间"`
+2. `git commit -m "update: 当前时间"`（使用英文时间格式，避免 Windows 控制台编码导致乱码）
 3. `git push origin main`
 
-推送完成后，GitHub Actions 会自动重新构建并部署最新版本到 Pages。
+若运行后无输出且未推送，请确认：在终端中执行（保证 `git` 在 PATH 中）、且当前目录为仓库根目录。推送完成后，GitHub Actions 会自动重新构建并部署最新版本到 Pages。
 
 ---
 
