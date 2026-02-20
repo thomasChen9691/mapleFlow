@@ -35,7 +35,7 @@ darkTheme = "forest"
 # backgroundImage = "img/global-background.jpg"
 # backgroundImageDark = ""
 
-author = "xxsky"
+author = "thomasChen"
 description = "这是我的博客"
 avatar = "img/tn.png"      # 请确保 static/img/ 目录下有这张图
 headerTitle = "Hugo Theme"
@@ -56,7 +56,7 @@ rss = true
 # walineServer = ""
 
 # === 联系方式 (原版字段) ===
-email = "xuhxjxhk@gmail.com"  # 取消注释，适配侧边栏邮箱图标显示
+email = "xxx@gmail.com"  # 取消注释，适配侧边栏邮箱图标显示
 
 siteStartYear = 2016
 
@@ -109,10 +109,10 @@ categories = { href = "/categories", icon = "grid", title = "分类" }
 tags = { href = "/tags", icon = "pricetags", title = "标签" }
 
 # 邮箱
-email = { href = "mailto:xuhxjxhk@gmail.com", icon = "mail", title = "Email" }
+email = { href = "mailto:xxx@gmail.com", icon = "mail", title = "Email" }
 
 # GitHub 按钮
-github = { href = "https://github.com/xuhxjx", icon = "logo-github", title = "GitHub" }
+github = { href = "https://github.com/thomasChen9691", icon = "logo-github", title = "GitHub" }
 
 # ================= 高级设置 =================
 [params.advanced]
@@ -195,13 +195,13 @@ weight = 4
 [[menu.main]]
 identifier = "github"
 name = "GitHub"
-url = "https://github.com/xuhxjx"
+url = "https://github.com/thomasChen9691"
 weight = 5
 
 [[menu.main]]
 identifier = "email"
 name = "Email"
-url = "mailto:xuhxjxhk@gmail.com"
+url = "mailto:xxx@gmail.com"
 weight = 6
 
 # 分页配置（避免列表页渲染错误）

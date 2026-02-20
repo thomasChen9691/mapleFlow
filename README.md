@@ -13,7 +13,7 @@
 - **首次克隆项目**
 
 ```bash
-git clone --recurse-submodules git@github.com:YOUR_GITHUB_USERNAME/mapleFlow.git
+git clone --recurse-submodules git@github.com:thomasChen9691/mapleFlow.git
 cd mapleFlow
 ```
 
@@ -21,6 +21,26 @@ cd mapleFlow
 >
 > ```bash
 > git submodule update --init --recursive
+> ```
+>
+> **若出现 `found no layout file for "html"` 或分类/文章不显示**：说明主题目录是空的（例如 revert 后子模块未检出）。请先确保 `themes/PaperMod` 里有文件（如 `layouts` 文件夹）：
+> - **若因代理/SSL 报错**（如 `SSL_ERROR_SYSCALL in connection to 127.0.0.1:10809`），先临时取消 Git 代理再拉取子模块：
+>   ```bash
+>   git config --global --unset http.proxy
+>   git config --global --unset https.proxy
+>   git submodule update --init --recursive
+>   ```
+> - 或再次执行（需能访问 GitHub）：`git submodule update --init --recursive`。
+> - 若仍失败，可手动克隆主题到 `themes/PaperMod`：
+>   ```bash
+>   # Windows 先删掉空目录（若存在）
+>   rmdir /s /q themes\PaperMod
+>   git clone https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
+>   ```
+> 完成后重新执行 `hugo server -D`。若之后需要恢复代理，再执行：
+> ```bash
+> git config --global http.proxy http://127.0.0.1:10809
+> git config --global https.proxy http://127.0.0.1:10809
 > ```
 
 - **本地开发模式（推荐）**

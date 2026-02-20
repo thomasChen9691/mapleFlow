@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>GitLab 标准操作规范（SOP） | 我的 Dream 博客</title>
+<meta name="keywords" content="GitLab, CI/CD, DevOps, SOP, 速查">
+<meta name="description" content="GitLab 是集代码托管、CI/CD、制品仓库、Wiki、Issue 等于一体的 DevOps 平台。本文整理安装、常用 Git/MR 操作、.gitlab-ci.yml 示例与日常 SOP，便于在网页上查阅。
+
+1. 简介
+
+典型场景：代码仓库、MR/Code Review、CI/CD Pipeline、容器镜像仓库、项目管理。
+
+
+2. 安装与访问
+2.1 快速安装（Linux）
+
+
+1
+2
+3
+4
+5
+6
+
+
+# 使用官方脚本（Omnibus，含 Nginx/PostgreSQL/Redis）
+curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+sudo EXTERNAL_URL=&#34;https://gitlab.example.com&#34; apt install gitlab-ee
+
+# 或 Docker
+docker run -d --hostname gitlab.example.com -p 443:443 -p 80:80 -p 22:22 --name gitlab gitlab/gitlab-ee:latest
+
+
+2.2 常用管理命令
+
+
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+
+
+# 重新配置
+sudo gitlab-ctl reconfigure
+
+# 服务状态
+sudo gitlab-ctl status
+
+# 启动/停止/重启
+sudo gitlab-ctl start
+sudo gitlab-ctl stop
+sudo gitlab-ctl restart
+
+# 查看日志
+sudo gitlab-ctl tail          # 所有服务
+sudo gitlab-ctl tail nginx    # 指定服务
+
+
+2.3 首次登录
+
+默认账号：root
+首次登录会要求修改密码；或通过 sudo gitlab-rake &quot;gitlab:password:reset[root]&quot; 重置。
+
+
+3. 常用 Git 与 GitLab 操作
+3.1 Git 基础命令
+
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+
+
+# 克隆
+git clone https://gitlab.example.com/group/project.git
+git clone git@gitlab.example.com:group/project.git
+
+# 分支与提交
+git checkout -b feature/xxx
+git add .
+git commit -m &#34;feat: xxx&#34;
+git push -u origin feature/xxx
+
+
+3.2 合并请求（Merge Request）
+
+在 GitLab 网页上基于分支创建 MR。
+或使用 CLI（需安装 gitlab-cli）：
+
+
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+
+
+# 创建 MR
+glab mr create -t &#34;标题&#34; -d &#34;描述&#34; -b main
+
+# 列表与查看
+glab mr list
+glab mr view 123
+
+# 合并
+glab mr merge 123
+
+
+3.3 标签与发布
+
+
+1
+2
+
+
+git tag -a v1.0.0 -m &#34;Release 1.0.0&#34;
+git push origin v1.0.0
+
+
+在 GitLab：Project → Deploy → Releases 可基于 Tag 创建 Release。">
+<meta name="author" content="thomasChen">
+<link rel="canonical" href="http://localhost:1313/posts/sop-gitlab-cicd-guide.html">
+<link crossorigin="anonymous" href="../assets/css/stylesheet.a29c24210eb31d9ce56f669c66a35c9c51b17376b7764e336a49af7dec914cf0.css" integrity="sha256-opwkIQ6zHZzlb2acZqNcnFGxc3a3dk4zakmvfeyRTPA=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh-cn" href="http://localhost:1313/posts/sop-gitlab-cicd-guide.html">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="我的 Dream 博客 (Alt + H)">我的 Dream 博客</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="首页">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="文章">
+                    <span>文章</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="分类">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="标签">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/thomasChen9691" title="GitHub">
+                    <span>GitHub</span>&nbsp;
+                    <svg fill="none" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" height="12" width="12">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"></path>
+                        <path d="M15 3h6v6"></path>
+                        <path d="M10 14L21 3"></path>
+                    </svg>
+                </a>
+            </li>
+            <li>
+                <a href="mailto:xuhxjxhk@gmail.com" title="Email">
+                    <span>Email</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      GitLab 标准操作规范（SOP）
+    </h1>
+    <div class="post-meta"><span title='2026-01-28 20:05:00 +0800 CST'>January 28, 2026</span>&nbsp;·&nbsp;<span>thomasChen</span>
+
+</div>
+  </header> 
+  <div class="post-content"><p>GitLab 是集代码托管、CI/CD、制品仓库、Wiki、Issue 等于一体的 DevOps 平台。本文整理安装、常用 Git/MR 操作、<code>.gitlab-ci.yml</code> 示例与日常 SOP，便于在网页上查阅。</p>
+<hr>
+<h2 id="1-简介">1. 简介<a hidden class="anchor" aria-hidden="true" href="#1-简介">#</a></h2>
+<ul>
+<li><strong>典型场景</strong>：代码仓库、MR/Code Review、CI/CD Pipeline、容器镜像仓库、项目管理。</li>
+</ul>
+<hr>
+<h2 id="2-安装与访问">2. 安装与访问<a hidden class="anchor" aria-hidden="true" href="#2-安装与访问">#</a></h2>
+<h3 id="21-快速安装linux">2.1 快速安装（Linux）<a hidden class="anchor" aria-hidden="true" href="#21-快速安装linux">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 使用官方脚本（Omnibus，含 Nginx/PostgreSQL/Redis）</span>
+</span></span><span class="line"><span class="cl">curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh <span class="p">|</span> sudo bash
+</span></span><span class="line"><span class="cl">sudo <span class="nv">EXTERNAL_URL</span><span class="o">=</span><span class="s2">&#34;https://gitlab.example.com&#34;</span> apt install gitlab-ee
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 或 Docker</span>
+</span></span><span class="line"><span class="cl">docker run -d --hostname gitlab.example.com -p 443:443 -p 80:80 -p 22:22 --name gitlab gitlab/gitlab-ee:latest
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="22-常用管理命令">2.2 常用管理命令<a hidden class="anchor" aria-hidden="true" href="#22-常用管理命令">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 重新配置</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-ctl reconfigure
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 服务状态</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-ctl status
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 启动/停止/重启</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-ctl start
+</span></span><span class="line"><span class="cl">sudo gitlab-ctl stop
+</span></span><span class="line"><span class="cl">sudo gitlab-ctl restart
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看日志</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-ctl tail          <span class="c1"># 所有服务</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-ctl tail nginx    <span class="c1"># 指定服务</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="23-首次登录">2.3 首次登录<a hidden class="anchor" aria-hidden="true" href="#23-首次登录">#</a></h3>
+<ul>
+<li>默认账号：<code>root</code></li>
+<li>首次登录会要求修改密码；或通过 <code>sudo gitlab-rake &quot;gitlab:password:reset[root]&quot;</code> 重置。</li>
+</ul>
+<hr>
+<h2 id="3-常用-git-与-gitlab-操作">3. 常用 Git 与 GitLab 操作<a hidden class="anchor" aria-hidden="true" href="#3-常用-git-与-gitlab-操作">#</a></h2>
+<h3 id="31-git-基础命令">3.1 Git 基础命令<a hidden class="anchor" aria-hidden="true" href="#31-git-基础命令">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 克隆</span>
+</span></span><span class="line"><span class="cl">git clone https://gitlab.example.com/group/project.git
+</span></span><span class="line"><span class="cl">git clone git@gitlab.example.com:group/project.git
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 分支与提交</span>
+</span></span><span class="line"><span class="cl">git checkout -b feature/xxx
+</span></span><span class="line"><span class="cl">git add .
+</span></span><span class="line"><span class="cl">git commit -m <span class="s2">&#34;feat: xxx&#34;</span>
+</span></span><span class="line"><span class="cl">git push -u origin feature/xxx
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="32-合并请求merge-request">3.2 合并请求（Merge Request）<a hidden class="anchor" aria-hidden="true" href="#32-合并请求merge-request">#</a></h3>
+<ol>
+<li>在 GitLab 网页上基于分支创建 MR。</li>
+<li>或使用 CLI（需安装 <a href="https://gitlab.com/gitlab-org/cli">gitlab-cli</a>）：</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 创建 MR</span>
+</span></span><span class="line"><span class="cl">glab mr create -t <span class="s2">&#34;标题&#34;</span> -d <span class="s2">&#34;描述&#34;</span> -b main
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 列表与查看</span>
+</span></span><span class="line"><span class="cl">glab mr list
+</span></span><span class="line"><span class="cl">glab mr view <span class="m">123</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 合并</span>
+</span></span><span class="line"><span class="cl">glab mr merge <span class="m">123</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="33-标签与发布">3.3 标签与发布<a hidden class="anchor" aria-hidden="true" href="#33-标签与发布">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git tag -a v1.0.0 -m <span class="s2">&#34;Release 1.0.0&#34;</span>
+</span></span><span class="line"><span class="cl">git push origin v1.0.0
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在 GitLab：Project → Deploy → Releases 可基于 Tag 创建 Release。</p>
+<hr>
+<h2 id="4-cicdgitlab-ciyml">4. CI/CD（.gitlab-ci.yml）<a hidden class="anchor" aria-hidden="true" href="#4-cicdgitlab-ciyml">#</a></h2>
+<h3 id="41-最小-pipeline-示例">4.1 最小 Pipeline 示例<a hidden class="anchor" aria-hidden="true" href="#41-最小-pipeline-示例">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># .gitlab-ci.yml</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">stages</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="l">build</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="l">test</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="l">deploy</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">build</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">stage</span><span class="p">:</span><span class="w"> </span><span class="l">build</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">script</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">echo &#34;Building...&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">make build</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">only</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">main</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">tags</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">test</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">stage</span><span class="p">:</span><span class="w"> </span><span class="l">test</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">script</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">make test</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">only</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">main</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">merge_requests</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">deploy_staging</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">stage</span><span class="p">:</span><span class="w"> </span><span class="l">deploy</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">script</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">echo &#34;Deploy to staging&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">./deploy.sh staging</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="l">staging</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">only</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">main</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l">manual</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="42-常用全局配置">4.2 常用全局配置<a hidden class="anchor" aria-hidden="true" href="#42-常用全局配置">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">default</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">alpine:latest</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">before_script</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">apk add --no-cache git</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">after_script</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">echo &#34;Job finished&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">variables</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">DEPLOY_ENV</span><span class="p">:</span><span class="w"> </span><span class="l">staging</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">DOCKER_DRIVER</span><span class="p">:</span><span class="w"> </span><span class="l">overlay2</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="43-常用-job-关键字">4.3 常用 Job 关键字<a hidden class="anchor" aria-hidden="true" href="#43-常用-job-关键字">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>关键字</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>stage</code></td>
+          <td>所属阶段</td>
+      </tr>
+      <tr>
+          <td><code>script</code></td>
+          <td>要执行的命令</td>
+      </tr>
+      <tr>
+          <td><code>only</code> / <code>except</code></td>
+          <td>触发分支/条件</td>
+      </tr>
+      <tr>
+          <td><code>rules</code></td>
+          <td>更细的触发规则</td>
+      </tr>
+      <tr>
+          <td><code>when</code></td>
+          <td>on_success / on_failure / manual / always</td>
+      </tr>
+      <tr>
+          <td><code>artifacts</code></td>
+          <td>产物保存与传递</td>
+      </tr>
+      <tr>
+          <td><code>cache</code></td>
+          <td>缓存目录</td>
+      </tr>
+      <tr>
+          <td><code>environment</code></td>
+          <td>环境（staging/production）</td>
+      </tr>
+      <tr>
+          <td><code>needs</code></td>
+          <td>依赖的 job，可跳过阶段</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="5-日常操作流程sop">5. 日常操作流程（SOP）<a hidden class="anchor" aria-hidden="true" href="#5-日常操作流程sop">#</a></h2>
+<h3 id="51-新建项目并推送">5.1 新建项目并推送<a hidden class="anchor" aria-hidden="true" href="#51-新建项目并推送">#</a></h3>
+<ol>
+<li>在 GitLab 创建新项目（含或不含 README）。</li>
+<li>本地：<code>git remote add origin &lt;url&gt;</code>，<code>git push -u origin main</code>。</li>
+</ol>
+<h3 id="52-功能开发与-mr">5.2 功能开发与 MR<a hidden class="anchor" aria-hidden="true" href="#52-功能开发与-mr">#</a></h3>
+<ol>
+<li>从 <code>main</code> 拉取最新：<code>git checkout main &amp;&amp; git pull</code></li>
+<li>新建分支：<code>git checkout -b feature/xxx</code></li>
+<li>开发、提交、推送：<code>git push -u origin feature/xxx</code></li>
+<li>在 GitLab 创建 MR，指定 Reviewer，通过后合并。</li>
+</ol>
+<h3 id="53-发布与打-tag">5.3 发布与打 Tag<a hidden class="anchor" aria-hidden="true" href="#53-发布与打-tag">#</a></h3>
+<ol>
+<li>合并到 <code>main</code> 后打 tag：<code>git tag -a v1.0.0 -m &quot;Release 1.0.0&quot;</code>，<code>git push origin v1.0.0</code></li>
+<li>在 GitLab Releases 中基于该 Tag 创建 Release，填写说明与附件。</li>
+</ol>
+<h3 id="54-pipeline-失败处理">5.4 Pipeline 失败处理<a hidden class="anchor" aria-hidden="true" href="#54-pipeline-失败处理">#</a></h3>
+<ol>
+<li>在 Project → CI/CD → Pipelines 打开失败 Pipeline。</li>
+<li>点击失败 Job 查看日志，根据报错修复代码或 CI 配置。</li>
+<li>重新运行 Job 或推送新提交触发新 Pipeline。</li>
+</ol>
+<hr>
+<h2 id="6-故障排查">6. 故障排查<a hidden class="anchor" aria-hidden="true" href="#6-故障排查">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>现象</th>
+          <th>排查方法</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>无法克隆/推送</td>
+          <td>检查 SSH 密钥或 Token、网络、仓库权限</td>
+      </tr>
+      <tr>
+          <td>Pipeline 一直 Pending</td>
+          <td>检查 Runner 是否在线、是否被该项目使用</td>
+      </tr>
+      <tr>
+          <td>Job 报错找不到命令</td>
+          <td>确认 <code>image</code> 或 <code>before_script</code> 中已安装依赖</td>
+      </tr>
+      <tr>
+          <td>权限不足</td>
+          <td>检查 Project/Group 的 Member 与 Role</td>
+      </tr>
+      <tr>
+          <td>磁盘占满</td>
+          <td><code>sudo gitlab-ctl reconfigure</code>，清理 build cache、旧镜像</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="常用管理命令">常用管理命令<a hidden class="anchor" aria-hidden="true" href="#常用管理命令">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 进入 Rails 控制台</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-rails console
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 重置 root 密码</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-rake <span class="s2">&#34;gitlab:password:reset[root]&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 检查仓库完整性</span>
+</span></span><span class="line"><span class="cl">sudo gitlab-rake gitlab:check
+</span></span></code></pre></td></tr></table>
+</div>
+</div><hr>
+<h2 id="7-参考链接">7. 参考链接<a hidden class="anchor" aria-hidden="true" href="#7-参考链接">#</a></h2>
+<ul>
+<li><a href="https://docs.gitlab.com/">GitLab 官方文档</a></li>
+<li><a href="https://docs.gitlab.com/ee/ci/">GitLab CI/CD 文档</a></li>
+<li><a href="https://docs.gitlab.com/ee/ci/yaml/">.gitlab-ci.yml 参考</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/gitlab.html">GitLab</a></li>
+      <li><a href="http://localhost:1313/tags/ci/cd.html">CI/CD</a></li>
+      <li><a href="http://localhost:1313/tags/devops.html">DevOps</a></li>
+      <li><a href="http://localhost:1313/tags/sop.html">SOP</a></li>
+      <li><a href="http://localhost:1313/tags/%E9%80%9F%E6%9F%A5.html">速查</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">我的 Dream 博客</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

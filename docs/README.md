@@ -18,6 +18,11 @@
   - 命令说明和工作流程
   - **首次使用 OpenSpec 必读**
 
+### SOP 运维文档（博客同步）
+
+- **[docs/sop/](sop/)** — Ansible、GitLab、SonarQube、Jenkins、Grafana、Prometheus 等 SOP 原文
+- 博客中对应索引页路径：`/posts/sop-ops-tools-index/`，可在此查看各 SOP 的博客版与跳转链接
+
 ### 其他文档
 
 - **[CHANGELOG.md](CHANGELOG.md)**

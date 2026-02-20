@@ -6,20 +6,146 @@
     <description>Recent content in Tags on 我的 Dream 博客</description>
     <generator>Hugo -- 0.154.5</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Tue, 27 Jan 2026 00:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 28 Jan 2026 20:30:00 +0800</lastBuildDate>
     <atom:link href="http://localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>AIOps</title>
-      <link>http://localhost:1313/tags/aiops.html</link>
-      <pubDate>Tue, 27 Jan 2026 00:00:00 +0800</pubDate>
-      <guid>http://localhost:1313/tags/aiops.html</guid>
+      <title>Ansible</title>
+      <link>http://localhost:1313/tags/ansible.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/ansible.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>GitLab</title>
+      <link>http://localhost:1313/tags/gitlab.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/gitlab.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Grafana</title>
+      <link>http://localhost:1313/tags/grafana.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/grafana.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Jenkins</title>
+      <link>http://localhost:1313/tags/jenkins.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/jenkins.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Prometheus</title>
+      <link>http://localhost:1313/tags/prometheus.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/prometheus.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SonarQube</title>
+      <link>http://localhost:1313/tags/sonarqube.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/sonarqube.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>SOP</title>
+      <link>http://localhost:1313/tags/sop.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/sop.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>速查</title>
+      <link>http://localhost:1313/tags/%E9%80%9F%E6%9F%A5.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E9%80%9F%E6%9F%A5.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>运维</title>
+      <link>http://localhost:1313/tags/%E8%BF%90%E7%BB%B4.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E8%BF%90%E7%BB%B4.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>PromQL</title>
+      <link>http://localhost:1313/tags/promql.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:25:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/promql.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>告警</title>
+      <link>http://localhost:1313/tags/%E5%91%8A%E8%AD%A6.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:25:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E5%91%8A%E8%AD%A6.html</guid>
       <description></description>
     </item>
     <item>
       <title>监控</title>
       <link>http://localhost:1313/tags/%E7%9B%91%E6%8E%A7.html</link>
-      <pubDate>Tue, 27 Jan 2026 00:00:00 +0800</pubDate>
+      <pubDate>Wed, 28 Jan 2026 20:25:00 +0800</pubDate>
       <guid>http://localhost:1313/tags/%E7%9B%91%E6%8E%A7.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>可视化</title>
+      <link>http://localhost:1313/tags/%E5%8F%AF%E8%A7%86%E5%8C%96.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:20:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E5%8F%AF%E8%A7%86%E5%8C%96.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>CI/CD</title>
+      <link>http://localhost:1313/tags/ci/cd.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:15:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/ci/cd.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>持续集成</title>
+      <link>http://localhost:1313/tags/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:15:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>安全扫描</title>
+      <link>http://localhost:1313/tags/%E5%AE%89%E5%85%A8%E6%89%AB%E6%8F%8F.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:10:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E5%AE%89%E5%85%A8%E6%89%AB%E6%8F%8F.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>代码质量</title>
+      <link>http://localhost:1313/tags/%E4%BB%A3%E7%A0%81%E8%B4%A8%E9%87%8F.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:10:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E4%BB%A3%E7%A0%81%E8%B4%A8%E9%87%8F.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>DevOps</title>
+      <link>http://localhost:1313/tags/devops.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:05:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/devops.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>自动化</title>
+      <link>http://localhost:1313/tags/%E8%87%AA%E5%8A%A8%E5%8C%96.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:00:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/%E8%87%AA%E5%8A%A8%E5%8C%96.html</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>AIOps</title>
+      <link>http://localhost:1313/tags/aiops.html</link>
+      <pubDate>Tue, 27 Jan 2026 00:00:00 +0800</pubDate>
+      <guid>http://localhost:1313/tags/aiops.html</guid>
       <description></description>
     </item>
     <item>
@@ -65,13 +191,6 @@
       <description></description>
     </item>
     <item>
-      <title>运维</title>
-      <link>http://localhost:1313/tags/%E8%BF%90%E7%BB%B4.html</link>
-      <pubDate>Mon, 26 Jan 2026 23:45:00 +0800</pubDate>
-      <guid>http://localhost:1313/tags/%E8%BF%90%E7%BB%B4.html</guid>
-      <description></description>
-    </item>
-    <item>
       <title>Docker</title>
       <link>http://localhost:1313/tags/docker.html</link>
       <pubDate>Sun, 25 Jan 2026 23:30:00 +0800</pubDate>
@@ -83,13 +202,6 @@
       <link>http://localhost:1313/tags/%E5%AE%B9%E5%99%A8.html</link>
       <pubDate>Sun, 25 Jan 2026 23:30:00 +0800</pubDate>
       <guid>http://localhost:1313/tags/%E5%AE%B9%E5%99%A8.html</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>速查</title>
-      <link>http://localhost:1313/tags/%E9%80%9F%E6%9F%A5.html</link>
-      <pubDate>Sun, 25 Jan 2026 23:30:00 +0800</pubDate>
-      <guid>http://localhost:1313/tags/%E9%80%9F%E6%9F%A5.html</guid>
       <description></description>
     </item>
     <item>

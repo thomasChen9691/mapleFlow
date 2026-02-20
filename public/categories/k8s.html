@@ -8,7 +8,7 @@
 <title>K8s | 我的 Dream 博客</title>
 <meta name="keywords" content="">
 <meta name="description" content="这是我的博客">
-<meta name="author" content="xxsky">
+<meta name="author" content="thomasChen">
 <link rel="canonical" href="http://localhost:1313/categories/k8s.html">
 <link crossorigin="anonymous" href="../assets/css/stylesheet.a29c24210eb31d9ce56f669c66a35c9c51b17376b7764e336a49af7dec914cf0.css" integrity="sha256-opwkIQ6zHZzlb2acZqNcnFGxc3a3dk4zakmvfeyRTPA=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
@@ -123,7 +123,7 @@
                 </a>
             </li>
             <li>
-                <a href="https://github.com/xuhxjx" title="GitHub">
+                <a href="https://github.com/thomasChen9691" title="GitHub">
                     <span>GitHub</span>&nbsp;
                     <svg fill="none" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round"
                         stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" height="12" width="12">
@@ -158,7 +158,7 @@
 一、基础与集群信息 1.1 查看集群与上下文 1 2 3 4 5 6 7 8 # 查看当前 kubectl 使用的上下文（集群 &#43; 用户 &#43; 命名空间） kubectl config current-context # 查看所有上下文 kubectl config get-contexts # 切换上下文 kubectl config use-context your-context-name 1.2 查看集群组件与节点 1 2 3 4 5 6 7 8 # 查看集群信息概览 kubectl cluster-info # 查看所有节点 kubectl get nodes # 查看节点详情（含标签与状态） kubectl describe node &lt;node-name&gt; 二、命名空间与资源概览 2.1 命名空间 1 2 3 4 5 6 7 8 # 查看所有命名空间 kubectl get ns # 创建命名空间 kubectl create namespace dev # 删除命名空间 kubectl delete namespace dev 2.2 按命名空间查看资源 1 2 3 4 5 6 7 8 # 查看指定命名空间下的 Pod kubectl get pods -n dev # 查看所有命名空间下的 Pod kubectl get pods -A # 查看命名空间下所有常见资源 kubectl get all -n dev 三、Pod 与 Deployment 管理 3.1 查看与过滤 Pod 1 2 3 4 5 6 7 8 # 查看当前命名空间 Pod kubectl get pods # 按标签选择 Pod kubectl get pods -l app=myapp # 以 wide 模式显示更多信息（节点、IP 等） kubectl get pods -o wide 3.2 Deployment 常用操作 1 2 3 4 5 6 7 8 9 10 11 12 # 查看 Deployment kubectl get deploy kubectl get deploy -n dev # 查看 Deployment 详情 kubectl describe deploy myapp-deployment # 伸缩副本数 kubectl scale deploy myapp-deployment --replicas=5 # 滚动更新镜像 kubectl set image deploy/myapp-deployment myapp-container=myrepo/myapp:1.1.0 3.3 快速创建 Deployment 1 2 3 # 使用命令行快速创建一个 Deployment 和 Service kubectl create deploy nginx-deploy --image=nginx:1.25 kubectl expose deploy nginx-deploy --port=80 --target-port=80 --type=ClusterIP 四、Service 与 Ingress 4.1 Service 1 2 3 4 5 # 查看所有 Service kubectl get svc # 查看 Service 详情 kubectl describe svc my-service 常见类型：
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2026-01-26 23:45:00 +0800 CST'>January 26, 2026</span>&nbsp;·&nbsp;<span>xxsky</span></footer>
+  <footer class="entry-footer"><span title='2026-01-26 23:45:00 +0800 CST'>January 26, 2026</span>&nbsp;·&nbsp;<span>thomasChen</span></footer>
   <a class="entry-link" aria-label="post link to Kubernetes 常见命令与日常用法" href="http://localhost:1313/posts/k8s-common-commands.html"></a>
 </article>
     </main>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Ansible on 我的 Dream 博客</title>
+    <link>http://localhost:1313/tags/ansible.html</link>
+    <description>Recent content in Ansible on 我的 Dream 博客</description>
+    <generator>Hugo -- 0.154.5</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Wed, 28 Jan 2026 20:30:00 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/ansible/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>运维工具 SOP 文档索引</title>
+      <link>http://localhost:1313/posts/sop-ops-tools-index.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate>
+      <guid>http://localhost:1313/posts/sop-ops-tools-index.html</guid>
+      <description>&lt;p&gt;本索引汇总本站发布的运维工具标准操作规范（SOP）文章，便于在网页上按工具查阅安装、常用命令与日常操作流程。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;文档列表&#34;&gt;文档列表&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;工具&lt;/th&gt;
+          &lt;th&gt;文章链接&lt;/th&gt;
+          &lt;th&gt;说明&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Ansible&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;a href=&#34;http://localhost:1313/posts/sop-ansible-automation-guide.html&#34;&gt;Ansible 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+          &lt;td&gt;自动化配置管理与批量操作&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;GitLab&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;a href=&#34;http://localhost:1313/posts/sop-gitlab-cicd-guide.html&#34;&gt;GitLab 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+          &lt;td&gt;代码仓库与 CI/CD 平台&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;SonarQube&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;a href=&#34;http://localhost:1313/posts/sop-sonarqube-code-quality-guide.html&#34;&gt;SonarQube 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+          &lt;td&gt;代码质量与安全扫描&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Jenkins&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;a href=&#34;http://localhost:1313/posts/sop-jenkins-cicd-guide.html&#34;&gt;Jenkins 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+          &lt;td&gt;持续集成与持续部署&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Grafana&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;a href=&#34;http://localhost:1313/posts/sop-grafana-dashboard-alerting-guide.html&#34;&gt;Grafana 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+          &lt;td&gt;监控可视化与告警&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Prometheus&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;a href=&#34;http://localhost:1313/posts/sop-prometheus-metrics-alerting-guide.html&#34;&gt;Prometheus 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+          &lt;td&gt;指标采集与存储&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;使用说明&#34;&gt;使用说明&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;每份 SOP 包含：&lt;strong&gt;简介&lt;/strong&gt;、&lt;strong&gt;安装/配置&lt;/strong&gt;、&lt;strong&gt;常用命令&lt;/strong&gt;、&lt;strong&gt;日常操作流程（SOP）&lt;/strong&gt;、&lt;strong&gt;故障排查&lt;/strong&gt;、&lt;strong&gt;参考链接&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;建议学习顺序：GitLab → Jenkins / SonarQube → Ansible → Prometheus → Grafana。&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>Ansible 标准操作规范（SOP）</title>
+      <link>http://localhost:1313/posts/sop-ansible-automation-guide.html</link>
+      <pubDate>Wed, 28 Jan 2026 20:00:00 +0800</pubDate>
+      <guid>http://localhost:1313/posts/sop-ansible-automation-guide.html</guid>
+      <description>&lt;p&gt;Ansible 是一款开源的自动化运维工具，基于 Python，通过 SSH 对目标主机执行任务，无需在受管节点安装 Agent。本文整理安装、常用命令、Playbook 规范与日常 SOP，便于在网页上查阅。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-简介&#34;&gt;1. 简介&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;特点&lt;/strong&gt;：无 Agent、幂等性、YAML 剧本、模块丰富。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;典型场景&lt;/strong&gt;：配置管理、应用部署、批量命令、持续交付。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;2-安装与基本配置&#34;&gt;2. 安装与基本配置&lt;/h2&gt;
+&lt;h3 id=&#34;21-控制节点安装linuxmacos&#34;&gt;2.1 控制节点安装（Linux/macOS）&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;# Ubuntu/Debian&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo apt update &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt install -y ansible
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;# CentOS/RHEL&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo yum install -y ansible
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;# macOS&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;brew install ansible
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;# 使用 pip 安装（推荐指定版本）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;pip install ansible-core
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id=&#34;22-查看版本与配置&#34;&gt;2.2 查看版本与配置&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;ansible --version
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;ansible-config dump --only-changed   &lt;span class=&#34;c1&#34;&gt;# 查看当前生效配置&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id=&#34;23-清单文件inventory&#34;&gt;2.3 清单文件（Inventory）&lt;/h3&gt;
+&lt;p&gt;默认清单：&lt;code&gt;/etc/ansible/hosts&lt;/code&gt; 或项目目录下 &lt;code&gt;inventory&lt;/code&gt;、&lt;code&gt;hosts&lt;/code&gt;。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

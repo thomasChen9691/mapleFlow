@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Prometheus 标准操作规范（SOP） | 我的 Dream 博客</title>
+<meta name="keywords" content="Prometheus, 监控, PromQL, 告警, SOP, 速查">
+<meta name="description" content="Prometheus 是开源指标采集、存储与查询系统，采用拉模式（Pull）从 Target 抓取指标，支持 PromQL 查询与告警（Alertmanager）。本文整理安装、配置、常用 API 与日常 SOP，便于在网页上查阅。
+
+1. 简介
+
+典型场景：机器/容器/应用指标采集、监控大屏（配合 Grafana）、告警。
+
+
+2. 安装与基本配置
+2.1 Docker 快速启动
+
+
+1
+2
+3
+4
+5
+6
+
+
+# 仅 Prometheus
+docker run -d --name prometheus -p 9090:9090 \
+  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus:latest
+
+# 访问：http://localhost:9090
+
+
+2.2 最小 prometheus.yml
+
+
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+
+
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []   # 可选：Alertmanager 地址
+
+rule_files: []          # 可选：告警/记录规则文件
+
+scrape_configs:
+  - job_name: &#39;prometheus&#39;
+    static_configs:
+      - targets: [&#39;localhost:9090&#39;]
+
+  - job_name: &#39;node&#39;
+    static_configs:
+      - targets: [&#39;192.168.1.10:9100&#39;, &#39;192.168.1.11:9100&#39;]
+    # 若需认证（如 basic_auth / bearer_token），在此配置
+
+
+2.3 系统级安装（Linux）
+
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+
+
+# 下载并解压
+wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+tar xzf prometheus-*.tar.gz
+cd prometheus-*/
+
+# 启动（前台）
+./prometheus --config.file=prometheus.yml --web.enable-lifecycle
+
+# 或使用 systemd 管理（需自行编写 unit 文件）
+
+
+2.4 常用启动参数
+
+
+1
+2
+3
+4
+
+
+--config.file=prometheus.yml    # 配置文件
+--storage.tsdb.path=/data       # 存储路径
+--web.enable-lifecycle          # 允许 API 重载配置
+--web.listen-address=:9090      # 监听地址
+
+
+
+3. 常用命令与操作
+3.1 重载配置（不重启）
+
+
+1
+2
+
+
+# 需启用 --web.enable-lifecycle
+curl -X POST http://localhost:9090/-/reload
+
+
+3.2 查询（Web &#43; PromQL）
+
+打开 http://localhost:9090 → Graph，输入 PromQL 示例：
+
+
+
+1
+2
+3
+4
+5
+6
+7
+8
+
+
+#  CPU 使用率（Node Exporter）
+100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=&#34;idle&#34;}[5m])) * 100)
+
+# 内存使用率
+(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+
+# 某服务 QPS
+rate(http_requests_total[5m])
+
+
+3.3 常用 API
+
+
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+
+
+# 查询瞬时值
+curl -G &#39;http://localhost:9090/api/v1/query&#39; --data-urlencode &#39;query=up&#39;
+
+# 查询范围
+curl -G &#39;http://localhost:9090/api/v1/query_range&#39; \
+  --data-urlencode &#39;query=up&#39; \
+  --data-urlencode &#39;start=...&#39; --data-urlencode &#39;end=...&#39; --data-urlencode &#39;step=15s&#39;
+
+# 查看 Target 状态
+curl http://localhost:9090/api/v1/targets
+
+# 重载配置
+curl -X POST http://localhost:9090/-/reload
+
+
+3.4 Node Exporter（主机指标）
+
+
+1
+2
+3
+
+
+# 目标机安装并暴露 9100
+docker run -d --name node_exporter -p 9100:9100 --net=&#34;host&#34; --pid=&#34;host&#34; \
+  -v &#34;/:/host:ro,rslave&#34; quay.io/prometheus/node-exporter:latest --path.rootfs=/host
+
+
+在 prometheus.yml 的 scrape_configs 中增加该主机 ip:9100。">
+<meta name="author" content="thomasChen">
+<link rel="canonical" href="http://localhost:1313/posts/sop-prometheus-metrics-alerting-guide.html">
+<link crossorigin="anonymous" href="../assets/css/stylesheet.a29c24210eb31d9ce56f669c66a35c9c51b17376b7764e336a49af7dec914cf0.css" integrity="sha256-opwkIQ6zHZzlb2acZqNcnFGxc3a3dk4zakmvfeyRTPA=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh-cn" href="http://localhost:1313/posts/sop-prometheus-metrics-alerting-guide.html">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="我的 Dream 博客 (Alt + H)">我的 Dream 博客</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="首页">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="文章">
+                    <span>文章</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="分类">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="标签">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/thomasChen9691" title="GitHub">
+                    <span>GitHub</span>&nbsp;
+                    <svg fill="none" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" height="12" width="12">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"></path>
+                        <path d="M15 3h6v6"></path>
+                        <path d="M10 14L21 3"></path>
+                    </svg>
+                </a>
+            </li>
+            <li>
+                <a href="mailto:xuhxjxhk@gmail.com" title="Email">
+                    <span>Email</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Prometheus 标准操作规范（SOP）
+    </h1>
+    <div class="post-meta"><span title='2026-01-28 20:25:00 +0800 CST'>January 28, 2026</span>&nbsp;·&nbsp;<span>thomasChen</span>
+
+</div>
+  </header> 
+  <div class="post-content"><p>Prometheus 是开源指标采集、存储与查询系统，采用拉模式（Pull）从 Target 抓取指标，支持 PromQL 查询与告警（Alertmanager）。本文整理安装、配置、常用 API 与日常 SOP，便于在网页上查阅。</p>
+<hr>
+<h2 id="1-简介">1. 简介<a hidden class="anchor" aria-hidden="true" href="#1-简介">#</a></h2>
+<ul>
+<li><strong>典型场景</strong>：机器/容器/应用指标采集、监控大屏（配合 Grafana）、告警。</li>
+</ul>
+<hr>
+<h2 id="2-安装与基本配置">2. 安装与基本配置<a hidden class="anchor" aria-hidden="true" href="#2-安装与基本配置">#</a></h2>
+<h3 id="21-docker-快速启动">2.1 Docker 快速启动<a hidden class="anchor" aria-hidden="true" href="#21-docker-快速启动">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 仅 Prometheus</span>
+</span></span><span class="line"><span class="cl">docker run -d --name prometheus -p 9090:9090 <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -v <span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/prometheus.yml:/etc/prometheus/prometheus.yml <span class="se">\
+</span></span></span><span class="line"><span class="cl">  prom/prometheus:latest
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 访问：http://localhost:9090</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="22-最小-prometheusyml">2.2 最小 prometheus.yml<a hidden class="anchor" aria-hidden="true" href="#22-最小-prometheusyml">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># prometheus.yml</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">global</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l">15s</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">evaluation_interval</span><span class="p">:</span><span class="w"> </span><span class="l">15s</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">alerting</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">alertmanagers</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="nt">static_configs</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span>- <span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">   </span><span class="c"># 可选：Alertmanager 地址</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">rule_files</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">          </span><span class="c"># 可选：告警/记录规则文件</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">scrape_configs</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;prometheus&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;localhost:9090&#39;</span><span class="p">]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;node&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;192.168.1.10:9100&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;192.168.1.11:9100&#39;</span><span class="p">]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c"># 若需认证（如 basic_auth / bearer_token），在此配置</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="23-系统级安装linux">2.3 系统级安装（Linux）<a hidden class="anchor" aria-hidden="true" href="#23-系统级安装linux">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 下载并解压</span>
+</span></span><span class="line"><span class="cl">wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+</span></span><span class="line"><span class="cl">tar xzf prometheus-*.tar.gz
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> prometheus-*/
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 启动（前台）</span>
+</span></span><span class="line"><span class="cl">./prometheus --config.file<span class="o">=</span>prometheus.yml --web.enable-lifecycle
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 或使用 systemd 管理（需自行编写 unit 文件）</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="24-常用启动参数">2.4 常用启动参数<a hidden class="anchor" aria-hidden="true" href="#24-常用启动参数">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">--config.file<span class="o">=</span>prometheus.yml    <span class="c1"># 配置文件</span>
+</span></span><span class="line"><span class="cl">--storage.tsdb.path<span class="o">=</span>/data       <span class="c1"># 存储路径</span>
+</span></span><span class="line"><span class="cl">--web.enable-lifecycle          <span class="c1"># 允许 API 重载配置</span>
+</span></span><span class="line"><span class="cl">--web.listen-address<span class="o">=</span>:9090      <span class="c1"># 监听地址</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><hr>
+<h2 id="3-常用命令与操作">3. 常用命令与操作<a hidden class="anchor" aria-hidden="true" href="#3-常用命令与操作">#</a></h2>
+<h3 id="31-重载配置不重启">3.1 重载配置（不重启）<a hidden class="anchor" aria-hidden="true" href="#31-重载配置不重启">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 需启用 --web.enable-lifecycle</span>
+</span></span><span class="line"><span class="cl">curl -X POST http://localhost:9090/-/reload
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="32-查询web--promql">3.2 查询（Web + PromQL）<a hidden class="anchor" aria-hidden="true" href="#32-查询web--promql">#</a></h3>
+<ul>
+<li>打开 http://localhost:9090 → Graph，输入 PromQL 示例：</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-promql" data-lang="promql"><span class="line"><span class="cl"><span class="c1">#  CPU 使用率（Node Exporter）</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="mi">100</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">(</span><span class="k">avg</span><span class="w"> </span><span class="k">by</span><span class="o">(</span><span class="nv">instance</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">node_cpu_seconds_total</span><span class="p">{</span><span class="nl">mode</span><span class="o">=</span><span class="p">&#34;</span><span class="s">idle</span><span class="p">&#34;}[</span><span class="s">5m</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="o">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1"># 内存使用率</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="o">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">(</span><span class="nv">node_memory_MemAvailable_bytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">node_memory_MemTotal_bytes</span><span class="o">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1"># 某服务 QPS</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kr">rate</span><span class="o">(</span><span class="nv">http_requests_total</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">)</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="33-常用-api">3.3 常用 API<a hidden class="anchor" aria-hidden="true" href="#33-常用-api">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查询瞬时值</span>
+</span></span><span class="line"><span class="cl">curl -G <span class="s1">&#39;http://localhost:9090/api/v1/query&#39;</span> --data-urlencode <span class="s1">&#39;query=up&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查询范围</span>
+</span></span><span class="line"><span class="cl">curl -G <span class="s1">&#39;http://localhost:9090/api/v1/query_range&#39;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  --data-urlencode <span class="s1">&#39;query=up&#39;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  --data-urlencode <span class="s1">&#39;start=...&#39;</span> --data-urlencode <span class="s1">&#39;end=...&#39;</span> --data-urlencode <span class="s1">&#39;step=15s&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看 Target 状态</span>
+</span></span><span class="line"><span class="cl">curl http://localhost:9090/api/v1/targets
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 重载配置</span>
+</span></span><span class="line"><span class="cl">curl -X POST http://localhost:9090/-/reload
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="34-node-exporter主机指标">3.4 Node Exporter（主机指标）<a hidden class="anchor" aria-hidden="true" href="#34-node-exporter主机指标">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 目标机安装并暴露 9100</span>
+</span></span><span class="line"><span class="cl">docker run -d --name node_exporter -p 9100:9100 --net<span class="o">=</span><span class="s2">&#34;host&#34;</span> --pid<span class="o">=</span><span class="s2">&#34;host&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -v <span class="s2">&#34;/:/host:ro,rslave&#34;</span> quay.io/prometheus/node-exporter:latest --path.rootfs<span class="o">=</span>/host
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在 <code>prometheus.yml</code> 的 <code>scrape_configs</code> 中增加该主机 <code>ip:9100</code>。</p>
+<hr>
+<h2 id="4-告警规则与-alertmanager">4. 告警规则与 Alertmanager<a hidden class="anchor" aria-hidden="true" href="#4-告警规则与-alertmanager">#</a></h2>
+<h3 id="41-告警规则示例rulesyml">4.1 告警规则示例（rules.yml）<a hidden class="anchor" aria-hidden="true" href="#41-告警规则示例rulesyml">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">groups</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">example</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">rules</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l">InstanceDown</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="l">up == 0</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l">5m</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">labels</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l">critical</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;Instance {{ $labels.instance }} down&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l">HighCpu</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>- <span class="l">(avg by(instance) (rate(node_cpu_seconds_total{mode=&#34;idle&#34;}[5m])) * 100) &gt; 80</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l">5m</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">labels</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l">warning</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;High CPU on {{ $labels.instance }}&#34;</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在 <code>prometheus.yml</code> 中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">rule_files</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="s2">&#34;rules.yml&#34;</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="42-alertmanager-最小配置">4.2 Alertmanager 最小配置<a hidden class="anchor" aria-hidden="true" href="#42-alertmanager-最小配置">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># alertmanager.yml</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">global</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">resolve_timeout</span><span class="p">:</span><span class="w"> </span><span class="l">5m</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">route</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">group_by</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;alertname&#39;</span><span class="p">]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">group_wait</span><span class="p">:</span><span class="w"> </span><span class="l">10s</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">group_interval</span><span class="p">:</span><span class="w"> </span><span class="l">10s</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">repeat_interval</span><span class="p">:</span><span class="w"> </span><span class="l">12h</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">receiver</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;default&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">receivers</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;default&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c"># 示例：邮件</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c"># email_configs:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c">#   - to: &#39;ops@example.com&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c">#     send_resolved: true</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>启动 Alertmanager：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">docker run -d --name alertmanager -p 9093:9093 <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -v <span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/alertmanager.yml:/etc/alertmanager/alertmanager.yml <span class="se">\
+</span></span></span><span class="line"><span class="cl">  prom/alertmanager:latest
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在 <code>prometheus.yml</code> 的 <code>alerting</code> 中填写 <code>targets: ['alertmanager:9093']</code>。</p>
+<hr>
+<h2 id="5-日常操作流程sop">5. 日常操作流程（SOP）<a hidden class="anchor" aria-hidden="true" href="#5-日常操作流程sop">#</a></h2>
+<h3 id="51-新增监控目标">5.1 新增监控目标<a hidden class="anchor" aria-hidden="true" href="#51-新增监控目标">#</a></h3>
+<ol>
+<li>在目标机器/容器部署 Exporter（如 node_exporter、应用暴露 /metrics）。</li>
+<li>在 <code>prometheus.yml</code> 的 <code>scrape_configs</code> 中增加 job 与 targets。</li>
+<li>执行 <code>curl -X POST http://localhost:9090/-/reload</code>（或重启），在 Status → Targets 确认 UP。</li>
+</ol>
+<h3 id="52-新增修改告警规则">5.2 新增/修改告警规则<a hidden class="anchor" aria-hidden="true" href="#52-新增修改告警规则">#</a></h3>
+<ol>
+<li>编辑 <code>rules.yml</code>（或新建 rule_files）。</li>
+<li>若 rule_files 已包含该文件，reload 即可；否则修改 <code>prometheus.yml</code> 后 reload。</li>
+<li>在 Alerts 页查看是否出现 Pending/Firing，并确认 Alertmanager 收到告警。</li>
+</ol>
+<h3 id="53-容量与保留">5.3 容量与保留<a hidden class="anchor" aria-hidden="true" href="#53-容量与保留">#</a></h3>
+<ul>
+<li>默认保留 15 天，可通过 <code>--storage.tsdb.retention.time=30d</code> 调整。</li>
+<li>注意磁盘空间；可配合远程写入（如 Thanos、Cortex）做长期存储。</li>
+</ul>
+<hr>
+<h2 id="6-故障排查">6. 故障排查<a hidden class="anchor" aria-hidden="true" href="#6-故障排查">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>现象</th>
+          <th>排查方法</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Target Down</td>
+          <td>检查网络、防火墙、Exporter 是否监听、URL 是否正确</td>
+      </tr>
+      <tr>
+          <td>无指标/少指标</td>
+          <td>检查 Exporter 版本、是否启用所需 collector、应用是否暴露 /metrics</td>
+      </tr>
+      <tr>
+          <td>查询很慢</td>
+          <td>缩小时间范围、简化 PromQL、检查 tsdb 磁盘与内存</td>
+      </tr>
+      <tr>
+          <td>告警不触发</td>
+          <td>检查 rule 的 expr、for 时间、Alertmanager 是否配置并可达</td>
+      </tr>
+      <tr>
+          <td>配置不生效</td>
+          <td>确认 YAML 语法、是否执行 reload 或重启</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="常用检查">常用检查<a hidden class="anchor" aria-hidden="true" href="#常用检查">#</a></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 检查配置文件语法</span>
+</span></span><span class="line"><span class="cl">promtool check config prometheus.yml
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 检查规则文件</span>
+</span></span><span class="line"><span class="cl">promtool check rules rules.yml
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看 TSDB 状态</span>
+</span></span><span class="line"><span class="cl">curl http://localhost:9090/api/v1/status/tsdb
+</span></span></code></pre></td></tr></table>
+</div>
+</div><hr>
+<h2 id="7-参考链接">7. 参考链接<a hidden class="anchor" aria-hidden="true" href="#7-参考链接">#</a></h2>
+<ul>
+<li><a href="https://prometheus.io/docs/">Prometheus 官方文档</a></li>
+<li><a href="https://prometheus.io/docs/prometheus/latest/querying/basics/">PromQL 文档</a></li>
+<li><a href="https://prometheus.io/docs/alerting/latest/configuration/">Alertmanager 配置</a></li>
+<li><a href="https://prometheus.io/docs/instrumenting/exporters/">Exporters 列表</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/prometheus.html">Prometheus</a></li>
+      <li><a href="http://localhost:1313/tags/%E7%9B%91%E6%8E%A7.html">监控</a></li>
+      <li><a href="http://localhost:1313/tags/promql.html">PromQL</a></li>
+      <li><a href="http://localhost:1313/tags/%E5%91%8A%E8%AD%A6.html">告警</a></li>
+      <li><a href="http://localhost:1313/tags/sop.html">SOP</a></li>
+      <li><a href="http://localhost:1313/tags/%E9%80%9F%E6%9F%A5.html">速查</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">我的 Dream 博客</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
