@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>GitLab on 我的 Dream 博客</title><link>https://thomasChen9691.github.io/mapleFlow/tags/gitlab.html</link><description>Recent content in GitLab on 我的 Dream 博客</description><generator>Hugo -- 0.156.0</generator><language>zh-CN</language><lastBuildDate>Wed, 28 Jan 2026 20:30:00 +0800</lastBuildDate><atom:link href="https://thomasChen9691.github.io/mapleFlow/tags/gitlab/index.xml" rel="self" type="application/rss+xml"/><item><title>运维工具 SOP 文档索引</title><link>https://thomasChen9691.github.io/mapleFlow/posts/sop-ops-tools-index.html</link><pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate><guid>https://thomasChen9691.github.io/mapleFlow/posts/sop-ops-tools-index.html</guid><description>&lt;p&gt;本索引汇总本站发布的运维工具标准操作规范（SOP）文章，便于在网页上按工具查阅安装、常用命令与日常操作流程。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="文档列表"&gt;文档列表&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;工具&lt;/th&gt;
+&lt;th&gt;文章链接&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Ansible&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-ansible-automation-guide.html"&gt;Ansible 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;自动化配置管理与批量操作&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;GitLab&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-gitlab-cicd-guide.html"&gt;GitLab 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;代码仓库与 CI/CD 平台&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;SonarQube&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-sonarqube-code-quality-guide.html"&gt;SonarQube 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;代码质量与安全扫描&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Jenkins&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-jenkins-cicd-guide.html"&gt;Jenkins 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;持续集成与持续部署&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Grafana&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-grafana-dashboard-alerting-guide.html"&gt;Grafana 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;监控可视化与告警&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Prometheus&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-prometheus-metrics-alerting-guide.html"&gt;Prometheus 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;指标采集与存储&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2 id="使用说明"&gt;使用说明&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;每份 SOP 包含：&lt;strong&gt;简介&lt;/strong&gt;、&lt;strong&gt;安装/配置&lt;/strong&gt;、&lt;strong&gt;常用命令&lt;/strong&gt;、&lt;strong&gt;日常操作流程（SOP）&lt;/strong&gt;、&lt;strong&gt;故障排查&lt;/strong&gt;、&lt;strong&gt;参考链接&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;建议学习顺序：GitLab → Jenkins / SonarQube → Ansible → Prometheus → Grafana。&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>GitLab 标准操作规范（SOP）</title><link>https://thomasChen9691.github.io/mapleFlow/posts/sop-gitlab-cicd-guide.html</link><pubDate>Wed, 28 Jan 2026 20:05:00 +0800</pubDate><guid>https://thomasChen9691.github.io/mapleFlow/posts/sop-gitlab-cicd-guide.html</guid><description>&lt;p&gt;GitLab 是集代码托管、CI/CD、制品仓库、Wiki、Issue 等于一体的 DevOps 平台。本文整理安装、常用 Git/MR 操作、&lt;code&gt;.gitlab-ci.yml&lt;/code&gt; 示例与日常 SOP，便于在网页上查阅。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="1-简介"&gt;1. 简介&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;典型场景&lt;/strong&gt;：代码仓库、MR/Code Review、CI/CD Pipeline、容器镜像仓库、项目管理。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2 id="2-安装与访问"&gt;2. 安装与访问&lt;/h2&gt;
+&lt;h3 id="21-快速安装linux"&gt;2.1 快速安装（Linux）&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;span class="lnt"&gt;6
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 使用官方脚本（Omnibus，含 Nginx/PostgreSQL/Redis）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh &lt;span class="p"&gt;|&lt;/span&gt; sudo bash
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo &lt;span class="nv"&gt;EXTERNAL_URL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://gitlab.example.com&amp;#34;&lt;/span&gt; apt install gitlab-ee
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 或 Docker&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker run -d --hostname gitlab.example.com -p 443:443 -p 80:80 -p 22:22 --name gitlab gitlab/gitlab-ee:latest
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="22-常用管理命令"&gt;2.2 常用管理命令&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;span class="lnt"&gt;11
+&lt;/span&gt;&lt;span class="lnt"&gt;12
+&lt;/span&gt;&lt;span class="lnt"&gt;13
+&lt;/span&gt;&lt;span class="lnt"&gt;14
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 重新配置&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo gitlab-ctl reconfigure
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 服务状态&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo gitlab-ctl status
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 启动/停止/重启&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo gitlab-ctl start
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo gitlab-ctl stop
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo gitlab-ctl restart
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 查看日志&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo gitlab-ctl tail &lt;span class="c1"&gt;# 所有服务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo gitlab-ctl tail nginx &lt;span class="c1"&gt;# 指定服务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="23-首次登录"&gt;2.3 首次登录&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;默认账号：&lt;code&gt;root&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;首次登录会要求修改密码；或通过 &lt;code&gt;sudo gitlab-rake &amp;quot;gitlab:password:reset[root]&amp;quot;&lt;/code&gt; 重置。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2 id="3-常用-git-与-gitlab-操作"&gt;3. 常用 Git 与 GitLab 操作&lt;/h2&gt;
+&lt;h3 id="31-git-基础命令"&gt;3.1 Git 基础命令&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;span class="lnt"&gt;6
+&lt;/span&gt;&lt;span class="lnt"&gt;7
+&lt;/span&gt;&lt;span class="lnt"&gt;8
+&lt;/span&gt;&lt;span class="lnt"&gt;9
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 克隆&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git clone https://gitlab.example.com/group/project.git
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git clone git@gitlab.example.com:group/project.git
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 分支与提交&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git checkout -b feature/xxx
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git commit -m &lt;span class="s2"&gt;&amp;#34;feat: xxx&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git push -u origin feature/xxx
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="32-合并请求merge-request"&gt;3.2 合并请求（Merge Request）&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;在 GitLab 网页上基于分支创建 MR。&lt;/li&gt;
+&lt;li&gt;或使用 CLI（需安装 &lt;a href="https://gitlab.com/gitlab-org/cli"&gt;gitlab-cli&lt;/a&gt;）：&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;span class="lnt"&gt;6
+&lt;/span&gt;&lt;span class="lnt"&gt;7
+&lt;/span&gt;&lt;span class="lnt"&gt;8
+&lt;/span&gt;&lt;span class="lnt"&gt;9
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 创建 MR&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;glab mr create -t &lt;span class="s2"&gt;&amp;#34;标题&amp;#34;&lt;/span&gt; -d &lt;span class="s2"&gt;&amp;#34;描述&amp;#34;&lt;/span&gt; -b main
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 列表与查看&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;glab mr list
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;glab mr view &lt;span class="m"&gt;123&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 合并&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;glab mr merge &lt;span class="m"&gt;123&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="33-标签与发布"&gt;3.3 标签与发布&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git tag -a v1.0.0 -m &lt;span class="s2"&gt;&amp;#34;Release 1.0.0&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git push origin v1.0.0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;在 GitLab：Project → Deploy → Releases 可基于 Tag 创建 Release。&lt;/p&gt;</description></item></channel></rss>

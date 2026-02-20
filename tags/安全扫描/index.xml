@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>安全扫描 on 我的 Dream 博客</title><link>https://thomasChen9691.github.io/mapleFlow/tags/%E5%AE%89%E5%85%A8%E6%89%AB%E6%8F%8F.html</link><description>Recent content in 安全扫描 on 我的 Dream 博客</description><generator>Hugo -- 0.156.0</generator><language>zh-CN</language><lastBuildDate>Wed, 28 Jan 2026 20:10:00 +0800</lastBuildDate><atom:link href="https://thomasChen9691.github.io/mapleFlow/tags/%E5%AE%89%E5%85%A8%E6%89%AB%E6%8F%8F/index.xml" rel="self" type="application/rss+xml"/><item><title>SonarQube 标准操作规范（SOP）</title><link>https://thomasChen9691.github.io/mapleFlow/posts/sop-sonarqube-code-quality-guide.html</link><pubDate>Wed, 28 Jan 2026 20:10:00 +0800</pubDate><guid>https://thomasChen9691.github.io/mapleFlow/posts/sop-sonarqube-code-quality-guide.html</guid><description>&lt;p&gt;SonarQube 是代码质量和安全分析平台，支持多语言，可集成到 CI/CD 中自动扫描。本文整理安装、Scanner 配置、质量门禁与日常 SOP，便于在网页上查阅。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="1-简介"&gt;1. 简介&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;典型能力&lt;/strong&gt;：代码异味、Bug、漏洞、安全热点、重复代码、覆盖率（需配合测试报告）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;典型场景&lt;/strong&gt;：MR 质量门禁、每日全量扫描、安全合规检查。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2 id="2-安装与基本配置"&gt;2. 安装与基本配置&lt;/h2&gt;
+&lt;h3 id="21-使用-docker-快速启动"&gt;2.1 使用 Docker 快速启动&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 需先有 PostgreSQL（或使用 SonarQube 内置 H2，仅适合试用）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 默认访问：http://localhost:9000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 默认账号/密码：admin / admin（首次登录需修改）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="22-与-postgresql-一起运行"&gt;2.2 与 PostgreSQL 一起运行&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker run -d --name sonar-db -e &lt;span class="nv"&gt;POSTGRES_USER&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;sonar -e &lt;span class="nv"&gt;POSTGRES_PASSWORD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;sonar postgres:14
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker run -d --name sonarqube -p 9000:9000 &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; -e &lt;span class="nv"&gt;SONAR_JDBC_URL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;jdbc:postgresql://sonar-db:5432/sonar &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; -e &lt;span class="nv"&gt;SONAR_JDBC_USERNAME&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;sonar -e &lt;span class="nv"&gt;SONAR_JDBC_PASSWORD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;sonar &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --link sonar-db sonarqube:lts-community
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="23-命令行扫描器scanner"&gt;2.3 命令行扫描器（Scanner）&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;SonarScanner CLI&lt;/strong&gt;：通用扫描，适合任意语言。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Maven/Gradle 插件&lt;/strong&gt;：Java 项目常用。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Scanner 与 SonarQube 版本尽量与服务器大版本一致。&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;span class="lnt"&gt;6
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 下载 SonarScanner（以 Linux 为例）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# https://docs.sonarqube.org/latest/analyzing-source-code/scanners/sonarscanner/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;unzip sonar-scanner-cli-*.zip
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;PATH&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;$PATH&lt;/span&gt;:&lt;span class="k"&gt;$(&lt;/span&gt;&lt;span class="nb"&gt;pwd&lt;/span&gt;&lt;span class="k"&gt;)&lt;/span&gt;/sonar-scanner-*/bin
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sonar-scanner --version
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;hr&gt;
+&lt;h2 id="3-常用命令与操作"&gt;3. 常用命令与操作&lt;/h2&gt;
+&lt;h3 id="31-项目配置sonar-projectproperties"&gt;3.1 项目配置（sonar-project.properties）&lt;/h3&gt;
+&lt;p&gt;在项目根目录创建或编辑：&lt;/p&gt;</description></item></channel></rss>

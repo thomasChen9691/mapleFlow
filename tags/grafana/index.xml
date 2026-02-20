@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Grafana on 我的 Dream 博客</title><link>https://thomasChen9691.github.io/mapleFlow/tags/grafana.html</link><description>Recent content in Grafana on 我的 Dream 博客</description><generator>Hugo -- 0.156.0</generator><language>zh-CN</language><lastBuildDate>Wed, 28 Jan 2026 20:30:00 +0800</lastBuildDate><atom:link href="https://thomasChen9691.github.io/mapleFlow/tags/grafana/index.xml" rel="self" type="application/rss+xml"/><item><title>运维工具 SOP 文档索引</title><link>https://thomasChen9691.github.io/mapleFlow/posts/sop-ops-tools-index.html</link><pubDate>Wed, 28 Jan 2026 20:30:00 +0800</pubDate><guid>https://thomasChen9691.github.io/mapleFlow/posts/sop-ops-tools-index.html</guid><description>&lt;p&gt;本索引汇总本站发布的运维工具标准操作规范（SOP）文章，便于在网页上按工具查阅安装、常用命令与日常操作流程。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="文档列表"&gt;文档列表&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;工具&lt;/th&gt;
+&lt;th&gt;文章链接&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Ansible&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-ansible-automation-guide.html"&gt;Ansible 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;自动化配置管理与批量操作&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;GitLab&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-gitlab-cicd-guide.html"&gt;GitLab 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;代码仓库与 CI/CD 平台&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;SonarQube&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-sonarqube-code-quality-guide.html"&gt;SonarQube 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;代码质量与安全扫描&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Jenkins&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-jenkins-cicd-guide.html"&gt;Jenkins 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;持续集成与持续部署&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Grafana&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-grafana-dashboard-alerting-guide.html"&gt;Grafana 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;监控可视化与告警&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Prometheus&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://thomasChen9691.github.io/mapleFlow/posts/sop-prometheus-metrics-alerting-guide.html"&gt;Prometheus 标准操作规范（SOP）&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;指标采集与存储&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2 id="使用说明"&gt;使用说明&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;每份 SOP 包含：&lt;strong&gt;简介&lt;/strong&gt;、&lt;strong&gt;安装/配置&lt;/strong&gt;、&lt;strong&gt;常用命令&lt;/strong&gt;、&lt;strong&gt;日常操作流程（SOP）&lt;/strong&gt;、&lt;strong&gt;故障排查&lt;/strong&gt;、&lt;strong&gt;参考链接&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;建议学习顺序：GitLab → Jenkins / SonarQube → Ansible → Prometheus → Grafana。&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>Grafana 标准操作规范（SOP）</title><link>https://thomasChen9691.github.io/mapleFlow/posts/sop-grafana-dashboard-alerting-guide.html</link><pubDate>Wed, 28 Jan 2026 20:20:00 +0800</pubDate><guid>https://thomasChen9691.github.io/mapleFlow/posts/sop-grafana-dashboard-alerting-guide.html</guid><description>&lt;p&gt;Grafana 是开源的可视化与告警平台，可对接 Prometheus、InfluxDB、Elasticsearch、MySQL 等多种数据源。本文整理安装、数据源与仪表盘、告警配置与日常 SOP，便于在网页上查阅。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="1-简介"&gt;1. 简介&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;典型场景&lt;/strong&gt;：监控大屏、业务/系统指标看板、告警规则配置与通知（邮件、钉钉、Slack 等）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2 id="2-安装与基本配置"&gt;2. 安装与基本配置&lt;/h2&gt;
+&lt;h3 id="21-docker-快速启动"&gt;2.1 Docker 快速启动&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker run -d --name&lt;span class="o"&gt;=&lt;/span&gt;grafana -p 3000:3000 grafana/grafana:latest
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 默认访问：http://localhost:3000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 默认账号/密码：admin / admin（首次登录需修改）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="22-持久化与常用环境变量"&gt;2.2 持久化与常用环境变量&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker run -d --name&lt;span class="o"&gt;=&lt;/span&gt;grafana -p 3000:3000 &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; -v grafana_data:/var/lib/grafana &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; -e &lt;span class="nv"&gt;GF_SECURITY_ADMIN_PASSWORD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;your_password &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; -e &lt;span class="nv"&gt;GF_USERS_ALLOW_SIGN_UP&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;false&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; grafana/grafana:latest
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="23-系统级安装ubuntu"&gt;2.3 系统级安装（Ubuntu）&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;span class="lnt"&gt;6
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo apt-get install -y software-properties-common
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo add-apt-repository &lt;span class="s2"&gt;&amp;#34;deb https://packages.grafana.com/oss/deb stable main&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;wget -q -O - https://packages.grafana.com/gpg.key &lt;span class="p"&gt;|&lt;/span&gt; sudo apt-key add -
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo apt-get update &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt-get install -y grafana
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; grafana-server
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl start grafana-server
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;hr&gt;
+&lt;h2 id="3-常用操作与命令"&gt;3. 常用操作与命令&lt;/h2&gt;
+&lt;h3 id="31-数据源prometheus-示例"&gt;3.1 数据源（Prometheus 示例）&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Web&lt;/strong&gt;：Configuration → Data sources → Add data source → Prometheus。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;URL&lt;/strong&gt;：如 &lt;code&gt;http://prometheus:9090&lt;/code&gt;（容器内用服务名），保存 &amp;amp; Test。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="32-仪表盘"&gt;3.2 仪表盘&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;新建&lt;/strong&gt;：+ → Dashboard → Add visualization，选择数据源与查询（如 PromQL）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;导入&lt;/strong&gt;：+ → Import，输入官方或社区 Dashboard ID（如 1860 Node Exporter），Load 后选择数据源。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;变量&lt;/strong&gt;：Dashboard settings → Variables，可建 instance、job 等变量，在 Panel 的 Query 中使用 &lt;code&gt;$variable&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="33-告警"&gt;3.3 告警&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Alerting&lt;/strong&gt;（新）：
+&lt;ul&gt;
+&lt;li&gt;Alert rules → New alert rule：选择 Query、条件（如 avg() of A &amp;gt; 1）、评估周期与 Contact point。&lt;/li&gt;
+&lt;li&gt;Contact points：配置通知渠道（Email、钉钉、Slack、Webhook 等）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;旧版&lt;/strong&gt;：在 Panel 的 Alert 页签配置（逐步迁移到新 Alerting）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="34-用户与权限"&gt;3.4 用户与权限&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Admin&lt;/strong&gt;：Configuration → Users 可创建/禁用用户、改密码。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Organization&lt;/strong&gt;：可多 Org，不同 Org 下数据源与 Dashboard 隔离。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Folder&lt;/strong&gt;：对 Dashboard 分组，可配置权限（Viewer/Editor/Admin）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="35-备份与恢复文件"&gt;3.5 备份与恢复（文件）&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 备份（默认 SQLite 或你配置的 DB 由 Grafana 自己管理）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 主要备份：/var/lib/grafana/grafana.db、provisioning、plugins&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker cp grafana:/var/lib/grafana ./grafana_backup
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 恢复：将备份目录挂载或复制回容器内对应路径，重启&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h3 id="36-provisioningyaml-配置数据源仪表盘"&gt;3.6 provisioning（YAML 配置数据源/仪表盘）&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;span class="lnt"&gt;6
+&lt;/span&gt;&lt;span class="lnt"&gt;7
+&lt;/span&gt;&lt;span class="lnt"&gt;8
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c"&gt;# provisioning/datasources/ds.yml&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;datasources&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Prometheus&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;prometheus&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;access&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;proxy&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;url&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;http://prometheus:9090&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;isDefault&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;启动时挂载：&lt;code&gt;-v ./provisioning:/etc/grafana/provisioning&lt;/code&gt;。&lt;/p&gt;</description></item></channel></rss>
