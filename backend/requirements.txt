@@ -1,9 +1,9 @@
-# This file is for reference only. Use uv to manage dependencies via pyproject.toml
-# Install with: uv pip install -r requirements.txt
+# 依赖参考；推荐使用 pyproject.toml + uv sync 管理
+# 安装: uv pip install -r backend/requirements.txt 或 pip install -r backend/requirements.txt
 
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-python-dotenv>=1.0.0
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
-tomli>=2.0.0
+fastapi>=0.104.0      # Web 框架
+uvicorn[standard]>=0.24.0   # ASGI 服务器
+python-dotenv>=1.0.0  # 可选，pydantic-settings 已支持 .env
+pydantic>=2.5.0      # 数据模型与校验
+pydantic-settings>=2.1.0   # 从环境变量加载配置
+tomli>=2.0.0          # 解析 Hugo front matter (TOML)

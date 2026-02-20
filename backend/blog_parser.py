@@ -1,4 +1,8 @@
-"""Parser for Hugo blog posts (Markdown with TOML front matter)."""
+"""Parser for Hugo blog posts (Markdown with TOML front matter).
+
+解析 content/posts/*.md：提取 +++ ... +++ 中的 TOML front matter，
+以及正文 Markdown；支持按 slug 单篇加载与全量加载（可选含 draft）。
+"""
 import re
 import os
 from pathlib import Path
@@ -17,7 +21,7 @@ def parse_front_matter(content: str) -> Tuple[Dict, str]:
     Returns:
         tuple: (front_matter_dict, markdown_content)
     """
-    # Match TOML front matter (+++ ... +++ or --- ... ---)
+    # Hugo 支持 +++ 或 --- 包裹的 front matter，后面紧跟正文
     pattern = r'^(\+\+\+|\-\-\-)\s*\n(.*?)\n\1\s*\n(.*)$'
     match = re.match(pattern, content, re.DOTALL)
     

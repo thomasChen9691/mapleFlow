@@ -1,6 +1,7 @@
 # MapleFlow Backend API 完整文档
 
-本文档整合了所有后端 API 相关文档，便于 OpenSpec 管理。
+本文档整合了所有后端 API 相关文档，便于 OpenSpec 管理。  
+后端提供博客文章列表、单篇获取、搜索等接口，供前端或 MCP 调用；推荐使用 **python3** 运行脚本。
 
 ---
 
@@ -27,8 +28,8 @@ source .venv/bin/activate
 # Windows
 .venv\Scripts\Activate.ps1
 
-# 启动服务
-python run_backend.py
+# 启动服务（推荐使用 python3）
+python3 run_backend.py
 ```
 
 ### 2. 运行测试脚本
@@ -37,7 +38,7 @@ python run_backend.py
 
 ```bash
 # Linux/macOS/Windows
-python test_api.py
+python3 test_api.py
 ```
 
 测试脚本会自动检查所有 API 端点，并正确显示中文内容。
@@ -231,10 +232,10 @@ curl "http://localhost:8000/api/posts/search?q=docker"
 
 ```bash
 # 确保服务正在运行
-python run_backend.py
+python3 run_backend.py
 
 # 在另一个终端运行测试
-python test_api.py
+python3 test_api.py
 ```
 
 测试脚本会检查：
@@ -256,7 +257,7 @@ curl http://localhost:8000/api/posts | python -m json.tool
 ```
 
 **注意**: 直接使用 `curl` 可能在终端显示乱码，建议：
-1. 使用 `python test_api.py` 脚本（推荐）
+1. 使用 `python3 test_api.py` 脚本（推荐）
 2. 通过 `python -m json.tool` 管道输出
 3. 在浏览器中访问 API 文档页面
 
@@ -292,7 +293,7 @@ for post in data['posts']:
 
 1. **使用 Python 测试脚本**（最佳方案）
    ```bash
-   python test_api.py
+   python3 test_api.py
    ```
    脚本会自动处理 UTF-8 编码，正确显示中文。
 
@@ -328,7 +329,7 @@ for post in data['posts']:
 **A:** 这是终端编码问题，不是 API 问题。API 已正确配置 UTF-8 编码。
 
 **解决方案：**
-1. 使用 `python test_api.py`（推荐）
+1. 使用 `python3 test_api.py`（推荐）
 2. 使用浏览器访问 API 文档
 3. 通过 `python -m json.tool` 管道输出
 
@@ -339,7 +340,7 @@ for post in data['posts']:
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 ```
 
-或直接使用 `python test_api.py` 脚本。
+或直接使用 `python3 test_api.py` 脚本。
 
 ### Q: 如何确认 API 编码正确？
 

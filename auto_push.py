@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-自动 add / commit / push。在项目根目录运行: python auto_push.py 或 .\auto_push.py
+自动 add / commit / push。在项目根目录运行:
+  python3 auto_push.py   # 推荐（Linux/macOS 或 Windows 上使用 Python 3）
+  .\auto_push.py          # Windows 下若 python3 已配置为默认也可直接运行
 """
 import os
 import sys

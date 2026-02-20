@@ -1,4 +1,4 @@
-# Environment variables
+# Environment variables（勿提交密钥；参考 .env.example 配置）
 .env
 .env.local
 .env.*.local

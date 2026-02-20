@@ -1,3 +1,4 @@
+# OpenSpec 根配置：项目上下文与各 artifact 规则可在此配置
 schema: spec-driven
 
 # Project context (optional)

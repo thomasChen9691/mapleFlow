@@ -1,3 +1,5 @@
+# MapleFlow 博客后端：FastAPI + Hugo content/posts 解析
+# 安装依赖: uv sync 或 pip install -e .
 [project]
 name = "mapleflow-backend"
 version = "0.1.0"

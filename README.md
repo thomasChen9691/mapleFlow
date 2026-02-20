@@ -80,10 +80,10 @@ hugo server -D
 
 ### 自动提交脚本（可选）
 
-项目根目录下有一个简单的自动提交脚本 `auto_push.py`（请在项目根目录运行，例如 `.\auto_push.py` 或 `python auto_push.py`）：
+项目根目录下有一个简单的自动提交脚本 `auto_push.py`（请在项目根目录运行）。**推荐使用 `python3` 执行**（若本机只有 Python 3，也可用 `python` 或 `.\auto_push.py`）：
 
 ```bash
-python auto_push.py
+python3 auto_push.py
 ```
 
 脚本会执行：

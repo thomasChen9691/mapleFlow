@@ -63,7 +63,7 @@
 
 2. **测试 API**
    ```bash
-   python test_api.py
+   python3 test_api.py
    ```
 
 ## 📖 文档使用建议

@@ -1,8 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FastAPI 后端测试脚本
-用于测试博客内容 API 是否正常工作（跨平台支持）
+FastAPI 后端测试脚本（跨平台支持）。
+
+在项目根目录执行: python3 test_api.py
+需先启动后端: python3 run_backend.py
+测试项：健康检查、获取文章列表、单篇文章、搜索、.env 配置检查。
 """
 import sys
 import json

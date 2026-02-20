@@ -1,4 +1,8 @@
-"""FastAPI application for blog content API."""
+"""FastAPI application for blog content API.
+
+提供 /api/posts（列表）、/api/posts/{slug}（单篇）、/api/posts/search（搜索）、/health。
+响应统一 UTF-8，避免中文乱码。
+"""
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -14,7 +18,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Custom JSON response class to ensure UTF-8 encoding
+# 自定义 JSON 响应类：ensure_ascii=False，保证中文不被转义为 \uXXXX
 class UTF8JSONResponse(JSONResponse):
     def render(self, content) -> bytes:
         return json.dumps(
@@ -28,7 +32,7 @@ class UTF8JSONResponse(JSONResponse):
 # Set default response class
 app.default_response_class = UTF8JSONResponse
 
-# CORS middleware
+# CORS：允许前端或本地调试跨域访问；生产环境建议缩小 allow_origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, specify actual origins

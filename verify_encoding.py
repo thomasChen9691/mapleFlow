@@ -1,7 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-验证 API 中文编码是否正确
+验证博客 API 响应的中文编码是否正确。
+
+在项目根目录执行: python3 verify_encoding.py
+会请求 /api/posts/aiops-state-and-tools 并检查 JSON 中的中文与 Content-Type。
 """
 import sys
 import requests

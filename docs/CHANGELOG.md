@@ -1,5 +1,7 @@
 # 更新日志
 
+记录 MapleFlow 博客与后端 API 的变更；与 OpenSpec 变更可互为参考。
+
 ## 2026-01-29
 
 ### 新增功能
@@ -38,7 +40,7 @@
 在 Windows PowerShell 中直接使用 `curl` 或 Python 单行命令时，可能遇到中文乱码。这是 Windows 终端编码设置的问题，不是 API 的问题。
 
 **解决方案：**
-1. 使用 `python test_api.py` 脚本（推荐）
+1. 使用 `python3 test_api.py` 脚本（推荐）
 2. 使用浏览器访问 http://localhost:8000/docs
 3. 设置 PowerShell 编码：`[Console]::OutputEncoding = [System.Text.Encoding]::UTF8`
 
