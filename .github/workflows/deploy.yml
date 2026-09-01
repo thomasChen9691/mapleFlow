@@ -31,10 +31,10 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
-          hugo-version: 'latest'
+          hugo-version: '0.164.0'
           extended: true
       - name: Build Hugo site
-        run: hugo --minify --config hugo.toml,config.production.toml
+        run: hugo --gc --minify --config hugo.toml,config.production.toml
 
       - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v4  # 升级：v4 比 v3 更稳定，适配新版权限

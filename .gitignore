@@ -54,6 +54,12 @@ Thumbs.db
 # Hugo
 .hugo_build.lock
 resources/
+/public/
+
+# Local agent / scratch state (do not commit)
+.workbuddy/
+.codebuddy/
+tmp/
 
 # Logs
 *.log
