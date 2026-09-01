@@ -4,6 +4,7 @@ date = '2026-01-28T20:30:00+08:00'
 draft = false
 categories = ['运维']
 tags = ['SOP', '运维', '速查', 'Ansible', 'GitLab', 'Jenkins', 'SonarQube', 'Grafana', 'Prometheus']
+description = '本站运维工具 SOP 文档总索引，按工具查阅安装与日常操作。'
 +++
 
 本索引汇总本站发布的运维工具标准操作规范（SOP）文章，便于在网页上按工具查阅安装、常用命令与日常操作流程。

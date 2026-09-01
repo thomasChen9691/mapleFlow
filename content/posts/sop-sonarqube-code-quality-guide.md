@@ -4,6 +4,7 @@ date = '2026-01-28T20:10:00+08:00'
 draft = false
 categories = ['运维']
 tags = ['SonarQube', '代码质量', '安全扫描', 'SOP', '速查']
+description = 'SonarQube 安装、Scanner 与质量门禁的代码质量 SOP 速查。'
 +++
 
 SonarQube 是代码质量和安全分析平台，支持多语言，可集成到 CI/CD 中自动扫描。本文整理安装、Scanner 配置、质量门禁与日常 SOP，便于在网页上查阅。

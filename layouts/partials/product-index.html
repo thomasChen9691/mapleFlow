@@ -1,0 +1,154 @@
+{{- /*
+  product-index（partial）—— 资源索引渲染核心
+  数据源：data/products.yaml
+  被两处调用：
+    · layouts/shortcodes/product-index.html（产品页正文）
+    · layouts/index.html（首页精选资源）
+
+  入参（dict）：
+    featured  bool   只显示精选
+    limit     int    显示条数（0 或空 = 全部）
+    filters   bool   是否输出筛选控件与交互脚本
+    uid       string DOM id，同页多次调用必须不同
+*/ -}}
+
+{{- $items := site.Data.products -}}
+{{- if .featured }}{{ $items = where $items "featured" true }}{{ end -}}
+{{- with .limit }}{{ if gt (int .) 0 }}{{ $items = $items | first (int .) }}{{ end }}{{ end -}}
+{{- $uid := .uid | default "mf-idx" -}}
+{{- $showFilters := ne (.filters | default true) false -}}
+
+{{- if not $items -}}
+  <p class="mf-empty">暂无资源。请在 <code>data/products.yaml</code> 中添加条目。</p>
+{{- else -}}
+
+<div class="mf-index" id="{{ $uid }}">
+
+  {{- if $showFilters }}
+  <div class="mf-filters">
+    <button type="button" class="mf-filter" data-group="kind" data-value="all" aria-pressed="true">全部</button>
+    <button type="button" class="mf-filter" data-group="kind" data-value="workflow" aria-pressed="false">工作流</button>
+    <button type="button" class="mf-filter" data-group="kind" data-value="document" aria-pressed="false">文档</button>
+    <button type="button" class="mf-filter" data-group="kind" data-value="question-bank" aria-pressed="false">题库</button>
+    <span class="mf-sep" aria-hidden="true"></span>
+    <button type="button" class="mf-filter" data-group="price" data-value="free" aria-pressed="false">免费</button>
+    <button type="button" class="mf-filter" data-group="price" data-value="paid" aria-pressed="false">付费</button>
+    <span class="mf-count" aria-live="polite"></span>
+  </div>
+  {{- end }}
+
+  <ol class="mf-rows">
+    {{- range $i, $p := $items }}
+    {{- $kindLabel := "资源" }}
+    {{- if eq $p.kind "workflow" }}{{ $kindLabel = "工作流" }}
+    {{- else if eq $p.kind "document" }}{{ $kindLabel = "文档" }}
+    {{- else if eq $p.kind "question-bank" }}{{ $kindLabel = "题库" }}{{ end }}
+    {{- $free := or (not $p.price) (eq (int $p.price) 0) }}
+
+    <li class="mf-row reveal" data-kind="{{ $p.kind }}" data-price="{{ if $free }}free{{ else }}paid{{ end }}">
+      <div class="mf-row-num">{{ printf "%02d" (add $i 1) }}</div>
+
+      <div class="mf-row-main">
+        <h3 class="mf-row-title">{{ $p.name }}</h3>
+        <p class="mf-row-sum">{{ $p.summary }}</p>
+        <ul class="mf-row-meta">
+          {{- with $p.version }}<li>{{ . }}</li>{{ end }}
+          {{- with $p.scale }}<li>{{ . }}</li>{{ end }}
+          {{- with $p.updated }}<li>更新 {{ . | time.Format "2006-01-02" }}</li>{{ end }}
+        </ul>
+      </div>
+
+      <div class="mf-row-side">
+        <span class="mf-kind" data-kind="{{ $p.kind }}">{{ $kindLabel }}</span>
+        <span class="mf-price{{ if $free }} is-free{{ end }}">{{ if $free }}免费{{ else }}¥{{ $p.price }}{{ end }}</span>
+        {{- if $p.buy_url }}
+          <a class="mf-cta" href="{{ $p.buy_url }}" target="_blank" rel="noopener">
+            {{ if $free }}免费获取{{ else }}购买{{ end }}
+          </a>
+        {{- else }}
+          <span class="mf-cta mf-cta-ghost" aria-disabled="true">即将上架</span>
+        {{- end }}
+      </div>
+    </li>
+    {{- end }}
+  </ol>
+
+  <p class="mf-empty" hidden>没有符合筛选条件的资源。</p>
+</div>
+
+{{- if $showFilters }}
+<script>
+(function () {
+  var root = document.getElementById("{{ $uid }}");
+  if (!root) { return; }
+  var list = root.querySelector('.mf-rows');
+  var items = root.querySelectorAll('.mf-row');
+  var btns = root.querySelectorAll('.mf-filter');
+  var count = root.querySelector('.mf-count');
+  var empty = root.querySelector('.mf-empty');
+  var state = { kind: 'all', price: 'all' };
+  var morphTimer;
+
+  function prefersReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  /* 重播一次性动画：移除 class → 强制回流 → 重新加上。
+     少了中间的 reflow，浏览器会合并成一次样式变更，动画不会重播。 */
+  function replay(el, cls, ms) {
+    if (!el) { return; }
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    if (ms) {
+      window.clearTimeout(morphTimer);
+      morphTimer = window.setTimeout(function () { el.classList.remove(cls); }, ms);
+    }
+  }
+
+  function apply(animate) {
+    var shown = 0;
+    items.forEach(function (el) {
+      var okKind = state.kind === 'all' || el.dataset.kind === state.kind;
+      var okPrice = state.price === 'all' || el.dataset.price === state.price;
+      var visible = okKind && okPrice;
+      el.classList.toggle('is-hidden', !visible);
+      if (visible) {
+        /* 小分组 stagger：第 9 条起不再累加延迟，长列表会显得迟钝 */
+        el.style.setProperty('--mf-i', Math.min(shown, 8));
+        /* 用户已交互过 —— 直接把条目落到终态。
+           否则未进入过视口的条目仍带 .reveal(opacity:0)，
+           is-morphing 动画结束后会重新变回透明，看起来像"筛完又消失了" */
+        if (animate) { el.classList.add('is-in'); }
+        shown++;
+      }
+    });
+    if (count) { count.textContent = '显示 ' + shown + ' / ' + items.length; }
+    if (empty) { empty.hidden = shown > 0; }
+
+    /* 只在用户点筛选时播放；首屏那次（animate=false）保持静止，
+       否则会和 .reveal 的滚动进场撞在一起 */
+    if (!animate || prefersReducedMotion()) { return; }
+    replay(list, 'is-morphing', 520);
+    replay(count, 'is-bump', 0);
+  }
+
+  btns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var group = btn.dataset.group;
+      var value = btn.dataset.value;
+      if (state[group] === value) { value = 'all'; }
+      state[group] = value;
+      root.querySelectorAll('.mf-filter[data-group="' + group + '"]').forEach(function (other) {
+        other.setAttribute('aria-pressed', other.dataset.value === value ? 'true' : 'false');
+      });
+      apply(true);
+    });
+  });
+
+  apply(false);
+})();
+</script>
+{{- end }}
+
+{{- end -}}

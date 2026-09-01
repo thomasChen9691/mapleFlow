@@ -1,0 +1,74 @@
+# ============================================================
+# 产品 / 资源索引（数据驱动）
+# ------------------------------------------------------------
+# 用法：新增或下架资源只改本文件，页面自动渲染，无需碰 HTML。
+#
+# 字段说明：
+#   id       唯一标识（URL 锚点用，改名前请勿变动）
+#   name     资源名称
+#   kind     形态：workflow(工作流) | document(文档) | question-bank(题库)
+#   summary  一句话说明（一句话讲清拿到什么，不写营销话术）
+#   version  版本号（未定版可留空）
+#   scale    篇幅/体量（模板数、页数、题数等，必须真实可核对）
+#   updated  最近更新日期（YYYY-MM-DD，不要加引号）
+#   price    价格（数字，0 表示免费）
+#   buy_url  面包多商品页 URL（留空 = 显示"即将上架"，不跳转）
+#   featured 是否进入首页精选（true/false）
+#
+# ⚠️ 上线前必做：把 buy_url 逐个替换为你的真实面包多商品页地址。
+# ============================================================
+
+- id: n8n-dify-workflows
+  name: n8n / Dify 工作流合集
+  kind: workflow
+  summary: 可直接导入的自动化工作流模板：告警聚合、巡检日报、工单同步、发布通知，附配置说明与踩坑记录。
+  version: v1.2.0
+  scale: 12 个模板
+  updated: 2026-08-20
+  price: 39
+  buy_url: ""
+  featured: true
+
+- id: sre-learning-docs
+  name: SRE 学习文档包
+  kind: document
+  summary: 体系化学习笔记：Kubernetes、CI/CD、可观测性、故障复盘方法论，Markdown 与 PDF 双格式。
+  version: v1.1.0
+  scale: 约 180 页
+  updated: 2026-08-12
+  price: 29
+  buy_url: ""
+  featured: true
+
+- id: sre-interview-bank
+  name: 运维 / SRE 面试题库
+  kind: question-bank
+  summary: 高频面试题与参考答案，覆盖网络、Linux、Kubernetes、监控告警、故障排查，按主题分组。
+  version: v1.0.1
+  scale: 200+ 题
+  updated: 2026-08-05
+  price: 49
+  buy_url: ""
+  featured: true
+
+- id: prometheus-alert-cheatsheet
+  name: Prometheus 告警规则速查
+  kind: document
+  summary: 常用 PromQL 与告警规则片段速查表，含分级阈值建议，免费领取。
+  version: v1.0.0
+  scale: 8 页
+  updated: 2026-07-28
+  price: 0
+  buy_url: ""
+  featured: false
+
+- id: aiops-anomaly-lab
+  name: AIOps 异常检测实验手册
+  kind: workflow
+  summary: 用真实监控数据跑通异常检测流程：数据接入、基线建模、告警降噪与效果评估，含可复现脚本。
+  version: ""
+  scale: 4 个实验
+  updated: 2026-08-26
+  price: 0
+  buy_url: ""
+  featured: false

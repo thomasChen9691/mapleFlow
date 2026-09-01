@@ -4,6 +4,7 @@ date = '2026-01-28T20:20:00+08:00'
 draft = false
 categories = ['运维']
 tags = ['Grafana', '监控', '可视化', '告警', 'SOP', '速查']
+description = 'Grafana 数据源、仪表盘与告警配置的可视化运维 SOP 速查。'
 +++
 
 Grafana 是开源的可视化与告警平台，可对接 Prometheus、InfluxDB、Elasticsearch、MySQL 等多种数据源。本文整理安装、数据源与仪表盘、告警配置与日常 SOP，便于在网页上查阅。

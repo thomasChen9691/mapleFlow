@@ -4,6 +4,7 @@ date = '2026-01-28T20:25:00+08:00'
 draft = false
 categories = ['运维']
 tags = ['Prometheus', '监控', 'PromQL', '告警', 'SOP', '速查']
+description = 'Prometheus 安装、配置、PromQL 与告警 SOP 速查。'
 +++
 
 Prometheus 是开源指标采集、存储与查询系统，采用拉模式（Pull）从 Target 抓取指标，支持 PromQL 查询与告警（Alertmanager）。本文整理安装、配置、常用 API 与日常 SOP，便于在网页上查阅。

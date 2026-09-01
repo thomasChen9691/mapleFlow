@@ -1,0 +1,114 @@
+{
+  "project": "mapleFlow",
+  "note": "finesse 构建记录。下次改版请先读这里，新方案需在五个坐标轴中至少三条与上一次不同。",
+  "builds": [
+    {
+      "date": "2026-08-31",
+      "surface": "全站视觉系统 + 首页 + 产品页（资源索引）",
+      "register": "brand(portfolio 5.B) + commerce(PLP，lean product)",
+      "dials": { "SOUL": 7, "SPECTACLE": 3, "DENSITY": 5 },
+      "axes": {
+        "A_palette": "tinted cool neutral ramp + single teal accent (#0f766e / #5eead4)",
+        "B_type": "中文黑体 display 700 / body 400 + 等宽字体承载元数据与编号",
+        "C_layout": "spec band (4列数字条) + index rows (列表行) + card grid + CTA band",
+        "D_engine": "CSS-only，无 JS 视觉引擎",
+        "E_material": "precision instrument — hairline 细线、等宽读数、机械网格"
+      },
+      "rejected_default": "白底 + 通用科技蓝 + 系统黑体 + 三个一模一样的卡片方块",
+      "images": "none，用户明确选择纯排版不要配图（og-cover.png 仅作社交分享图）",
+      "motion_beats": [
+        "首屏标题错峰浮起（只播一次）",
+        "滚动进场逐个轻微上浮（IntersectionObserver）",
+        "悬停微浮 + 边框点亮",
+        "prefers-reduced-motion 下全部定格在最终画面"
+      ],
+      "avoid_next": [
+        "用户已锁定强调色为靛蓝 #3f56c9 / #9aa8ff，除非用户主动要求否则不要换色；也不要用泛科技蓝 #2563EB 那种无辨识度蓝",
+        "不要用三个相同卡片并排的做法",
+        "不要给每个区块都加小号大写标签（eyebrow）"
+      ]
+    },
+    {
+      "date": "2026-09-01",
+      "surface": "动效语言统一 + 微交互与状态切换（Emil Kowalski 动效规则 / 简诗 AI 动效 skill）",
+      "register": "motion pass，不动版式与配色",
+      "dials": { "SOUL": 7, "SPECTACLE": 3, "DENSITY": 5 },
+      "axes": {
+        "A_palette": "未动（沿用深青绿单强调色）；新增 --primary-hover / --shadow-accent 两枚派生令牌",
+        "B_type": "未动",
+        "C_layout": "未动",
+        "D_engine": "仍是 CSS-only + 20 行原生 IntersectionObserver，未引入动画库",
+        "E_material": "未动"
+      },
+      "motion_language": {
+        "ease_out": "cubic-bezier(.22,.68,0,1) —— 进入 / 展开",
+        "ease_in": "cubic-bezier(.55,0,1,.45) —— 退出 / 收起",
+        "ease_std": "cubic-bezier(.2,.7,.2,1) —— 通用",
+        "durations": "--dur-0 80ms 按下 / --dur-1 140ms 微反馈 / --dur-2 200ms 控件 / --dur-3 520ms 页面级揭示",
+        "rule": "基础态挂退出曲线，:hover 换进入曲线；只动 transform / opacity / 颜色",
+        "note_on_dur0": "按下必须比抬起更快才跟手，故单列一档且全局唯一（8 处 :active 全部引用它）",
+        "orchestration_constants": "错峰延迟 70/150/230ms、stagger 步长 22ms 是有意的节奏刻度，不是交互时长，勿并入令牌"
+      },
+      "bugs_fixed": [
+        {
+          "symptom": "筛选后条目短暂出现又消失",
+          "root_cause": "重新显示的 .mf-row 仍是 .reveal 未点亮态，morph 动画结束后回落 opacity:0",
+          "fix": "脚本在筛选路径给可见行补 .is-in；初始加载路径不加，以免破坏首屏滚动进场",
+          "file": "layouts/partials/product-index.html"
+        },
+        {
+          "symptom": "生产构建后 public/ 仍残留 localhost:1313",
+          "root_cause": "本地 hugo server -D 生成了草稿专属分类页（categories/随笔/），生产构建不含草稿因而不会删除，成为孤儿文件",
+          "fix": "生产构建加 --cleanDestinationDir；文件数 140→128。已写入 AGENTS.md 坑点 7b",
+          "file": "AGENTS.md / 页面改版落地说明.md"
+        }
+      ],
+      "changes": [
+        "全站裸 ease 清零、8 处 :active 硬编码时长收敛为 4 档令牌",
+        "移除 filter:brightness（触发重绘），改用 --primary-hover + --shadow-accent",
+        "补齐 :active 按下反馈（按钮 / 卡片 / 标签 / 筛选），比悬停更快（80-90ms）",
+        "主题切换图标旋转缩放；导航下划线用 scaleX 从左侧展开",
+        "筛选结果切换：容器 .is-morphing 触发 mf-pop，小分组 stagger 上限 8 条、22ms 递增",
+        "计数 .is-bump 一次性脉冲（非循环装饰）",
+        "正文链接改 text-underline-offset 过渡，不再跳变 thickness",
+        "reduced-motion 精确化：只压自动/滚动动画，保留 hover/focus 即时反馈"
+      ],
+      "rejected_default": "统一用 ease 到底、hover 加 filter:brightness、reduced-motion 一刀切 .01ms 全局",
+      "avoid_next": [
+        "不要再引入第二条缓动曲线或第四档时长",
+        "不要给长列表做无上限 stagger",
+        "不要用 filter / width / height / top / left 做过渡"
+      ]
+    },
+    {
+      "date": "2026-09-01",
+      "surface": "换色（深青绿→靛蓝）+ 导航下划线滑动条修复",
+      "register": "palette pass，不动版式 / 动效语言",
+      "dials": { "SOUL": 7, "SPECTACLE": 3, "DENSITY": 5 },
+      "axes": {
+        "A_palette": "single indigo accent (#3f56c9 / #9aa8ff) 替换原 teal；按钮文字色改为近白带靛调 #f5f6fc / 近黑带靛调 #0e1233",
+        "B_type": "未动",
+        "C_layout": "未动",
+        "D_engine": "未动",
+        "E_material": "未动"
+      },
+      "bugs_fixed": [
+        {
+          "symptom": "导航栏 Email 悬停时冒出竖向滚动条",
+          "root_cause": "PaperMod #menu 为 overflow-x:auto，规范强制 overflow-y 算成 auto；旧下划线 ::after 用 bottom:-4px 伸出链接盒子，撑出竖向溢出",
+          "fix": "下划线收进盒子 bottom:0 + 给 #menu 显式 overflow-y:hidden（横向滚动照常）",
+          "file": "assets/css/extended/custom.css"
+        }
+      ],
+      "changes": [
+        "强调色 teal→indigo；连同 --primary-hover / --primary-soft / --shadow-accent / 两处按钮文字色全局替换并断言清零",
+        "导航下划线 bottom:-4px→0，新增 #menu{overflow-y:hidden}"
+      ],
+      "rejected_default": "保留 teal、或只换 --primary 漏掉派生令牌导致青色残留",
+      "avoid_next": [
+        "换色必须连带派生令牌一起换，避免残留旧色",
+        "导航 underline / badge 类绝对定位元素别用负 bottom 伸出 overflow:auto 容器"
+      ]
+    }
+  ]
+}

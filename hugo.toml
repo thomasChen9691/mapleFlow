@@ -12,8 +12,12 @@ uglyURLs = true
 absoluteURLs = false
 defaultContentLanguage = "zh-cn"
 languageCode = "zh-CN"
-title = "我的 Dream 博客"
+title = "MapleFlow"
 theme = "PaperMod"
+
+# 页脚版权（顶层参数；PaperMod footer.html 优先用 site.Copyright，覆盖默认的 © now.Year）
+# 注意：siteStartYear 不被 PaperMod footer 读取（footer 仅用 now.Year），故用 copyright 控制年份范围
+copyright = "© 2019 - 2026 thomasChen"
 
 # ================= 服务设置 =================
 # [services]
@@ -27,18 +31,20 @@ theme = "PaperMod"
 # 禅模式 (默认关闭。开启后变为双栏布局，关闭为翻转卡片)
 # zenMode = true
 
-# 配色方案
-lightTheme = "emerald"
-darkTheme = "forest"
+# 配色方案：由 defaultTheme 控制（PaperMod 不读取 lightTheme/darkTheme，已删除）
+defaultTheme = "auto"
 
 # 背景图（PaperMod 主题推荐用 cover 配置，此处注释避免冲突）
 # backgroundImage = "img/global-background.jpg"
 # backgroundImageDark = ""
 
 author = "thomasChen"
-description = "这是我的博客"
-avatar = "img/tn.png"      # 请确保 static/img/ 目录下有这张图
-headerTitle = "Hugo Theme"
+description = "运维开发 / SRE / DevOps 实战 SOP：Kubernetes、Docker、CI/CD、AIOps 与可观测性"
+avatar = "img/avatar.svg"      # static/img/avatar.svg 占位头像（原 img/tn.png 不存在，会 404）
+# 社交分享 OG 图：用 ogImage（PaperMod opengraph 读取此参数，不读 [params].images）
+# 必须无前导斜杠，Hugo 会用 .Permalink 自动带 /mapleFlow/ 子路径，避免 404
+ogImage = "img/og-cover.png"
+# headerTitle 为无效字段（PaperMod 不识别），已移除
 # motto = ""
 
 # 页脚自定义文字
@@ -58,9 +64,33 @@ rss = true
 # === 联系方式 (原版字段) ===
 email = "xxx@gmail.com"  # 取消注释，适配侧边栏邮箱图标显示
 
-siteStartYear = 2016
+siteStartYear = 2019
 
-# favicon = "favicon.ico"
+# ================= 首页品牌信息（homeInfoParams） =================
+# 仅 Title / Content / AlignSocialIconsTo 生效；AGENTS.md 已确认其余字段无效
+[params.homeInfoParams]
+Title = "MapleFlow"
+# 内联 SVG 头像（避免 GitHub Pages 子路径下引用 static 资源 404；home_info.html 用 safeHTML 渲染）
+Content = """
+<p style="text-align:center;margin:0 0 1rem"><svg width="88" height="88" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="32" fill="#2D7FF9"/><text x="32" y="33" text-anchor="middle" fill="#fff" font-size="34" font-weight="700" font-family="sans-serif">M</text></svg></p>
+运维开发 / SRE / DevOps 实战 SOP。把重复的劳动自动化，把不可控的故障变成可观测的指标。
+"""
+AlignSocialIconsTo = "center"
+
+# ================= 社交图标（socialIcons） =================
+[[params.socialIcons]]
+icon = "email"
+url = "mailto:xxx@gmail.com"
+title = "Email"
+
+[[params.socialIcons]]
+icon = "github"
+url = "https://github.com/thomasChen9691"
+title = "GitHub"
+
+# favicon 由 [params.assets].favicon 指定（static/favicon.svg）
+[params.assets]
+favicon = "favicon.svg"
 
 # 代码高亮开关（PaperMod 自带高亮，保持关闭）
 customSyntaxHighlighting = false
@@ -69,8 +99,8 @@ customSyntaxHighlighting = false
 # 导航栏吸顶
 stickyNav = true
 
-# 导航菜单排序 (PaperMod 适配的菜单名称，修复原配置的兼容性问题)
-reorderNavItems = ["Home", "About", "Posts", "Categories", "Tags", "Search", "RSS"]
+# 导航菜单排序（按 identifier 列出期望顺序；GitHub / Email 置于末尾）
+reorderNavItems = ["home", "posts", "categories", "tags", "about", "search", "products", "github", "email", "RSS"]
 
 # 移动端折叠菜单（适配 PaperMod 命名规范）
 collapseNavItems = ["Posts", "Categories", "Tags"]
@@ -99,32 +129,15 @@ showPrevNextPost = true
 reorderShares = []
 
 # ================= 自定义菜单 =================
-[params.navItems]
-# 首页（适配 PaperMod 命名规范，首字母大写）
-home = { href = "/", icon = "home", title = "首页" }
-
-# 文章归档
-posts = { href = "/posts", icon = "book", title = "文章" }
-categories = { href = "/categories", icon = "grid", title = "分类" }
-tags = { href = "/tags", icon = "pricetags", title = "标签" }
-
-# 邮箱
-email = { href = "mailto:xxx@gmail.com", icon = "mail", title = "Email" }
-
-# GitHub 按钮
-github = { href = "https://github.com/thomasChen9691", icon = "logo-github", title = "GitHub" }
+# 注意：[params.navItems] 为无效字段（PaperMod 不读取），导航由上方 [[menu.main]] 驱动，已删除
 
 # ================= 高级设置 =================
-[params.advanced]
-# 挂载自定义样式和脚本（确保 static/css/ 和 static/js/ 目录存在对应文件）
-customCSS = ["css/style.css"]
-customJS = ["js/app.js"]
+# 品牌样式经 assets/css/extended/custom.css 由 Hugo Pipes 自动并入主题样式表，
+# 无需 [params.advanced].customCSS/customJS（PaperMod 不读取该配置，已删除）
 
 # ================= 实验性功能 =================
-[params.experimental]
-# 开启日期中文显示
-jsDate = true
-jsDateFormat = "yyyy年MM月dd日"
+# 注意：[params.experimental].jsDate 为无效字段（PaperMod 不识别），
+# 中文日期由 Hugo/goldmark 原生支持，无需 JS 配置，已删除
 
 # ======================================================
 # 代码高亮设置 (Markup)
@@ -193,16 +206,36 @@ url = "/tags/"
 weight = 4
 
 [[menu.main]]
+identifier = "about"
+name = "关于"
+url = "/about.html"
+weight = 5
+
+# 站内搜索入口（content/search.md 的 layout=search 被 header.html 识别为搜索链接）
+[[menu.main]]
+identifier = "search"
+name = "搜索"
+url = "/search.html"
+weight = 6
+
+# 产品 / 资源页（方案 A：面包多第三方收银台；uglyURLs=true → /products.html）
+[[menu.main]]
+identifier = "products"
+name = "产品"
+url = "/products.html"
+weight = 7
+
+[[menu.main]]
 identifier = "github"
 name = "GitHub"
 url = "https://github.com/thomasChen9691"
-weight = 5
+weight = 9
 
 [[menu.main]]
 identifier = "email"
 name = "Email"
 url = "mailto:xxx@gmail.com"
-weight = 6
+weight = 10
 
 # 分页配置（避免列表页渲染错误）
 [pagination]
@@ -210,3 +243,8 @@ paginate = 10  # 每页显示10篇文章
 
 # 时区配置（解决日期显示错误）
 timeZone = "Asia/Shanghai"
+
+# ================= 站内搜索（PaperMod + fuse.js）=================
+# 生成首页 JSON 索引（index.json），供 search.md 的 fuse.js 检索
+[outputs]
+home = ["HTML", "RSS", "JSON"]

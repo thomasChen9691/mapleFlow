@@ -4,6 +4,7 @@ date = '2026-01-28T20:15:00+08:00'
 draft = false
 categories = ['运维']
 tags = ['Jenkins', 'CI/CD', '持续集成', 'SOP', '速查']
+description = 'Jenkins 安装、Jenkinsfile 与 CI/CD 流水线 SOP 速查。'
 +++
 
 Jenkins 是开源的持续集成/持续部署（CI/CD）服务器，通过任务（Job/Pipeline）执行构建、测试、部署等流水线。本文整理安装、常用命令、Jenkinsfile 示例与日常 SOP，便于在网页上查阅。

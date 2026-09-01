@@ -4,6 +4,7 @@ date = '2026-01-28T20:00:00+08:00'
 draft = false
 categories = ['运维']
 tags = ['Ansible', '自动化', '运维', 'SOP', '速查']
+description = 'Ansible 安装、Playbook 规范与日常自动化运维 SOP 速查。'
 +++
 
 Ansible 是一款开源的自动化运维工具，基于 Python，通过 SSH 对目标主机执行任务，无需在受管节点安装 Agent。本文整理安装、常用命令、Playbook 规范与日常 SOP，便于在网页上查阅。

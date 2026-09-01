@@ -1,0 +1,166 @@
+{{- /*
+  首页（覆盖 PaperMod 的 _default/list.html）
+  骨架：HERO → 数据条(spec band) → 精选文章(索引行) → 精选资源(索引行) → CTA → 全部文章(卡片网格) → 分页
+  数据条所有数字均由站点真实数据计算，没有任何写死的「漂亮数字」。
+*/ -}}
+
+{{- define "main" }}
+
+{{- $pages := where site.RegularPages "Type" "posts" -}}
+{{- if not $pages }}{{ $pages = site.RegularPages }}{{ end -}}
+{{- $paginator := .Paginate $pages -}}
+{{- $postsPage := site.GetPage "section" "posts" -}}
+{{- $productsPage := site.GetPage "page" "products" -}}
+{{- $aboutPage := site.GetPage "page" "about" -}}
+
+{{- if eq $paginator.PageNumber 1 }}
+
+{{- /* ---------- HERO ---------- */ -}}
+<section class="mf-hero">
+  <p class="mf-eyebrow">SRE · DevOps · AIOps</p>
+  <h1 class="mf-rise">把重复的劳动自动化，让故障在发生前就有迹可循</h1>
+  <p class="mf-lede mf-rise d1">
+    真实环境下的运维工程笔记：Kubernetes、CI/CD、可观测性与 AIOps。
+    这里只放跑通过的东西——SOP、工作流模板和能直接拿去用的文档。
+  </p>
+  <div class="mf-actions mf-rise d2">
+    {{- with $postsPage }}
+    <a class="mf-btn mf-btn-primary" href="{{ .RelPermalink }}">浏览文章</a>
+    {{- end }}
+    {{- with $productsPage }}
+    <a class="mf-btn mf-btn-ghost" href="{{ .RelPermalink }}">查看资源</a>
+    {{- end }}
+  </div>
+  {{- with site.Taxonomies.categories }}
+  <div class="mf-tags mf-rise d3">
+    {{- range $name, $tax := . }}
+    <a class="mf-tag" href="{{ $tax.Page.RelPermalink }}">{{ $name }}</a>
+    {{- end }}
+  </div>
+  {{- end }}
+</section>
+
+{{- /* ---------- 数据条：全部为真实统计 ---------- */ -}}
+<section class="mf-spec" aria-label="站点数据">
+  <div class="mf-spec-item">
+    <span class="mf-spec-num">{{ len $pages }}</span>
+    <span class="mf-spec-label">篇技术文章</span>
+  </div>
+  <div class="mf-spec-item">
+    <span class="mf-spec-num">{{ len site.Taxonomies.categories }}</span>
+    <span class="mf-spec-label">个分类</span>
+  </div>
+  <div class="mf-spec-item">
+    <span class="mf-spec-num">{{ len site.Data.products }}</span>
+    <span class="mf-spec-label">份可下载资源</span>
+  </div>
+  <div class="mf-spec-item">
+    {{- with index (site.RegularPages.ByLastmod.Reverse) 0 }}
+    <span class="mf-spec-num">{{ .Lastmod | time.Format "2006-01" }}</span>
+    <span class="mf-spec-label">最近更新</span>
+    {{- end }}
+  </div>
+</section>
+
+{{- /* ---------- 精选文章 ---------- */ -}}
+<section class="mf-section">
+  <div class="mf-section-head">
+    <h2>精选文章</h2>
+    {{- with $postsPage }}
+    <a class="mf-more" href="{{ .RelPermalink }}">全部文章 →</a>
+    {{- end }}
+  </div>
+  <ol class="mf-rows">
+    {{- range $i, $p := first 3 ($pages.ByDate.Reverse) }}
+    <li class="mf-row reveal">
+      <div class="mf-row-num">{{ printf "%02d" (add $i 1) }}</div>
+      <div class="mf-row-main">
+        <h3 class="mf-row-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p class="mf-row-sum">{{ .Summary | plainify | truncate 96 }}</p>
+        <ul class="mf-row-meta">
+          <li>{{ .Date | time.Format "2006-01-02" }}</li>
+          {{- range first 3 (.GetTerms "categories") }}
+          <li>{{ .LinkTitle }}</li>
+          {{- end }}
+        </ul>
+      </div>
+      <div class="mf-row-side">
+        <a class="mf-cta mf-cta-ghost" href="{{ .RelPermalink }}">阅读</a>
+      </div>
+    </li>
+    {{- end }}
+  </ol>
+</section>
+
+{{- /* ---------- 精选资源（与产品页共用同一份数据与渲染） ---------- */ -}}
+<section class="mf-section">
+  <div class="mf-section-head">
+    <h2>精选资源</h2>
+    {{- with $productsPage }}
+    <a class="mf-more" href="{{ .RelPermalink }}">全部资源 →</a>
+    {{- end }}
+  </div>
+  {{ partial "product-index.html" (dict "featured" true "limit" 3 "filters" false "uid" "mf-idx-home") }}
+</section>
+
+{{- end }}{{/* end 仅第 1 页显示 */}}
+
+{{- /* ---------- 文章列表（每页都显示） ---------- */ -}}
+<section class="mf-section">
+  <div class="mf-section-head">
+    <h2>{{ if eq $paginator.PageNumber 1 }}最近更新{{ else }}文章{{ end }}</h2>
+  </div>
+  <div class="mf-posts">
+    {{- range $paginator.Pages }}
+    <article class="mf-post">
+      <header class="entry-header">
+        <h2 class="entry-hint-parent">{{ .Title }}</h2>
+      </header>
+      {{- if ne (.Param "hideSummary") true }}
+      <div class="entry-content">
+        <p>{{ .Summary | plainify | htmlUnescape }}{{ if .Truncated }}...{{ end }}</p>
+      </div>
+      {{- end }}
+      <footer class="entry-footer">
+        {{- partial "post_meta.html" . -}}
+      </footer>
+      <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
+    </article>
+    {{- end }}
+  </div>
+</section>
+
+{{- if gt $paginator.TotalPages 1 }}
+<footer class="page-footer">
+  <nav class="pagination">
+    {{- if $paginator.HasPrev }}
+    <a class="prev" href="{{ $paginator.Prev.URL | absURL }}">«&nbsp;上一页</a>
+    {{- end }}
+    {{- if $paginator.HasNext }}
+    <a class="next" href="{{ $paginator.Next.URL | absURL }}">下一页&nbsp;»</a>
+    {{- end }}
+  </nav>
+</footer>
+{{- end }}
+
+{{- /* ---------- 结尾 CTA（仅第 1 页） ---------- */ -}}
+{{- if eq $paginator.PageNumber 1 }}
+<section class="mf-section">
+  <div class="mf-cta-band reveal">
+    <div>
+      <h2>想直接看人，还是直接看东西？</h2>
+      <p>简历、项目经历与联系方式在「关于」页；可下载的工作流与文档在「资源」页。</p>
+    </div>
+    <div class="mf-actions" style="margin:0">
+      {{- with $aboutPage }}
+      <a class="mf-btn mf-btn-ghost" href="{{ .RelPermalink }}">关于我</a>
+      {{- end }}
+      {{- with $productsPage }}
+      <a class="mf-btn mf-btn-primary" href="{{ .RelPermalink }}">查看资源</a>
+      {{- end }}
+    </div>
+  </div>
+</section>
+{{- end }}
+
+{{- end }}{{/* end main */ -}}

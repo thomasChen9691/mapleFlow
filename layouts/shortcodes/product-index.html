@@ -1,0 +1,11 @@
+{{- /*
+  短代码包装：{{< product-index featured="true" limit="3" filters="false" >}}
+  真正的渲染逻辑在 layouts/partials/product-index.html
+*/ -}}
+
+{{- partial "product-index.html" (dict
+    "featured" (eq (.Get "featured" | default "false") "true")
+    "limit" (int (.Get "limit" | default 0))
+    "filters" (ne (.Get "filters" | default "true") "false")
+    "uid" (printf "mf-idx-%d" .Ordinal)
+) -}}

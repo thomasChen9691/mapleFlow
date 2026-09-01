@@ -4,6 +4,7 @@ date = '2026-01-26T23:45:00+08:00'
 draft = false
 categories = ['k8s']
 tags = ['kubernetes', 'k8s', '容器编排', '运维']
+description = 'kubectl 常用命令速查：集群、工作负载、配置与排错的日常运维。'
 +++
 
 Kubernetes（K8s）已经成为容器编排的事实标准，日常开发和运维中最常用的就是 `kubectl` 命令。

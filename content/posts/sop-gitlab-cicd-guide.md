@@ -4,6 +4,7 @@ date = '2026-01-28T20:05:00+08:00'
 draft = false
 categories = ['运维']
 tags = ['GitLab', 'CI/CD', 'DevOps', 'SOP', '速查']
+description = 'GitLab 安装、Git/MR 操作与 .gitlab-ci.yml 流水线 SOP 速查。'
 +++
 
 GitLab 是集代码托管、CI/CD、制品仓库、Wiki、Issue 等于一体的 DevOps 平台。本文整理安装、常用 Git/MR 操作、`.gitlab-ci.yml` 示例与日常 SOP，便于在网页上查阅。
