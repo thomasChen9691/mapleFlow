@@ -752,10 +752,24 @@ span.mf-cta[aria-disabled="true"] {
 
 /* ---------- 15. 文章列表卡片 ---------- */
 /* 分类页 / 标签页 / 归档页：沿用主题结构，文章直接挂在 main 下，用 :has 把 main 变成网格。
-   首页走 layouts/index.html，文章包在 .mf-posts 里且类名不同，不会命中这里。 */
+   首页走 layouts/index.html，文章包在 .mf-posts 里且类名不同，不会命中这里。
+
+   单条场景的塌陷问题（实测 /categories/k8s.html 曾出现卡片 398px 高、正文仅 49px、
+   空白占卡片 75%）——真实根因经过 CDP 逐层追查，**不是**网格列数：
+
+     主题 main.css:3  .main { min-height: calc(100vh - header - footer) }
+       → 900px 视口下 main 被强制撑到 780px
+     + 本文件 .post-entry { height: 100% }
+       → 单条时网格只有 1 行，height:100% 解析到被 min-height 撑高的 main（780px）
+       → 卡片被拉到 398px，内部大片空白
+
+   所以修法是剪断这条继承链，而不是调网格列数：
+   ① 网格用 auto-fit（条目不足时折叠空轨道，避免预留空列）；
+   ② height:100% 只保留给「真正需要同行等高」的多列场景，单条时显式取消。
+   容器限宽（1 条时收缩到单列宽）作为视觉收口，避免卡片被 1fr 拉宽。 */
 main:has(.post-entry) {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
   align-items: start;
 }
@@ -766,9 +780,21 @@ main:has(.post-entry) .page-footer { grid-column: 1 / -1; }
 /* 首页文章网格 */
 .mf-posts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
   align-items: start;
+}
+
+/* 只有 1 条时：容器收缩到单列宽（= 三列布局下的列宽），卡片不被 1fr 拉宽拉高 */
+main:has(.post-entry:only-of-type),
+.mf-posts:has(> .mf-post:only-child) {
+  max-width: calc((100% - 2rem) / 3);
+}
+
+/* 窄屏本来就只有一列，不需要限宽 */
+@media (max-width: 768px) {
+  main:has(.post-entry:only-of-type),
+  .mf-posts:has(> .mf-post:only-child) { max-width: none; }
 }
 
 .post-entry,
@@ -778,11 +804,22 @@ main:has(.post-entry) .page-footer { grid-column: 1 / -1; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.15rem 1.3rem;
-  height: 100%;
+  /* 注意：这里**不**设 height:100%。
+     主题 .main 带 min-height:calc(100vh - header - footer)，网格只有 1 行时
+     卡片的高度百分比会往上解析到被撑高的 main，把卡片拉成大片空白
+     （实测单篇分类页 398px 高、正文 49px）。等高对齐改由下面
+     「多列场景」的规则按需开启，不再全局继承。 */
   box-shadow: var(--shadow-sm);
   transition: transform var(--dur-2) var(--ease-in),
               box-shadow var(--dur-2) var(--ease-in),
               border-color var(--dur-1) var(--ease-in);
+}
+
+/* 同行等高：仅在「同一行有多于一张卡」时才需要拉伸。
+   用 :has 判断容器内是否存在相邻兄弟卡片，单条时不生效。 */
+main:has(.post-entry + .post-entry) > .post-entry,
+.mf-posts:has(> .mf-post + .mf-post) > .mf-post {
+  height: 100%;
 }
 .post-entry:hover,
 .mf-post:hover,
