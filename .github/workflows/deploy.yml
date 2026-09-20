@@ -34,7 +34,11 @@ jobs:
           hugo-version: '0.164.0'
           extended: true
       - name: Build Hugo site
-        run: hugo --gc --minify --config hugo.toml,config.production.toml
+        # --cleanDestinationDir：构建前清空 public/。
+        # 不加会导致「旧产物残留」—— Hugo 只覆盖变更文件，已删除文章对应的页面
+        # 会一直留在 public/ 并被推上 gh-pages，造成线上内容与仓库状态脱节
+        # （2026-09-20 审计中发现的 posts/aiop.html 即此类残留）。
+        run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
       - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v4  # 升级：v4 比 v3 更稳定，适配新版权限
