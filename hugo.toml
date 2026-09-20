@@ -67,12 +67,12 @@ email = "xxx@gmail.com"  # 取消注释，适配侧边栏邮箱图标显示
 siteStartYear = 2019
 
 # ================= 首页品牌信息（homeInfoParams） =================
-# 仅 Title / Content / AlignSocialIconsTo 生效；AGENTS.md 已确认其余字段无效
+# 注意：首页由 layouts/index.html 自定义模板完全覆盖，本区块的 Content 不参与渲染。
+# 因此这里不再内联 SVG 头像（原内容含旧科技蓝 #2D7FF9，属死配置已移除）。
+# 若将来改用主题默认首页，需在此重新提供 Content。
 [params.homeInfoParams]
 Title = "MapleFlow"
-# 内联 SVG 头像（避免 GitHub Pages 子路径下引用 static 资源 404；home_info.html 用 safeHTML 渲染）
 Content = """
-<p style="text-align:center;margin:0 0 1rem"><svg width="88" height="88" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="32" fill="#2D7FF9"/><text x="32" y="33" text-anchor="middle" fill="#fff" font-size="34" font-weight="700" font-family="sans-serif">M</text></svg></p>
 运维开发 / SRE / DevOps 实战 SOP。把重复的劳动自动化，把不可控的故障变成可观测的指标。
 """
 AlignSocialIconsTo = "center"

@@ -14,8 +14,8 @@ layout = "single"
     <svg class="resume-avatar" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="头像占位">
       <defs>
         <linearGradient id="av" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#2D7FF9"/>
-          <stop offset="1" stop-color="#5AA0FF"/>
+          <stop offset="0" stop-color="#3f56c9"/>
+          <stop offset="1" stop-color="#9aa8ff"/>
         </linearGradient>
       </defs>
       <circle cx="60" cy="60" r="60" fill="url(#av)"/>
