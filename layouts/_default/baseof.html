@@ -1,0 +1,43 @@
+{{- /*
+  覆盖主题 baseof.html，仅为一件事：给 <html> 加 class="no-js"。
+
+  渐进增强基线 —— 默认假定 JS 不可用。layouts/partials/extend_head.html 里的
+  内联脚本会在 <head> 内立刻把 no-js 换成 js。这样：
+    · JS 可用        → 换成 .js，reveal/mf-rise 的初始隐藏动画照常生效
+    · JS 被禁用/失败 → 保持 .no-js，元素按默认可见渲染，内容不会消失
+    · 爬虫/社交抓取  → 同上（它们不执行 JS），正文对搜索引擎可见
+
+  除 <html> 的 class 外，其余与 themes/PaperMod/layouts/_default/baseof.html 完全一致。
+  主题升级时需回来同步本文件。
+*/ -}}
+{{- if lt hugo.Version "0.146.0" }}
+{{- errorf "=> hugo v0.146.0 or greater is required for hugo-PaperMod to build " }}
+{{- end -}}
+
+<!DOCTYPE html>
+{{- $theme := site.Params.defaultTheme | default "auto" }}
+{{- if eq $theme "dark" }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" class="no-js" data-theme="dark">
+{{- else if eq $theme "light" }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" class="no-js" data-theme="light">
+{{- else }}
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" class="no-js" data-theme="auto">
+{{- end }}
+
+<head>
+    {{- partial "head.html" . }}
+</head>
+
+{{- if (or (ne .Kind `page` ) (eq .Layout `archives`) (eq .Layout `search`)) }}
+<body class="list" id="top">
+{{- else }}
+<body id="top">
+{{- end }}
+    {{ partialCached "header.html" . .Page -}}
+    <main class="main">
+        {{- block "main" . }}{{ end }}
+    </main>
+    {{ partialCached "footer.html" . .Layout .Kind (.Param "hideFooter") (.Param "ShowCodeCopyButtons") -}}
+</body>
+
+</html>

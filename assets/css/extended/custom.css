@@ -161,6 +161,11 @@ button:focus-visible { text-decoration: none; }
   opacity: 0;
   animation: mf-rise var(--dur-3) var(--ease-std) forwards;
 }
+/* 仅在 JS 确实可用时隐藏初始态 —— <html> 默认 .no-js，由 extend_head 的内联
+   脚本替换为 .js。这样 JS 被禁用 / 加载失败 / 爬虫不执行 JS 时，标题按默认
+   可见渲染，不会出现「内容凭空消失」。 */
+.no-js .mf-rise { opacity: 1; animation: none; }
+.js .mf-rise { opacity: 0; }
 .mf-rise.d1 { animation-delay: 70ms; }
 .mf-rise.d2 { animation-delay: 150ms; }
 .mf-rise.d3 { animation-delay: 230ms; }
@@ -174,6 +179,8 @@ button:focus-visible { text-decoration: none; }
               transform var(--dur-3) var(--ease-out);
 }
 .reveal.is-in { opacity: 1; transform: none; }
+/* 同 .mf-rise：无 JS 时保持默认可见，避免整块内容对爬虫与禁用 JS 的用户不可见 */
+.no-js .reveal { opacity: 1; transform: none; transition: none; }
 
 /* 第 3 拍：悬停微浮 —— 见各组件（进入 ease-out，退出 ease-in） */
 /* 第 3.5 拍：状态切换 —— 筛选后剩余的条目重新落位，小分组 stagger，
