@@ -234,7 +234,11 @@ button:focus-visible { text-decoration: none; }
   line-height: 1.12;
   letter-spacing: -.025em;
   margin: 0 0 1rem;
-  max-width: 20ch;
+  /* 用 em 而非 ch 限宽。ch 以数字 0 的字形宽度为基准，中文字宽约为其 2 倍，
+     20ch 在 52.7px 字号下解析成 650px，650 / 52.7 ≈ 12.33 个字，非整数，
+     必然在字与字之间切开，第 13 个字被推到下一行开头（1440/1280/1024 均复现）。
+     13em = 13 个全角字宽，与字号同比缩放，中英文混排都稳定。 */
+  max-width: 13em;
 }
 .mf-hero .mf-lede {
   font-size: 1.06rem;
