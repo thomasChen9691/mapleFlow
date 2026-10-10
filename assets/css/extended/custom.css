@@ -1,11 +1,12 @@
-/* finesse · register=brand(portfolio 5.B)+commerce(PLP) · A=tinted-cool-neutral+single-indigo ·
+/* finesse · register=brand(portfolio 5.B)+commerce(PLP) · A=tinted-cool-neutral+indigo-orange ·
  * B=display-700/body-400+mono-meta · C=spec-band+index-rows · D=CSS-only · E=precision-instrument ·
  * SOUL=7 SPECTACLE=3 DENSITY=5 */
 /* ============================================================
    mapleFlow 视觉系统 · 精密仪器档
    经 Hugo Pipes 自动并入 PaperMod 样式表，不修改主题文件。
    工艺底线：中性色一律带色调（无纯白/纯黑）、边框为半透明细线、
-             阴影带色调而非纯黑、强调色只有一支（靛蓝）。
+             阴影带色调而非纯黑、强调色为「靛蓝（主）+ 橙（次）」双色，
+             页面底为蓝→橙的极淡柔和渐变。
    ============================================================ */
 
 /* ---------- 1. 排版与字体 ---------- */
@@ -46,11 +47,19 @@ body {
   font-family: var(--font-sans);
   line-height: 1.75;
   letter-spacing: .01em;
-  /* 质感层：极淡灰噪点，打破「矢量塑料」的平滑感。
-     灰噪点在浅底呈暗点、深底呈亮点，一套图两种模式通用 */
+  /* 底色分三层（自上而下）：
+     ① 极淡灰噪点，打破「矢量塑料」的平滑感（浅底呈暗点、深底呈亮点，一图两模式通用）；
+     ② 左上角的蓝色柔光；
+     ③ 右下角的橙色柔光。
+     蓝→橙双色洗色都极淡（rgba 约 .10）且只铺在角落，中心与正文区仍是实色 --theme，
+     所以明暗两套主题下正文/按钮对比度均不受影响；渐变固定在视口上，滚动时氛围稳定。 */
   background-color: var(--theme);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
-  background-repeat: repeat;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
+    radial-gradient(58rem 42rem at 2% -8%, var(--wash-blue), transparent 62%),
+    radial-gradient(52rem 40rem at 104% 106%, var(--wash-orange), transparent 64%);
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-attachment: scroll, fixed, fixed;
 }
 
 /* 手机端横向溢出防护：用 clip 而非 hidden（hidden 会造出滚动容器，
@@ -60,9 +69,14 @@ html, body { overflow-x: clip; }
 /* ---------- 2. 色彩令牌（浅色） ---------- */
 :root,
 [data-theme="light"] {
-  --primary: #3f56c9;        /* 深青绿：唯一强调色，白底对比度 5.35:1（过 WCAG AA） */
+  --primary: #3f56c9;        /* 靛蓝：主强调色，白底对比度 ≈6.2:1（过 WCAG AA） */
   --primary-hover: #2f43a8;  /* 按下/悬停态：不用 filter:brightness（会触发重绘） */
   --primary-soft: rgba(63, 86, 201, .10);
+  /* 次强调：橙。只用于点睛（eyebrow / 数据条数字 / 序号 / 时间线圆点 / 题库标记），
+     蓝仍是主色。文字用途的橙取深色调，最浅的洗色底（≈#eaf0fb）上仍有 ≈5.2:1 */
+  --accent: #a8460f;
+  --accent-hover: #8a390c;
+  --accent-soft: rgba(168, 70, 15, .12);
   --secondary: #5b6470;      /* 次级文本，白底 5.9:1 */
   --tertiary: #eef1f1;       /* 浅填充（代码块/引用/标签底） */
   --theme: #f6f8f8;          /* 页面底：冷灰，不是白 */
@@ -76,6 +90,9 @@ html, body { overflow-x: clip; }
   --shadow-md: 0 8px 24px rgba(16, 40, 44, .07);
   --shadow-lg: 0 16px 40px rgba(16, 40, 44, .10);
   --shadow-accent: 0 6px 16px rgba(63, 86, 201, .22);  /* 主按钮悬停：半透明带色调 */
+  /* 双色渐变底的洗色（浅色：近白底上极淡的蓝、橙，只做氛围） */
+  --wash-blue: rgba(63, 86, 201, .10);
+  --wash-orange: rgba(230, 126, 46, .10);
   --main-width: 1040px;
 }
 
@@ -86,9 +103,13 @@ html, body { overflow-x: clip; }
   --primary: #9aa8ff;
   --primary-hover: #b3bcff;
   --primary-soft: rgba(154, 168, 255, .12);
+  /* 次强调：橙（深色底用亮橙，暗底对比度 ≈10:1） */
+  --accent: #ffb26b;
+  --accent-hover: #ffc38f;
+  --accent-soft: rgba(255, 178, 107, .14);
   --secondary: #98a2ae;
   --tertiary: #1b2023;
-  --theme: #0f1214;
+  --theme: #0f131b;          /* 页面底：深蓝黑（为橙光留出冷色基底） */
   --entry: #161a1d;
   --content: #dde3e5;
   --border: rgba(255, 255, 255, .10);
@@ -98,6 +119,9 @@ html, body { overflow-x: clip; }
   --shadow-md: 0 8px 24px rgba(0, 0, 0, .35);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, .45);
   --shadow-accent: 0 6px 16px rgba(154, 168, 255, .20);
+  /* 双色渐变底的洗色（深色：深蓝底上叠一层低不透明度橙色微光，保持「暗底亮字」） */
+  --wash-blue: rgba(96, 130, 255, .10);
+  --wash-orange: rgba(240, 150, 70, .12);
 }
 
 /* ---------- 4. 标题层级与排版张力 ---------- */
@@ -233,7 +257,7 @@ button:focus-visible { text-decoration: none; }
   font-size: .74rem;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--secondary);
+  color: var(--accent);   /* 次强调橙：小号眉标用橙点睛，蓝仍是主色 */
   margin: 0 0 .9rem;
 }
 .mf-hero h1 {
@@ -362,7 +386,7 @@ a.mf-tag:active { transform: translateY(0) scale(.97); transition-duration: var(
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: -.02em;
-  color: var(--content);
+  color: var(--accent);   /* 数据条数字：橙色读数，点睛而不喧宾夺主 */
 }
 .mf-spec-num small { font-size: .85rem; font-weight: 400; color: var(--secondary); }
 .mf-spec-label {
@@ -416,7 +440,7 @@ a.mf-tag:active { transform: translateY(0) scale(.97); transition-duration: var(
   font-family: var(--font-mono);
   font-size: .74rem;
   letter-spacing: .12em;
-  color: var(--primary);
+  color: var(--accent);   /* 序号用橙，与眉标同一套点睛语言 */
 }
 
 /* ---------- 11. 索引行列表（精选文章 / 产品索引共用，替代同质卡片墙） ---------- */
@@ -507,6 +531,8 @@ a.mf-tag:active { transform: translateY(0) scale(.97); transition-duration: var(
   white-space: nowrap;
 }
 .mf-kind[data-kind="workflow"] { border-color: var(--primary); color: var(--primary); }
+/* 题库用橙：三类交付形态里「工作流=蓝、题库=橙、文档=中性」形成可区分的三色标记 */
+.mf-kind[data-kind="question-bank"] { border-color: var(--accent); color: var(--accent); }
 .mf-price {
   font-family: var(--font-mono);
   font-size: 1rem;
@@ -719,8 +745,8 @@ span.mf-cta[aria-disabled="true"] {
   left: -1.4rem; top: .35rem;
   width: 12px; height: 12px;
   border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-soft);
+  background: var(--accent);          /* 时间线圆点：橙色节点 */
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 .timeline-date {
   font-family: var(--font-mono);
