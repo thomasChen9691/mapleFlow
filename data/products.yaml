@@ -15,7 +15,8 @@
 #   buy_url  面包多商品页 URL（留空 = 显示"即将上架"，不跳转）
 #   featured 是否进入首页精选（true/false）
 #
-# ⚠️ 上线前必做：把 buy_url 逐个替换为你的真实面包多商品页地址。
+# ⚠️ 当前 buy_url 全部为「TEST 测试地址」（用于验证按钮会从「即将上架」变为可点击的
+#    「购买 / 免费获取」）。上线前请逐条替换为真实面包多商品页地址。
 # ============================================================
 
 - id: n8n-dify-workflows
@@ -26,7 +27,7 @@
   scale: 12 个模板
   updated: 2026-08-20
   price: 39
-  buy_url: ""
+  buy_url: "https://mbd.pub/o/test-n8n-dify-workflows"
   featured: true
 
 - id: sre-learning-docs
@@ -37,7 +38,7 @@
   scale: 约 180 页
   updated: 2026-08-12
   price: 29
-  buy_url: ""
+  buy_url: "https://mbd.pub/o/test-sre-learning-docs"
   featured: true
 
 - id: sre-interview-bank
@@ -48,7 +49,7 @@
   scale: 200+ 题
   updated: 2026-08-05
   price: 49
-  buy_url: ""
+  buy_url: "https://mbd.pub/o/test-sre-interview-bank"
   featured: true
 
 - id: prometheus-alert-cheatsheet
@@ -59,7 +60,7 @@
   scale: 8 页
   updated: 2026-07-28
   price: 0
-  buy_url: ""
+  buy_url: "https://mbd.pub/o/test-prometheus-alert-cheatsheet"
   featured: false
 
 - id: aiops-anomaly-lab
@@ -70,5 +71,5 @@
   scale: 4 个实验
   updated: 2026-08-26
   price: 0
-  buy_url: ""
+  buy_url: "https://mbd.pub/o/test-aiops-anomaly-lab"
   featured: false

@@ -1,11 +1,15 @@
 +++
 title = "关于我"
-description = "运维开发 / SRE 实战派：Kubernetes、CI/CD、可观测性与自动化（演示占位内容，请替换为真实信息）"
+description = "运维开发 / SRE 实战派：Kubernetes、CI/CD、可观测性与自动化（TEST 测试占位内容，上线前请替换为真实信息）"
 draft = false
 layout = "single"
 +++
 
-<!-- 演示占位内容（非真实信息）：请将其替换为你的真实 姓名 / 职位 / 经历 / 项目 / 联系方式。结构已调好，直接改文字即可，链接均为相对路径不会 404。 -->
+<!-- ============================================================
+     TEST DATA —— 本页为「测试用」占位内容（非真实信息）。
+     所有姓名 / 邮箱 / GitHub / 地点 / 公司 / 微信均为测试值，用于验证页面渲染。
+     上线前请整体替换为你的真实信息；结构（HTML 标签与 CSS 类名）已调好，改文字即可。
+     ============================================================ -->
 
 <div class="resume">
 
@@ -19,16 +23,16 @@ layout = "single"
         </linearGradient>
       </defs>
       <circle cx="60" cy="60" r="60" fill="url(#av)"/>
-      <text x="60" y="60" dy=".35em" text-anchor="middle" fill="#ffffff" font-size="44" font-family="sans-serif" font-weight="700">陈</text>
+      <text x="60" y="60" dy=".35em" text-anchor="middle" fill="#ffffff" font-size="44" font-family="sans-serif" font-weight="700">测</text>
     </svg>
     <div class="resume-id">
-      <h1>陈思远</h1>
+      <h1>测试用户（TEST）</h1>
       <p class="resume-role">高级运维开发工程师 / SRE / DevOps Engineer</p>
       <p class="resume-tagline">把重复的劳动自动化，把不可控的故障变成可观测的指标。</p>
       <ul class="resume-contact">
-        <li><span>📧</span> <a href="mailto:you@example.com">you@example.com</a></li>
-        <li><span>💻</span> <a href="https://github.com/yourname" target="_blank" rel="noopener">github.com/yourname</a></li>
-        <li><span>📍</span> 上海</li>
+        <li><span>📧</span> <a href="mailto:test@example.com">test@example.com</a></li>
+        <li><span>💻</span> <a href="https://github.com/test-user" target="_blank" rel="noopener">github.com/test-user</a></li>
+        <li><span>📍</span> 测试城市</li>
       </ul>
     </div>
   </header>
@@ -60,16 +64,16 @@ layout = "single"
         <span class="timeline-dot"></span>
         <div class="timeline-body">
           <p class="timeline-date">2022 — 至今</p>
-          <h3>高级运维开发工程师 · 某互联网公司</h3>
-          <p>负责 Kubernetes 多集群治理、CI/CD 流水线平台化与可观测性体系建设；将核心服务发布耗时从 40 分钟降至 8 分钟，告警噪声下降约 60%。</p>
+          <h3>高级运维开发工程师 · 测试公司 A（TEST）</h3>
+          <p>TEST 占位：负责 Kubernetes 多集群治理、CI/CD 流水线平台化与可观测性体系建设；示例指标仅供渲染验证，非真实业绩。</p>
         </div>
       </div>
       <div class="timeline-item">
         <span class="timeline-dot"></span>
         <div class="timeline-body">
           <p class="timeline-date">2019 — 2022</p>
-          <h3>运维工程师 · 某云计算公司</h3>
-          <p>负责生产环境稳定性保障、自动化运维平台开发与监控告警治理；主导一次大规模故障的根因定位与复盘，沉淀为团队 SOP。</p>
+          <h3>运维工程师 · 测试公司 B（TEST）</h3>
+          <p>TEST 占位：负责生产环境稳定性保障、自动化运维平台开发与监控告警治理；示例描述仅供渲染验证。</p>
         </div>
       </div>
     </div>
@@ -100,9 +104,9 @@ layout = "single"
   <section class="resume-section" id="contact">
     <h2>联系方式</h2>
     <ul class="contact-list">
-      <li>邮箱：<a href="mailto:you@example.com">you@example.com</a></li>
-      <li>GitHub：<a href="https://github.com/yourname" target="_blank" rel="noopener">github.com/yourname</a></li>
-      <li>微信：your_wechat_id</li>
+      <li>邮箱：<a href="mailto:test@example.com">test@example.com</a></li>
+      <li>GitHub：<a href="https://github.com/test-user" target="_blank" rel="noopener">github.com/test-user</a></li>
+      <li>微信：test_wechat_id（TEST）</li>
     </ul>
   </section>
 
