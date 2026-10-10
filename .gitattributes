@@ -1,0 +1,72 @@
+# =============================================================================
+# 行尾策略 —— Mac 主力 + Windows 备用（2026-10-10 迁移整理加入）
+#
+# 目标：任何一个平台提交/检出都不再产生行尾噪音；同一份代码在两台机器上
+#       只有「真实改动」才会显示为 modified。
+# 规则：仓库内一律存 LF；检出到任何平台也写 LF（eol=lf）。
+#
+# 解析顺序提醒：gitattributes 按「最后匹配者生效」，因此本全局块必须放在
+#       文件顶部；其后的具体规则（binary / eol=crlf）会正确覆盖它。
+# 另需在 Windows 备用机执行一次：git config --global core.autocrlf false
+# =============================================================================
+* text=auto eol=lf
+
+# Windows 专用脚本保留 CRLF（cmd.exe 对 LF 的 GOTO/LABEL 解析有坑）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 显式声明二进制（双保险：text=auto 靠 NUL 字节探测，此处补足无 NUL 的格式）
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.bmp    binary
+*.tiff   binary
+*.webp   binary
+*.pdf    binary
+*.zip    binary
+*.rar    binary
+*.7z     binary
+*.gz     binary
+*.tgz    binary
+*.tar    binary
+*.whl    binary
+*.jar    binary
+*.so     binary
+*.dylib  binary
+*.dll    binary
+*.exe    binary
+*.pyd    binary
+*.pyc    binary
+*.sqlite binary
+*.sqlite3 binary
+*.db     binary
+*.parquet binary
+*.pkl    binary
+*.pickle binary
+*.npy    binary
+*.npz    binary
+*.pt     binary
+*.pth    binary
+*.onnx   binary
+*.safetensors binary
+*.gguf   binary
+*.bin    binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.otf    binary
+*.eot    binary
+*.mp3    binary
+*.mp4    binary
+*.mov    binary
+*.avi    binary
+*.wav    binary
+*.flac   binary
+*.webm   binary
+*.xlsx   binary
+*.xls    binary
+*.docx   binary
+*.pptx   binary
