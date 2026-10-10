@@ -2,6 +2,42 @@
 
 记录 MapleFlow 博客与后端 API 的变更；与 OpenSpec 变更可互为参考。
 
+## 2026-10-10
+
+### 视觉改造（蓝橙双色 + 柔和渐变底）
+- 🎨 `assets/css/extended/custom.css`：页面底改为蓝→橙的极淡双色渐变（保留原 SVG 噪点层，不改结构/动效令牌/排版）；
+  强调色扩展为「靛蓝（主）+ 橙（次）」双色令牌（新增 `--accent` / `--accent-hover` / `--accent-soft`）；
+  橙色用于眉标 `.mf-eyebrow`、数据条数字 `.mf-spec-num`、序号 `.mf-form-idx`、时间线圆点 `.timeline-dot`、
+  题库标记 `.mf-kind[data-kind="question-bank"]` 等点睛处；蓝仍为主色。明暗两套主题对比度均过 WCAG AA。
+- 🧹 修正 `custom.css` 中「深青绿 / 5.35:1」的陈旧注释为与新配色一致的准确描述。
+
+### P1 修复
+- ✅ P1-1 首页数据条「份可下载资源」改为按 `buy_url` 非空计数（不再把占位条目算成可下载）。
+- ✅ P1-2 分类导航补「运维」入口（`[[menu.main]]` identifier=ops，覆盖 7/10 篇文章）。
+- ✅ P1-3 测试数据：`content/about.md` 换为 TEST 占位内容；`hugo.toml` 三处邮箱统一为 `test@example.com`；
+  `data/products.yaml` 5 条 `buy_url` 填测试地址（用于验证按钮由「即将上架」变为可点击的「购买 / 免费获取」）。
+- ✅ P1-4 删除调试探针 `static/probe.js`（及已上线的构建产物 `public/probe.js`）。
+- ✅ P1-5 `git rm --cached .hugo_build.lock` 与 `.idea/`（保留磁盘文件，仅取消跟踪）。
+- ✅ P1-6 分页阈值 `paginate = 10 → 6`（10 篇 → TotalPages=2，分页器可见）。
+
+### P2 修复
+- ✅ P2-1 注释掉死配置 `[params.homeInfoParams]`；`[params.cover]` 空字典**保留**（防主题 cover.html 对 nil 的解引用）。
+- ✅ P2-4 删除空目录 `content/page/`。
+- ✅ P2-5 标签合并：`k8s` + `kubernetes` → `Kubernetes`（仅合并确属同义的标签，未改 categories）。
+- ✅ P2-6/7 覆盖 `layouts/_default/index.json`：`content` 改为截断摘要（索引瘦身）+ 并入 `products.yaml` 条目
+  （permalink 指向产品页锚点 `/products.html#<id>`）。
+- ✅ P2-8 覆盖 `layouts/_default/rss.xml`：首页订阅源只输出 posts 区文章。
+- ✅ P2-9 `languageCode` → `locale`（Hugo v0.158.0 起弃用 languageCode）。
+- ✅ P2-10 `static/img/og-cover.png` 由约 1.02MB 压到约 295KB（980×490，合法 PNG）。
+- ⏸️ P2-2 backend **保留不动**（用户决定，作为未来小程序 / APP 数据源）。
+- ⏸️ P2-11 `static/img/avatar.svg` 保留（当前模板未渲染，无害）。
+
+### 文档对齐
+- ✅ README / AGENTS / CLAUDE 的 CI 命令统一为 `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml`。
+- ✅ 修正「`content/about.md` 用 `TODO:` 标注」的不实描述；更新 `public/` 跟踪状态说明（现 0 文件被跟踪）。
+- ✅ `docs/README.md` 删除不存在的 `backend_docs.zip` 引用；SOP 索引路径改为 `/posts/sop-ops-tools-index.html`。
+- ✅ 本文件修正对不存在文件（`docs/README_BACKEND.md` / `docs/API_TEST_SUMMARY.md`）的引用。
+
 ## 2026-01-29
 
 ### 新增功能
@@ -24,8 +60,7 @@
 
 ### 文档更新
 - ✅ 创建 `docs/` 文件夹统一管理文档
-- ✅ 更新后端使用文档 (`docs/README_BACKEND.md`)
-- ✅ 添加 API 测试说明 (`docs/API_TEST_SUMMARY.md`)
+- ✅ 整理后端使用文档（实际文件为 `docs/BACKEND_DOCS.md`）
 - ✅ 添加更新日志 (`docs/CHANGELOG.md`)
 
 ### 技术改进

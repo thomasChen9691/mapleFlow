@@ -18,7 +18,7 @@
 | `gh-pages` | 由 GitHub Actions 自动构建的静态站点产物 | **不要手动修改/提交** |
 | `origin/main` | 远端源码；推送到它会触发部署 | 仅通过 push 更新 |
 
-- 部署流水线见 `.github/workflows/deploy.yml`：push `main` → 检出（含子模块）→ `hugo --minify --config hugo.toml,config.production.toml` → 推 `gh-pages`。
+- 部署流水线见 `.github/workflows/deploy.yml`：push `main` → 检出（含子模块）→ `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml` → 推 `gh-pages`。
 - 切勿直接编辑 `gh-pages` 或本地 `public/`（构建产物会覆盖）。
 
 ## 3. 核心命令
@@ -41,7 +41,7 @@ hugo server -D        # 访问 http://localhost:1313/
 #   若观感"颜色/字体全没了"，先确认预览服务是 dev 配置、且用 http://localhost:1313/ 根路径打开。
 
 # 生产构建（必须与 CI 命令完全一致！不能只跑 hugo）
-hugo --minify --config hugo.toml,config.production.toml
+hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
 # 【本地验证推荐】多一个 --cleanDestinationDir，可清掉草稿孤儿文件（见坑点 7b）
 hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
@@ -56,7 +56,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 ## 4. 必知坑点（改动前先读）
 
-1. **构建必须合并两个配置**：`hugo --minify --config hugo.toml,config.production.toml`。
+1. **构建必须合并两个配置**：`hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml`。
    `config.production.toml` 提供 `baseURL` 与 `uglyURLs = true`。单独跑 `hugo` 会用 `localhost` 且路径不同。
 
 2. **`uglyURLs = true` → 页面是 `.html` 文件**：
@@ -65,7 +65,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
    - **不要**把独立页面放在 `content/page/` 下（会变成 `/page/about.html` 分区，破坏干净 URL）。
 
 3. **PaperMod 不识别以下配置**（加了完全无效，是「改了没效果」的常见原因，禁止新增）：
-   - `[params.navItems]`（导航栏应由标准 `[[menu.main]]` + `[params.reorderNavItems]` 控制）
+   - `[params.navItems]`（导航栏应由标准 `[[menu.main]]` 控制。注：`[params.reorderNavItems]` 在当前 PaperMod 版本中**同样不被读取**（已 grep 主题全目录 0 命中），保留仅为文档价值，改导航请直接改 `[[menu.main]]` 的 `weight`）
    - `lightTheme` / `darkTheme`（daisyUI 概念，PaperMod 用 `defaultTheme`）
    - `headerTitle`
    - `[params.advanced].customCSS` / `customJS`
@@ -100,13 +100,13 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 8. **图片/资源在 GitHub Pages 子路径下**：站点部署在 `.../mapleFlow/`（非根域）。页面内联 SVG 头像比引用 `static/img/*` 更稳；若引用静态资源，路径需相对正确。
 
-9. **`public/` 在 `main` 上有历史提交**：`git add .` 会包含它（无害），但真正对外的是 `gh-pages`，不必纠结 `main` 上的 `public`。
+9. **`public/` 为构建产物，当前未被 git 跟踪**（`git ls-files | grep '^public/'` → 0 文件）：`git add .` 不会包含它，真正对外的是 `gh-pages`，不必纠结 `main` 上的 `public`。
 
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
 - front matter 至少包含：`title`、`date`、`draft = false`（否则线上不显示）、`categories`、`tags`。
-- 简历/关于页：`content/about.md`（已含技能胶囊、时间线、项目卡片，使用内联 SVG）。修改占位 `Your Name` / `name@example.com` / GitHub 用户名等（文件中用 `TODO:` 标注）。
+- 简历/关于页：`content/about.md`（已含技能胶囊、时间线、项目卡片，使用内联 SVG）。当前为 **TEST 测试占位内容**（姓名「测试用户」/ 邮箱 `test@example.com` / GitHub `test-user` / 公司「测试公司 A·B」等），文件内以 `TEST` 与 HTML 注释标注；上线前替换为真实信息（**没有** `TODO:` 标注）。
 - `docs/sop/*.md` 是源笔记，**不在** Hugo `content` 内，不会被渲染成页面。
 - 中文日期由 Hugo/goldmark 原生支持，无需额外 JS 配置。
 

@@ -21,19 +21,13 @@
 ### SOP 运维文档（博客同步）
 
 - **[docs/sop/](sop/)** — Ansible、GitLab、SonarQube、Jenkins、Grafana、Prometheus 等 SOP 原文
-- 博客中对应索引页路径：`/posts/sop-ops-tools-index/`，可在此查看各 SOP 的博客版与跳转链接
+- 博客中对应索引页路径：`/posts/sop-ops-tools-index.html`（`uglyURLs = true`，故是 `.html` 而非目录），可在此查看各 SOP 的博客版与跳转链接
 
 ### 其他文档
 
 - **[CHANGELOG.md](CHANGELOG.md)**
   - 更新日志
   - 记录所有变更和改进
-
-### 压缩文件
-
-- **[backend_docs.zip](backend_docs.zip)**
-  - 所有 Markdown 文档的压缩包
-  - 便于备份和分享
 
 ## 🚀 快速开始
 
@@ -72,7 +66,6 @@
 
 - 在创建 Proposal 或 Specs 时，引用 `BACKEND_DOCS.md` 作为参考
 - 使用 `OPENSPEC_GUIDE.md` 了解如何使用 OpenSpec
-- 压缩文件 `backend_docs.zip` 可以用于备份
 
 ### 对于开发者
 
@@ -96,7 +89,6 @@
 所有文档更新都应该：
 1. 更新相应的 Markdown 文件
 2. 更新 `CHANGELOG.md`
-3. 重新生成压缩文件（如需要）
 
 ---
 

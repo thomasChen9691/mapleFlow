@@ -1,4 +1,4 @@
-## 我的 Dream 博客（Hugo + PaperMod）
+## MapleFlow（Hugo + PaperMod）
 
 本项目是使用 Hugo 静态站点生成器和 PaperMod 主题搭建的个人博客，托管在 GitHub Pages 上。
 
@@ -66,7 +66,7 @@ hugo server -D
      - 检出代码（包含 PaperMod 子模块）
      - 使用命令：
        ```bash
-       hugo --minify --config hugo.toml,config.production.toml
+       hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
        ```
      - 将 `public/` 中生成的内容推送到 `gh-pages` 分支；
   3. GitHub Pages 从 `gh-pages` 分支读取静态文件，对外提供访问。
@@ -114,7 +114,7 @@ python3 auto_push.py
     ```
   - 确认 GitHub Actions 中的构建命令为：
     ```bash
-    hugo --minify --config hugo.toml,config.production.toml
+    hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
     ```
 
 ---
