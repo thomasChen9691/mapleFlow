@@ -1,0 +1,39 @@
+{{- /*
+  P2-6 / P2-7：覆盖主题的 _default/index.json（项目级优先于 themes/PaperMod）。
+  目的：
+    ① 瘦身：content 字段不再塞整篇正文，改用截断后的摘要，单条体积可控；
+    ② 纳入产品：把 site.Data.products 也并入索引，permalink 指向产品页锚点
+       （/products.html#<id>，锚点由 layouts/partials/product-index.html 的 <li id> 提供）。
+
+  字段名与 assets/js/fastsearch.js 的 keys 约定保持一致：
+    title / permalink / summary / content —— 额外补 tags / categories 供扩展检索。
+  保留主题的过滤语义：跳过 searchHidden、archives、search 三类页面。
+*/ -}}
+{{- $index := slice -}}
+{{- range site.RegularPages -}}
+  {{- if and (not .Params.searchHidden) (ne .Layout "archives") (ne .Layout "search") -}}
+    {{- $summary := .Summary | plainify | htmlUnescape | chomp -}}
+    {{- $index = $index | append (dict
+        "title" .Title
+        "permalink" .Permalink
+        "summary" ($summary | truncate 200)
+        "content" ($summary | truncate 320)
+        "tags" (.Params.tags | default slice)
+        "categories" (.Params.categories | default slice)
+    ) -}}
+  {{- end -}}
+{{- end -}}
+{{- with site.GetPage "page" "products" -}}
+  {{- $productsPermalink := .RelPermalink -}}
+  {{- range site.Data.products -}}
+    {{- $index = $index | append (dict
+        "title" .name
+        "permalink" (printf "%s#%s" $productsPermalink .id)
+        "summary" .summary
+        "content" (printf "%s %s %s" .name .summary (.scale | default ""))
+        "tags" (slice "资源")
+        "categories" (slice "产品")
+    ) -}}
+  {{- end -}}
+{{- end -}}
+{{- $index | jsonify -}}

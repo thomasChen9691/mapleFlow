@@ -51,7 +51,8 @@
     <span class="mf-spec-label">个分类</span>
   </div>
   <div class="mf-spec-item">
-    <span class="mf-spec-num">{{ len site.Data.products }}</span>
+    {{- /* 只统计「真正可下载」的资源：buy_url 非空才算，避免把占位条目算成可下载（对外失实） */ -}}
+    <span class="mf-spec-num">{{ len (where site.Data.products "buy_url" "!=" "") }}</span>
     <span class="mf-spec-label">份可下载资源</span>
   </div>
   <div class="mf-spec-item">

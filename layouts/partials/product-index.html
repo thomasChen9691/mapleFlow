@@ -45,7 +45,7 @@
     {{- else if eq $p.kind "question-bank" }}{{ $kindLabel = "题库" }}{{ end }}
     {{- $free := or (not $p.price) (eq (int $p.price) 0) }}
 
-    <li class="mf-row reveal" data-kind="{{ $p.kind }}" data-price="{{ if $free }}free{{ else }}paid{{ end }}">
+    <li class="mf-row reveal" id="{{ $p.id }}" data-kind="{{ $p.kind }}" data-price="{{ if $free }}free{{ else }}paid{{ end }}">
       <div class="mf-row-num">{{ printf "%02d" (add $i 1) }}</div>
 
       <div class="mf-row-main">
