@@ -1,0 +1,9 @@
+# 行为 fixture：draft: true = 注册但未发布（0009 目录契约）——
+# 不进生产构建，-D 构建出现。另一条为对照组。
+- slug: draft-live-entry
+  note: LIVE.md
+  date: 2026-01-01T00:00:00+08:00
+- slug: draft-hidden-entry
+  note: DRAFT.md
+  date: 2026-01-01T00:00:00+08:00
+  draft: true

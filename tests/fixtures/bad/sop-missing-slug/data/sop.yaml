@@ -1,0 +1,3 @@
+# 契约坏用例：缺 slug → 构建必须失败（path 必填，空 path 保留给 home page）
+- note: OK.md
+  date: 2026-01-01T00:00:00+08:00

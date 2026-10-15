@@ -34,6 +34,9 @@ TMP = REPO / "tests" / "tmp"
 REGISTRY = REPO / "data" / "sop.yaml"
 GOLDEN = REPO / "tests" / "fixtures" / "sop-golden"
 REAL_CONFIG = "hugo.toml,config.production.toml"
+BAD_ROOT = REPO / "tests" / "fixtures" / "bad"
+DRAFT_ROOT = REPO / "tests" / "fixtures" / "draft"
+PIPELINE_MARKER = "SOP 发布管线"
 
 ZERO_DATE_TEXT = "January 1, 0001"  # Hugo 对零值日期的渲染形态（独立字面量）
 
@@ -156,6 +159,60 @@ def assert_derived(report):
                      f"got={got_title!r} want={golden['title']!r}")
 
 
+def fixture_config(name, root):
+    """坏用例 / 行为 fixture 的构建配置：dataDir 与 sopNotesDir 双覆盖。
+
+    dataDir 只含数据文件（sop.yaml），notes/ 平级隔离——Hugo 数据加载器
+    会递归解析 dataDir 下所有文件，.md 混入即「unmarshal of format」崩溃。
+
+    refLinksErrorLevel = WARNING：fixture 注册表不含 6 个真实 slug，
+    sop-ops-tools-index 的 ref 会落空——那是预期内的环境差异，
+    不应掩蔽本模块的契约错误（真实构建保持默认 ERROR 级）。
+    """
+    cfg = TMP / f"{name}.toml"
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    cfg.write_text(
+        'dataDir = "%s/data"\nrefLinksErrorLevel = "WARNING"\n[params]\nsopNotesDir = "%s/notes"\n'
+        % (root.relative_to(REPO), root.relative_to(REPO)),
+        encoding="utf-8")
+    return "hugo.toml,%s" % cfg.relative_to(REPO)
+
+
+def assert_bad_cases(report):
+    """契约坏用例：构建必须失败，且错误信息来自 SOP 发布管线（0008 决议第 4 条）。"""
+    cases = sorted(p.name for p in BAD_ROOT.iterdir()
+                   if p.is_dir() and p.name.startswith("sop-")) if BAD_ROOT.is_dir() else []
+    if not cases:
+        report.check("存在契约坏用例", False, "tests/fixtures/bad/sop-* 下没有用例")
+        return
+    for case in cases:
+        config = fixture_config(f"bad-{case}", BAD_ROOT / case)
+        proc = build(config, TMP / f"bad-{case}")
+        ok = proc.returncode != 0 and PIPELINE_MARKER in (proc.stderr + proc.stdout)
+        report.check(f"契约[{case}] → 构建失败且错误来自 SOP 发布管线", ok,
+                     "" if ok else "exit=%d %s" % (proc.returncode, (proc.stderr or proc.stdout)[-300:]))
+
+
+def assert_draft(report):
+    """draft: true = 注册但未发布（0009 目录契约）：不进生产构建，-D 构建出现。"""
+    config = fixture_config("draft", DRAFT_ROOT)
+    prod = build(config, TMP / "draft-prod")
+    report.check("draft fixture 生产构建成功", prod.returncode == 0,
+                 prod.stderr[-300:] if prod.returncode else "")
+    if prod.returncode == 0:
+        live = (TMP / "draft-prod" / "posts" / "draft-live-entry.html").is_file()
+        hidden = (TMP / "draft-prod" / "posts" / "draft-hidden-entry.html").exists()
+        report.check("draft: true 条目不进生产构建（对照组进）", live and not hidden,
+                     f"live={live} hidden={hidden}")
+    withd = run(["hugo", "--gc", "--minify", "--cleanDestinationDir", "-D",
+                 "--config", config, "-d", str(TMP / "draft-d")])
+    report.check("draft fixture -D 构建成功", withd.returncode == 0,
+                 withd.stderr[-300:] if withd.returncode else "")
+    if withd.returncode == 0:
+        report.check("draft: true 条目在 -D 构建出现",
+                     (TMP / "draft-d" / "posts" / "draft-hidden-entry.html").is_file())
+
+
 def main():
     parser = argparse.ArgumentParser(description="SOP 发布管线产物断言")
     parser.add_argument("--quick", action="store_true", help="跳过真实数据构建")
@@ -171,6 +228,8 @@ def main():
     report = Report()
     if not args.quick:
         assert_derived(report)
+    assert_bad_cases(report)
+    assert_draft(report)
 
     width = max(len(name) for _, name, _ in report.items)
     for ok, name, detail in report.items:

@@ -1,0 +1,4 @@
+# 契约坏用例：条目在、笔记文件缺失（死条目）→ 构建必须失败
+- slug: dead-entry-test
+  note: MISSING.md
+  date: 2026-01-01T00:00:00+08:00
