@@ -24,12 +24,12 @@ created: 2026-10-15
 ## Decisions so far
 
 - [查清 Hugo 模板可测性事实](tickets/0001-hugo-template-testability.md) — Hugo 无模板单测机制，测试只能 build 后断言产物；派生数据靠 return 型 partial（0.164 限根级单条 return）+ site.Store；data/ 纯静态；本机 0.167 与 CI 0.164 的 return 语义分叉已坐实，深化方案按 0.164 编写。
+- [产品状态模块的驻留位置](tickets/0002-module-seam-location.md) — seam = 单一 return 型 partial（排除预构建脚本：漏跑即静默腐化）；形状 B：模块拥有状态判定 + 控件/文案语义；规则全集 5 条（搜索投影不外扩）；存活测试 = products.html 控件态 + index.html 计数两条产物断言，覆盖 100%。
 
 ## Not yet specified
 
-- **构建集成方式**：若 seam 选定构建期脚本，CI（`.github/workflows/deploy.yml`）与本地 dev 如何获得派生数据 —— 依赖工单「产品状态模块的驻留位置」。
 - **数据迁移与上线时序**：`products.yaml` 5 条 TEST buy_url 改写成新表示的时点与顺序 —— 依赖工单「占位例外的数据表示」。
-- **测试运行阶段**：若测试缝选定构建产物断言，测试挂在 CI 哪一步、本地如何跑 —— 依赖工单「测试缝的形状」。
+- **测试运行阶段**：产物断言挂在 CI 哪一步、本地如何跑（本机 hugo 0.167 与 CI 0.164 语义分叉下，本地跑法是 advisory 还是钉版本）—— 依赖工单「测试缝的形状」。
 
 ## Out of scope
 
