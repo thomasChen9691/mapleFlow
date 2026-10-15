@@ -213,6 +213,46 @@ def assert_draft(report):
                      (TMP / "draft-d" / "posts" / "draft-hidden-entry.html").is_file())
 
 
+def assert_readme(report):
+    """README ↔ 注册表双向一致 + MAPLEFLOW_BLOG_SOP 的不发布标注（0009 决议）。"""
+    readme_path = REPO / "docs" / "sop" / "README.md"
+    if not readme_path.is_file():
+        report.check("docs/sop/README.md 存在", False, str(readme_path))
+        return
+    readme = readme_path.read_text(encoding="utf-8")
+    listed = set(re.findall(r"\]\(([A-Za-z0-9_]+\.md)\)", readme))
+    registered = {e.get("note") for e in parse_registry(REGISTRY)}
+    report.check("README 表格列出的笔记 == 注册表 note 集合（双向）", listed == registered,
+                 f"README-only={sorted(listed - registered)} registry-only={sorted(registered - listed)}")
+    report.check("README 标注 MAPLEFLOW_BLOG_SOP 为不发布",
+                 any("MAPLEFLOW_BLOG_SOP" in line and "不发布" in line for line in readme.splitlines()))
+
+
+def assert_ref_links(report):
+    """索引文章的 6 个 ref 全部解析到冻结 URL（0009 连带裁定：实施期第一验证点）。"""
+    page = TMP / "real" / "posts" / "sop-ops-tools-index.html"
+    if not page.is_file():
+        report.check("索引文章产物存在", False, str(page))
+        return
+    html = page.read_text(encoding="utf-8")
+    for e in parse_registry(REGISTRY):
+        target = "/mapleFlow/posts/%s.html" % e["slug"]
+        report.check(f"索引文章 ref → {target}", target in html)
+
+
+def assert_search_index(report):
+    """搜索索引含 6 篇 SOP（雾区结论的实施期验证：生成页是真页面，自动进投影）。"""
+    index_path = TMP / "real" / "index.json"
+    if not index_path.is_file():
+        report.check("index.json 产物存在", False, str(index_path))
+        return
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    for e in parse_registry(REGISTRY):
+        needle = "posts/%s.html" % e["slug"]
+        report.check(f"搜索索引含 {e['slug']}",
+                     any(needle in (x.get("permalink") or "") for x in index))
+
+
 def main():
     parser = argparse.ArgumentParser(description="SOP 发布管线产物断言")
     parser.add_argument("--quick", action="store_true", help="跳过真实数据构建")
@@ -228,6 +268,9 @@ def main():
     report = Report()
     if not args.quick:
         assert_derived(report)
+        assert_readme(report)
+        assert_ref_links(report)
+        assert_search_index(report)
     assert_bad_cases(report)
     assert_draft(report)
 
