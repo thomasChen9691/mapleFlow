@@ -75,7 +75,10 @@ def load_blog_post(file_path: Path) -> Optional[BlogPost]:
         front_matter = BlogPostFrontMatter(
             title=front_matter_dict.get('title', 'Untitled'),
             date=parse_date(front_matter_dict.get('date', datetime.now().isoformat())),
-            draft=front_matter_dict.get('draft', True),
+            # draft 缺省与 Hugo 一致：未标记 = 非草稿（发布）。
+            # 历史遗留为 True（缺省隐藏），与 Hugo 语义相反，且 models.py 的
+            # draft: bool = False 也不一致 —— 2026-10-15 领域建模裁决对齐 Hugo。
+            draft=front_matter_dict.get('draft', False),
             categories=front_matter_dict.get('categories', []),
             tags=front_matter_dict.get('tags', []),
         )
