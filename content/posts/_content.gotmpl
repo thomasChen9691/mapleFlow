@@ -18,7 +18,8 @@
        ④ 笔记 H1 之后无章节标题行 → 构建失败（正文变换的锚点）
 
        目录契约（0009 决议）：注册表驱动——无条目的笔记 = 尚未发布的稿件，
-       容许自然存在；「注册但未发布」= 条目 draft: true（不进生产构建，-D 出现）。
+       容许自然存在；已注册的草稿 = 条目 draft: true（不进生产构建，-D 出现）。
+       「草稿」以 CONTEXT.md 定义为准（draft 标记即草稿），不另造同义词。
 
        正文变换（迁移保真，golden 比对坐实的历史规则）：剥 H1 → 保留首个
        章节标题行 → 剥紧随其后的定位段（单行；该段内容由注册表 intro 承载）
@@ -31,8 +32,12 @@
 {{- if not $entry.note }}{{ $missing = $missing | append "note" }}{{ end -}}
 {{- if not $entry.date }}{{ $missing = $missing | append "date" }}{{ end -}}
 {{- with $missing }}{{ errorf "SOP 发布管线：注册条目缺必填字段 %v（slug/note/date 必填；标题由笔记首行 H1 承载，不在注册表）" . }}{{ end -}}
+{{- /* 死条目必须显式查存在：os.ReadFile 对缺失文件不返回错误（静默空串，
+       会漏到下游 H1 检查，报出归因错误的错误——实测 + 官方函数族行为）。 */ -}}
+{{- $notePath := printf "%s/%s" $notesDir $entry.note -}}
+{{- if not (os.FileExists $notePath) }}{{ errorf "SOP 发布管线：条目 %s 的源笔记 %s 不存在（死条目：注册表有条目而笔记缺失）" $entry.slug $entry.note }}{{ end -}}
 {{- $raw := "" -}}
-{{- with try (os.ReadFile (printf "%s/%s" $notesDir $entry.note)) -}}
+{{- with try (os.ReadFile $notePath) -}}
   {{- with .Err -}}
     {{- errorf "SOP 发布管线：条目 %s 的源笔记 %s 读取失败：%s" $entry.slug $entry.note . -}}
   {{- else -}}

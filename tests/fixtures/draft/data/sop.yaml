@@ -1,4 +1,5 @@
-# 行为 fixture：draft: true = 注册但未发布（0009 目录契约）——
+# 行为 fixture：draft: true = 已注册的草稿（0009 目录契约，CONTEXT.md
+# canonical 术语）——
 # 不进生产构建，-D 构建出现。另一条为对照组。
 - slug: draft-live-entry
   note: LIVE.md

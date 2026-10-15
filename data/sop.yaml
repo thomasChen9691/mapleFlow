@@ -2,7 +2,8 @@
 # 每篇 SOP 文的发布声明：slug / note / date / categories / tags / description / intro。
 # seam（content/posts/_content.gotmpl）只消费本表；docs/sop 里没有条目的笔记
 # = 尚未发布的稿件（0009 目录契约：注册表驱动、孤儿笔记 tolerated）。
-# 契约（模块内 errorf 执法，后续循环落地）：条目在而笔记缺失 → 构建失败。
+# 契约（模块内 errorf 执法，已落地）：缺 slug/note/date、死条目（条目在而
+# 笔记缺失）、笔记首行无 H1、H1 之后无章节标题行 → 构建失败。
 - slug: sop-ansible-automation-guide
   note: ANSIBLE_SOP.md
   date: 2026-01-28T20:00:00+08:00
