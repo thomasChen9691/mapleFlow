@@ -4,9 +4,10 @@ title: 模块命名与导航契约
 type: grilling
 mode: HITL
 status: open
-blocked_by: [0002]
-assignee:
+blocked_by: []
+assignee: agent
 map: map-product-state-convergence
+claimed: 2026-10-15
 ---
 
 ## Question
