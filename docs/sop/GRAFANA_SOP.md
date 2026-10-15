@@ -78,7 +78,7 @@ docker cp grafana:/var/lib/grafana ./grafana_backup
 # 恢复：将备份目录挂载或复制回容器内对应路径，重启
 ```
 
-### 3.6  provisioning（YAML 配置数据源/仪表盘）
+### 3.6 provisioning（YAML 配置数据源/仪表盘）
 
 ```yaml
 # provisioning/datasources/ds.yml

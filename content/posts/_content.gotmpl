@@ -1,0 +1,36 @@
+{{- /* SOP 发布管线（wayfinder 工单 0008/0009 决议）——seam = 本模板。
+       数据源：data/sop.yaml 注册表（发布声明）+ docs/sop/ 源笔记（纯净正文）。
+       构建期派生文章；模板外无生成物、无第二份 .md；ADR-0001 构建命令零改动。
+
+       0.164 语义纪律（CI 钉版；本机 0.167 skew 已坐实）：
+       · dates 必须嵌套 dict —— page map 顶层 date 静默失效（工单 0007，
+         官方集成测试亦如此写；照抄文档 PortableText 示例会让全部文章日期变零值）。
+       · categories/tags/description 走 params —— 官方 page map 契约，
+         taxonomy 键不得置于顶层。
+       · path 相对本适配器所在目录（官方文档原文），故 path = slug 即 /posts/<slug>。
+       · range 内用 $.AddPage —— $ 才是持有 AddPage 方法的根上下文。
+
+       输入契约由后续红绿循环以 errorf 执法（死条目 / 无 H1 / 缺 date / 缺 slug）。 */ -}}
+{{- range $entry := hugo.Data.sop -}}
+{{- $raw := os.ReadFile (printf "docs/sop/%s" $entry.note) -}}
+{{- $h1 := index (findRE "(?m)^# .*$" $raw 1) 0 -}}
+{{- $title := strings.TrimPrefix "# " $h1 -}}
+{{- /* 正文变换（迁移保真，golden 比对坐实的历史规则）：
+       剥 H1 → 保留首个章节标题行 → 剥紧随其后的定位段（单行；该段内容由
+       注册表 intro 承载）→ 正文 = 标题行 + 余部，前置导语。
+       定位段为多行时不被剥（页面可见重复，不静默丢失内容）。 */ -}}
+{{- $noH1 := replaceRE "(?m)^# [^\n]*\n" "" $raw 1 -}}
+{{- $head := index (findRE "\\A\\n*[^\\n]*\\n" $noH1 1) 0 -}}
+{{- $rest := strings.TrimPrefix $head $noH1 -}}
+{{- $restNoPara := replaceRE "\\A\\n[^\\n]*\\n\\n" "" $rest 1 -}}
+{{- $body := printf "%s\n\n%s" (trim $head "\n") (trim $restNoPara "\n") -}}
+{{- $content := printf "%s\n\n---\n\n%s" $entry.intro $body -}}
+{{- $.AddPage (dict
+      "path" $entry.slug
+      "title" $title
+      "description" $entry.description
+      "dates" (dict "date" ($entry.date | time.AsTime))
+      "content" (dict "mediaType" "text/markdown" "value" $content)
+      "params" (dict "categories" $entry.categories "tags" $entry.tags)
+    ) -}}
+{{- end -}}

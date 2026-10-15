@@ -1,0 +1,47 @@
+# SOP 发布管线注册表（wayfinder 工单 0008/0009 决议）——
+# 每篇 SOP 文的发布声明：slug / note / date / categories / tags / description / intro。
+# seam（content/posts/_content.gotmpl）只消费本表；docs/sop 里没有条目的笔记
+# = 尚未发布的稿件（0009 目录契约：注册表驱动、孤儿笔记 tolerated）。
+# 契约（模块内 errorf 执法，后续循环落地）：条目在而笔记缺失 → 构建失败。
+- slug: sop-ansible-automation-guide
+  note: ANSIBLE_SOP.md
+  date: 2026-01-28T20:00:00+08:00
+  categories: [运维]
+  tags: [Ansible, 自动化, 运维, SOP, 速查]
+  description: "Ansible 安装、Playbook 规范与日常自动化运维 SOP 速查。"
+  intro: "Ansible 是一款开源的自动化运维工具，基于 Python，通过 SSH 对目标主机执行任务，无需在受管节点安装 Agent。本文整理安装、常用命令、Playbook 规范与日常 SOP，便于在网页上查阅。"
+- slug: sop-gitlab-cicd-guide
+  note: GITLAB_SOP.md
+  date: 2026-01-28T20:05:00+08:00
+  categories: [运维]
+  tags: [GitLab, CI/CD, DevOps, SOP, 速查]
+  description: "GitLab 安装、Git/MR 操作与 .gitlab-ci.yml 流水线 SOP 速查。"
+  intro: "GitLab 是集代码托管、CI/CD、制品仓库、Wiki、Issue 等于一体的 DevOps 平台。本文整理安装、常用 Git/MR 操作、`.gitlab-ci.yml` 示例与日常 SOP，便于在网页上查阅。"
+- slug: sop-jenkins-cicd-guide
+  note: JENKINS_SOP.md
+  date: 2026-01-28T20:15:00+08:00
+  categories: [运维]
+  tags: [Jenkins, CI/CD, 持续集成, SOP, 速查]
+  description: "Jenkins 安装、Jenkinsfile 与 CI/CD 流水线 SOP 速查。"
+  intro: "Jenkins 是开源的持续集成/持续部署（CI/CD）服务器，通过任务（Job/Pipeline）执行构建、测试、部署等流水线。本文整理安装、常用命令、Jenkinsfile 示例与日常 SOP，便于在网页上查阅。"
+- slug: sop-prometheus-metrics-alerting-guide
+  note: PROMETHEUS_SOP.md
+  date: 2026-01-28T20:25:00+08:00
+  categories: [运维]
+  tags: [Prometheus, 监控, PromQL, 告警, SOP, 速查]
+  description: "Prometheus 安装、配置、PromQL 与告警 SOP 速查。"
+  intro: "Prometheus 是开源指标采集、存储与查询系统，采用拉模式（Pull）从 Target 抓取指标，支持 PromQL 查询与告警（Alertmanager）。本文整理安装、配置、常用 API 与日常 SOP，便于在网页上查阅。"
+- slug: sop-sonarqube-code-quality-guide
+  note: SONARQUBE_SOP.md
+  date: 2026-01-28T20:10:00+08:00
+  categories: [运维]
+  tags: [SonarQube, 代码质量, 安全扫描, SOP, 速查]
+  description: "SonarQube 安装、Scanner 与质量门禁的代码质量 SOP 速查。"
+  intro: "SonarQube 是代码质量和安全分析平台，支持多语言，可集成到 CI/CD 中自动扫描。本文整理安装、Scanner 配置、质量门禁与日常 SOP，便于在网页上查阅。"
+- slug: sop-grafana-dashboard-alerting-guide
+  note: GRAFANA_SOP.md
+  date: 2026-01-28T20:20:00+08:00
+  categories: [运维]
+  tags: [Grafana, 监控, 可视化, 告警, SOP, 速查]
+  description: "Grafana 数据源、仪表盘与告警配置的可视化运维 SOP 速查。"
+  intro: "Grafana 是开源的可视化与告警平台，可对接 Prometheus、InfluxDB、Elasticsearch、MySQL 等多种数据源。本文整理安装、数据源与仪表盘、告警配置与日常 SOP，便于在网页上查阅。"
