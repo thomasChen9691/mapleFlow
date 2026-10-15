@@ -35,6 +35,8 @@
 
 {{- if eq $listed nil -}}
   {{- errorf "产品状态：条目 %q 缺少 listed 字段（必填布尔值，无缺省）" $name -}}
+{{- else if eq $price nil -}}
+  {{- errorf "产品状态：条目 %q 缺少 price 字段（必填；免费显式写 0）" $name -}}
 {{- end -}}
 
 {{- $free := eq (int $price) 0 -}}

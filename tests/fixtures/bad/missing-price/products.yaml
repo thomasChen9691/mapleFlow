@@ -1,0 +1,13 @@
+# 契约坏用例：缺少 price 字段（必填；免费须显式写 0）。
+# listed 与 buy_url 均合法，单独暴露 price 缺失。
+# 期望：构建失败，错误信息来自产品状态模块（含「产品状态」与条目名）。
+- id: fx-missing-price
+  name: 夹具·缺price字段
+  kind: workflow
+  summary: 缺 price 字段，必须构建失败。
+  version: ""
+  scale: 1 个模板
+  updated: 2026-10-15
+  listed: true
+  buy_url: "https://example.com/fx-missing-price"
+  featured: false
