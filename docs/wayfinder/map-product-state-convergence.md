@@ -26,6 +26,7 @@ created: 2026-10-15
 - [查清 Hugo 模板可测性事实](tickets/0001-hugo-template-testability.md) — Hugo 无模板单测机制，测试只能 build 后断言产物；派生数据靠 return 型 partial（0.164 限根级单条 return）+ site.Store；data/ 纯静态；本机 0.167 与 CI 0.164 的 return 语义分叉已坐实，深化方案按 0.164 编写。
 - [产品状态模块的驻留位置](tickets/0002-module-seam-location.md) — seam = 单一 return 型 partial（排除预构建脚本：漏跑即静默腐化）；形状 B：模块拥有状态判定 + 控件/文案语义；规则全集 5 条（搜索投影不外扩）；存活测试 = products.html 控件态 + index.html 计数两条产物断言，覆盖 100%。
 - [占位例外的数据表示](tickets/0003-placeholder-data-representation.md) — 显式上架状态字段，必填无缺省、缺失即 errorf 构建失败；price 同案严格（免费显式写 0）；模块输入契约成形（已上架⇒buy_url 真实、未上架⇒buy_url 空）；CONTEXT.md 可下载产品定义随机制 sharpen。
+- [可下载产品指标口径](tickets/0004-downloadable-metric-display.md) — 显示 0：指标含义不因数字重定义；迁移后当前值 0 属预期；数据条该格改消费模块的已上架判定。
 
 ## Not yet specified
 
