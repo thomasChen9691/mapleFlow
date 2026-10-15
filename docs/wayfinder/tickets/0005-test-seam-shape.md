@@ -4,9 +4,10 @@ title: 测试缝的形状
 type: grilling
 mode: HITL
 status: open
-blocked_by: [0002, 0003]
-assignee:
+blocked_by: []
+assignee: agent
 map: map-product-state-convergence
+claimed: 2026-10-15
 ---
 
 ## Question
