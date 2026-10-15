@@ -2,8 +2,9 @@
 id: map-product-state-convergence
 title: 产品状态模块深化图（候选 1）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-15
+closed: 2026-10-15
 ---
 
 # 产品状态模块深化图（候选 1）
@@ -28,6 +29,7 @@ created: 2026-10-15
 - [占位例外的数据表示](tickets/0003-placeholder-data-representation.md) — 显式上架状态字段，必填无缺省、缺失即 errorf 构建失败；price 同案严格（免费显式写 0）；模块输入契约成形（已上架⇒buy_url 真实、未上架⇒buy_url 空）；CONTEXT.md 可下载产品定义随机制 sharpen。
 - [可下载产品指标口径](tickets/0004-downloadable-metric-display.md) — 显示 0：指标含义不因数字重定义；迁移后当前值 0 属预期；数据条该格改消费模块的已上架判定。
 - [测试缝的形状](tickets/0005-test-seam-shape.md) — 契约执法在模块内（errorf，构建即门禁）；双构建覆盖（fixture 全分支 + 真实数据线上回归）；CI 权威 + 本地 advisory；脚本落 tests/assert_product_states.py；ADR-0001 只做加法。
+- [模块命名与导航契约](tickets/0006-module-naming-and-navigation.md) — 定名「产品状态模块」（layouts/partials/product-state.html），CONTEXT.md 术语条当场写入；决策耐久性落 ADR-0004（纪律①的阅读路由不含 wayfinder 目录，决策必须活在 docs/adr/）。**本题关闭 = 目的地到达，地图标记 closed。**
 
 ## Not yet specified
 
