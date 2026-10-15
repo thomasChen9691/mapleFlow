@@ -39,6 +39,8 @@
   {{- errorf "产品状态：条目 %q 缺少 price 字段（必填；免费显式写 0）" $name -}}
 {{- else if and $listed (not $buyURL) -}}
   {{- errorf "产品状态：条目 %q 已上架但 buy_url 为空（已上架必须有真实领取入口）" $name -}}
+{{- else if and (not $listed) $buyURL -}}
+  {{- errorf "产品状态：条目 %q 未上架但 buy_url 非空（占位条目不留死链接）" $name -}}
 {{- end -}}
 
 {{- $free := eq (int $price) 0 -}}

@@ -1,0 +1,15 @@
+# 契约坏用例：未上架但 buy_url 非空。
+# 这就是 2026-10 之前的真实状态——5 条 TEST 占位链接全部算进「可下载」，
+# 首页对外显示 5、术语口径 0（5-vs-0 失实）。占位条目不留死链接。
+# 期望：构建失败，错误信息来自产品状态模块（含「产品状态」与条目名）。
+- id: fx-unlisted-with-url
+  name: 夹具·未上架带链接
+  kind: workflow
+  summary: 未上架但 buy_url 非空，必须构建失败。
+  version: ""
+  scale: 1 个模板
+  updated: 2026-10-15
+  price: 39
+  listed: false
+  buy_url: "https://mbd.pub/o/test-should-not-be-here"
+  featured: false
