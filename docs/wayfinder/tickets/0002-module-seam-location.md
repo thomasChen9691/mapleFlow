@@ -4,9 +4,10 @@ title: 产品状态模块的驻留位置
 type: grilling
 mode: HITL
 status: open
-blocked_by: [0001]
-assignee:
+blocked_by: []
+assignee: agent
 map: map-product-state-convergence
+claimed: 2026-10-15
 ---
 
 ## Question
