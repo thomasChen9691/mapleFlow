@@ -31,7 +31,7 @@
         "permalink" (printf "%s#%s" $productsPermalink .id)
         "summary" .summary
         "content" (printf "%s %s %s" .name .summary (.scale | default ""))
-        "tags" (slice "资源")
+        "tags" (slice "产品")
         "categories" (slice "产品")
     ) -}}
   {{- end -}}

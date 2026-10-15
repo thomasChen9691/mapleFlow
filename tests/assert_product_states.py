@@ -151,6 +151,19 @@ class Report:
         return [i for i in self.items if not i[0]]
 
 
+def assert_search_index(report, dest):
+    """产品搜索条目的 tag 必须用标准术语「产品」（CONTEXT.md；资源为禁用词）。"""
+    import json
+    index = json.loads((dest / "index.json").read_text(encoding="utf-8"))
+    product_entries = [e for e in index if "products.html#" in (e.get("permalink") or "")]
+    if not product_entries:
+        report.check("搜索索引含产品条目", False, "index.json 里没有 products.html# 锚点条目")
+        return
+    bad = [e for e in product_entries if e.get("tags") != ["产品"]]
+    report.check(f"产品搜索条目 tag = [\"产品\"]（{len(product_entries)} 条）", not bad,
+                 "" if not bad else "got: " + "; ".join(str(e.get("tags")) for e in bad))
+
+
 def assert_fixture(report):
     dest = TMP / "fixture"
     proc = build(FIXTURE_CONFIG, dest)
@@ -173,6 +186,7 @@ def assert_fixture(report):
                      f"got control={row['control']} label={row['label']!r} data-price={row['data_price']} price={row['price_text']!r} href={row['href']!r}")
     count = parse_spec_count((dest / "index.html").read_text(encoding="utf-8"), "可下载产品")
     report.check("fixture 首页计数 = 已上架条数（2）", count == FIXTURE_LISTED_COUNT, f"got {count}")
+    assert_search_index(report, dest)
 
 
 def assert_bad_cases(report):
