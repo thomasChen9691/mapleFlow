@@ -12,7 +12,10 @@
     uid       string DOM id，同页多次调用必须不同
 */ -}}
 
-{{- $items := site.Data.products -}}
+{{- /* default slice：data/products.yaml 整体缺席（如 fixture 构建覆盖 dataDir）时
+       site.Data.products 为 nil，第 16 行 where 会以「can't iterate over <nil>」
+       崩溃——空态分支为此而写却永不可达。default slice 让 nil 走既定空态。 */ -}}
+{{- $items := hugo.Data.products | default slice -}}
 {{- if .featured }}{{ $items = where $items "featured" true }}{{ end -}}
 {{- with .limit }}{{ if gt (int .) 0 }}{{ $items = $items | first (int .) }}{{ end }}{{ end -}}
 {{- $uid := .uid | default "mf-idx" -}}

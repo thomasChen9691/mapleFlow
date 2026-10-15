@@ -194,9 +194,14 @@ def assert_fixture(report):
 
 
 def assert_bad_cases(report):
-    """每个坏 fixture 的构建必须失败——契约执法（模块内 errorf）。"""
+    """每个坏 fixture 的构建必须失败——契约执法（模块内 errorf）。
+
+    只发现本模块的用例：目录内含 products.yaml。tests/fixtures/bad/ 是
+    共享空间（SOP 管线的 sop-* 用例同住），按内容归属过滤，防止互相扫入。
+    """
     bad_root = REPO / "tests" / "fixtures" / "bad"
-    cases = sorted(p.name for p in bad_root.iterdir() if p.is_dir()) if bad_root.is_dir() else []
+    cases = sorted(p.name for p in bad_root.iterdir()
+                   if p.is_dir() and (p / "products.yaml").is_file()) if bad_root.is_dir() else []
     if not cases:
         report.check("存在契约坏用例", False, "tests/fixtures/bad/ 下没有用例")
         return
