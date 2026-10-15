@@ -27,10 +27,11 @@ created: 2026-10-15
 - [产品状态模块的驻留位置](tickets/0002-module-seam-location.md) — seam = 单一 return 型 partial（排除预构建脚本：漏跑即静默腐化）；形状 B：模块拥有状态判定 + 控件/文案语义；规则全集 5 条（搜索投影不外扩）；存活测试 = products.html 控件态 + index.html 计数两条产物断言，覆盖 100%。
 - [占位例外的数据表示](tickets/0003-placeholder-data-representation.md) — 显式上架状态字段，必填无缺省、缺失即 errorf 构建失败；price 同案严格（免费显式写 0）；模块输入契约成形（已上架⇒buy_url 真实、未上架⇒buy_url 空）；CONTEXT.md 可下载产品定义随机制 sharpen。
 - [可下载产品指标口径](tickets/0004-downloadable-metric-display.md) — 显示 0：指标含义不因数字重定义；迁移后当前值 0 属预期；数据条该格改消费模块的已上架判定。
+- [测试缝的形状](tickets/0005-test-seam-shape.md) — 契约执法在模块内（errorf，构建即门禁）；双构建覆盖（fixture 全分支 + 真实数据线上回归）；CI 权威 + 本地 advisory；脚本落 tests/assert_product_states.py；ADR-0001 只做加法。
 
 ## Not yet specified
 
-- **测试运行阶段**：产物断言挂在 CI 哪一步、本地如何跑（本机 hugo 0.167 与 CI 0.164 语义分叉下，本地跑法是 advisory 还是钉版本）—— 依赖工单「测试缝的形状」。
+（空——雾区已清空；剩余决策仅在 frontier 工单 0006）
 
 ## Out of scope
 
