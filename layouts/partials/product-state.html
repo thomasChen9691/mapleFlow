@@ -1,7 +1,7 @@
 {{- /*
   产品状态模块（CONTEXT.md：产品状态；ADR-0004）
   ============================================================
-  输入：一个产品条目（data/products.yaml 的元素）
+  输入：一个产品（data/products.yaml 的元素）
   输出：dict {
     listed     bool   已上架（领取入口真实可用）
     free       bool   免费（price 显式为 0）
@@ -34,22 +34,28 @@
 {{- $buyURL := $p.buy_url | default "" -}}
 
 {{- if eq $listed nil -}}
-  {{- errorf "产品状态：条目 %q 缺少 listed 字段（必填布尔值，无缺省）" $name -}}
+  {{- errorf "产品状态：%q 缺少 listed 字段（必填布尔值，无缺省）" $name -}}
 {{- else if eq $price nil -}}
-  {{- errorf "产品状态：条目 %q 缺少 price 字段（必填；免费显式写 0）" $name -}}
+  {{- errorf "产品状态：%q 缺少 price 字段（必填；免费显式写 0）" $name -}}
 {{- else if and $listed (not $buyURL) -}}
-  {{- errorf "产品状态：条目 %q 已上架但 buy_url 为空（已上架必须有真实领取入口）" $name -}}
+  {{- errorf "产品状态：%q 已上架但 buy_url 为空（已上架必须有真实领取入口）" $name -}}
 {{- else if and (not $listed) $buyURL -}}
-  {{- errorf "产品状态：条目 %q 未上架但 buy_url 非空（占位条目不留死链接）" $name -}}
+  {{- errorf "产品状态：%q 未上架但 buy_url 非空（占位产品不留死链接）" $name -}}
 {{- end -}}
 
 {{- $free := eq (int $price) 0 -}}
 {{- $dataPrice := "paid" -}}
 {{- if $free }}{{ $dataPrice = "free" }}{{ end -}}
-{{- $state := dict "listed" $listed "free" $free "dataPrice" $dataPrice "label" "即将上架" "href" "" "disabled" true -}}
-{{- if and $listed $free -}}
-  {{- $state = dict "listed" true "free" true "dataPrice" "free" "label" "免费获取" "href" $buyURL "disabled" false -}}
-{{- else if $listed -}}
-  {{- $state = dict "listed" true "free" false "dataPrice" "paid" "label" "购买" "href" $buyURL "disabled" false -}}
+{{- $label := "即将上架" -}}
+{{- $href := "" -}}
+{{- $disabled := true -}}
+{{- if $listed -}}
+  {{- if $free -}}
+    {{- $label = "免费获取" -}}
+  {{- else -}}
+    {{- $label = "购买" -}}
+  {{- end -}}
+  {{- $href = $buyURL -}}
+  {{- $disabled = false -}}
 {{- end -}}
-{{- return $state -}}
+{{- return dict "listed" $listed "free" $free "dataPrice" $dataPrice "label" $label "href" $href "disabled" $disabled -}}

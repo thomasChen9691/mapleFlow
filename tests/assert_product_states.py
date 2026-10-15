@@ -21,6 +21,7 @@ return 写法本地过、CI 红。本脚本只消费构建产物，与 Hugo 版�
 """
 
 import argparse
+import json
 import re
 import shutil
 import subprocess
@@ -39,20 +40,24 @@ REAL_CONFIG = "hugo.toml,config.production.toml"
 # 未上架→禁用「即将上架」（与价格无关）。
 FIXTURE_ROWS = {
     "fx-listed-paid": {
+        "name": "已上架+付费 → 可点「购买」",
         "control": "link", "label": "购买", "href": "https://example.com/fx-listed-paid",
-        "data_price": "paid", "price_text": "¥39",
+        "data_price": "paid", "price_text": "¥39", "aria_disabled": None,
     },
     "fx-listed-free": {
+        "name": "已上架+免费 → 可点「免费获取」",
         "control": "link", "label": "免费获取", "href": "https://example.com/fx-listed-free",
-        "data_price": "free", "price_text": "免费",
+        "data_price": "free", "price_text": "免费", "aria_disabled": None,
     },
     "fx-unlisted-paid": {
+        "name": "未上架+付费 → 禁用「即将上架」+ data-price=paid",
         "control": "disabled", "label": "即将上架", "href": None,
-        "data_price": "paid", "price_text": "¥49",
+        "data_price": "paid", "price_text": "¥49", "aria_disabled": "true",
     },
     "fx-unlisted-free": {
+        "name": "未上架+免费 → 禁用「即将上架」+ data-price=free",
         "control": "disabled", "label": "即将上架", "href": None,
-        "data_price": "free", "price_text": "免费",
+        "data_price": "free", "price_text": "免费", "aria_disabled": "true",
     },
 }
 FIXTURE_LISTED_COUNT = 2   # 4 条 fixture 中已上架 2 条
@@ -76,7 +81,8 @@ class ProductRowParser(HTMLParser):
         classes = (a.get("class") or "").split()
         if tag == "li" and "mf-row" in classes:
             self._row = {"id": a.get("id"), "data_price": a.get("data-price"),
-                         "price_text": "", "control": None, "href": None, "label": ""}
+                         "price_text": "", "control": None, "href": None, "label": "",
+                         "aria_disabled": None}
             self._li_depth = 0
         elif self._row is not None:
             if tag == "li":
@@ -89,6 +95,7 @@ class ProductRowParser(HTMLParser):
                 self._capture = "cta"
             elif tag == "span" and "mf-cta-ghost" in classes:
                 self._row["control"] = "disabled"
+                self._row["aria_disabled"] = a.get("aria-disabled")
                 self._capture = "cta"
 
     def handle_data(self, data):
@@ -152,15 +159,14 @@ class Report:
 
 
 def assert_search_index(report, dest):
-    """产品搜索条目的 tag 必须用标准术语「产品」（CONTEXT.md；资源为禁用词）。"""
-    import json
+    """产品搜索索引的 tag 必须用标准术语「产品」（CONTEXT.md；资源为禁用词）。"""
     index = json.loads((dest / "index.json").read_text(encoding="utf-8"))
     product_entries = [e for e in index if "products.html#" in (e.get("permalink") or "")]
     if not product_entries:
-        report.check("搜索索引含产品条目", False, "index.json 里没有 products.html# 锚点条目")
+        report.check("搜索索引含产品", False, "index.json 里没有 products.html# 锚点")
         return
     bad = [e for e in product_entries if e.get("tags") != ["产品"]]
-    report.check(f"产品搜索条目 tag = [\"产品\"]（{len(product_entries)} 条）", not bad,
+    report.check(f"产品搜索索引 tag = [\"产品\"]（{len(product_entries)} 条）", not bad,
                  "" if not bad else "got: " + "; ".join(str(e.get("tags")) for e in bad))
 
 
@@ -176,14 +182,12 @@ def assert_fixture(report):
         if row is None:
             report.check(f"fixture[{pid}] 渲染出产品行", False, "products.html 中找不到该 id")
             continue
-        report.check(f"未上架+免费 → 禁用「即将上架」+ data-price=free" if pid == "fx-unlisted-free"
-                     else f"未上架+付费 → 禁用「即将上架」+ data-price=paid" if pid == "fx-unlisted-paid"
-                     else f"已上架+免费 → 可点「免费获取」" if pid == "fx-listed-free"
-                     else f"已上架+付费 → 可点「购买」",
-                     row["control"] == exp["control"] and row["label"] == exp["label"]
-                     and row["data_price"] == exp["data_price"] and row["price_text"] == exp["price_text"]
-                     and row["href"] == exp["href"],
-                     f"got control={row['control']} label={row['label']!r} data-price={row['data_price']} price={row['price_text']!r} href={row['href']!r}")
+        ok = (row["control"] == exp["control"] and row["label"] == exp["label"]
+              and row["data_price"] == exp["data_price"] and row["price_text"] == exp["price_text"]
+              and row["href"] == exp["href"] and row["aria_disabled"] == exp["aria_disabled"])
+        report.check(exp["name"], ok,
+                     f"got control={row['control']} label={row['label']!r} data-price={row['data_price']} "
+                     f"price={row['price_text']!r} href={row['href']!r} aria-disabled={row['aria_disabled']!r}")
     count = parse_spec_count((dest / "index.html").read_text(encoding="utf-8"), "可下载产品")
     report.check("fixture 首页计数 = 已上架条数（2）", count == FIXTURE_LISTED_COUNT, f"got {count}")
     assert_search_index(report, dest)
@@ -214,7 +218,8 @@ def assert_real(report):
         return
     rows = parse_rows(dest / "products.html")
     all_unlisted = len(rows) == REAL_ROW_COUNT and all(
-        r["control"] == "disabled" and r["label"] == "即将上架" for r in rows.values())
+        r["control"] == "disabled" and r["label"] == "即将上架" and r["aria_disabled"] == "true"
+        for r in rows.values())
     report.check(f"真实数据 {REAL_ROW_COUNT} 条全部「即将上架」", all_unlisted,
                  f"got {len(rows)} rows: " + ", ".join("%s=%s/%s" % (k, v["control"], v["label"]) for k, v in rows.items()))
     count = parse_spec_count((dest / "index.html").read_text(encoding="utf-8"), "可下载产品")
