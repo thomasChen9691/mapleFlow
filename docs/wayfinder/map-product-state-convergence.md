@@ -23,7 +23,7 @@ created: 2026-10-15
 
 ## Decisions so far
 
-（空）
+- [查清 Hugo 模板可测性事实](tickets/0001-hugo-template-testability.md) — Hugo 无模板单测机制，测试只能 build 后断言产物；派生数据靠 return 型 partial（0.164 限根级单条 return）+ site.Store；data/ 纯静态；本机 0.167 与 CI 0.164 的 return 语义分叉已坐实，深化方案按 0.164 编写。
 
 ## Not yet specified
 
