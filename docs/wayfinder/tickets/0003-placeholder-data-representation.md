@@ -5,8 +5,9 @@ type: grilling
 mode: HITL
 status: open
 blocked_by: []
-assignee:
+assignee: agent
 map: map-product-state-convergence
+claimed: 2026-10-15
 ---
 
 ## Question
