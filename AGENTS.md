@@ -138,3 +138,12 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `.github/workflows/deploy.yml` | 自动部署流水线 |
 | `backend/` | 内容 API（FastAPI） |
 | `docs/sop/` | 运维 SOP 源笔记 |
+
+## 9. 工程纪律（realeng）
+
+1. 任何会话（含更换模型后的新会话）第一步：读 `CONTEXT.md` 与 `docs/adr/`。术语以 `CONTEXT.md` 为准，禁止另造同义词。
+2. 已被 ADR 记录的决策，禁止重新推导；认为 ADR 错了，先提出重审，不许默认推翻。
+3. 难逆决策才写 ADR（难逆转 + 无上下文会惊讶 + 源于真实权衡，三条件齐备）。
+4. 讨论中敲定的术语，当场更新 `CONTEXT.md`，不攒批。
+5. 每批次单独 commit，commit message 说明改动意图。
+6. 会话收尾用 realeng-handoff 压缩交接，长期接力文档存 `docs/handoffs/`。
