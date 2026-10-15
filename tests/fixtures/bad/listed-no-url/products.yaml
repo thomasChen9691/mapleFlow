@@ -1,0 +1,14 @@
+# 契约坏用例：已上架但 buy_url 为空。
+# listed 与 price 均合法，单独暴露「已上架必须有真实领取入口」。
+# 期望：构建失败，错误信息来自产品状态模块（含「产品状态」与条目名）。
+- id: fx-listed-no-url
+  name: 夹具·已上架无链接
+  kind: workflow
+  summary: 已上架但 buy_url 为空，必须构建失败。
+  version: ""
+  scale: 1 个模板
+  updated: 2026-10-15
+  price: 39
+  listed: true
+  buy_url: ""
+  featured: false
