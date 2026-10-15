@@ -102,6 +102,8 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 9. **`public/` 为构建产物，当前未被 git 跟踪**（`git ls-files | grep '^public/'` → 0 文件）：`git add .` 不会包含它，真正对外的是 `gh-pages`，不必纠结 `main` 上的 `public`。
 
+10. **SOP 文是构建期派生的，不要手写**（wayfinder 工单 0008/0009）：`content/posts/` 下 6 个 `sop-*.md` 已删除，文章由 `content/posts/_content.gotmpl`（seam）从 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记在构建期生成，磁盘上没有第二份 .md。手写同名 .md 会与派生页撞路径（产物不确定），由「无残留」断言守。改 SOP 内容 = 改 `docs/sop/` 笔记；改 web 包装（标题由笔记 H1 承载，日期/分类/标签/描述/导语在注册表）= 改 `data/sop.yaml`。契约（缺 slug/note/date、死条目、笔记无 H1）以 errorf 让构建失败。测试 `python3 tests/assert_sop_pipeline.py`（CI 权威、本地 advisory，改动前先跑）。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
@@ -139,6 +141,9 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `backend/` | 内容 API（FastAPI） |
 | `docs/sop/` | 运维 SOP 源笔记 |
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |
+| `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |
+| `data/sop.yaml` | SOP 发布注册表：slug/note/date 必填，tags 可缺省，`draft: true` = 注册但未发布 |
+| `docs/sop/README.md` | 源笔记索引（与注册表双向漂移断言守护；`MAPLEFLOW_BLOG_SOP.md` 不发布） |
 
 ## 9. 工程纪律（realeng）
 

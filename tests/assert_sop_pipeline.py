@@ -253,6 +253,17 @@ def assert_search_index(report):
                      any(needle in (x.get("permalink") or "") for x in index))
 
 
+def assert_ci_wiring(report):
+    """CI 守门在位（0013 预裁：CI 权威 + 本地 advisory）——部署流水线里
+    必须跑本脚本，否则断言的「失败阻断部署」不存在。"""
+    workflow = REPO / ".github" / "workflows" / "deploy.yml"
+    if not workflow.is_file():
+        report.check("deploy.yml 存在", False, str(workflow))
+        return
+    text = workflow.read_text(encoding="utf-8")
+    report.check("deploy.yml 含 SOP 管线断言步", "tests/assert_sop_pipeline.py" in text)
+
+
 def main():
     parser = argparse.ArgumentParser(description="SOP 发布管线产物断言")
     parser.add_argument("--quick", action="store_true", help="跳过真实数据构建")
@@ -273,6 +284,7 @@ def main():
         assert_search_index(report)
     assert_bad_cases(report)
     assert_draft(report)
+    assert_ci_wiring(report)
 
     width = max(len(name) for _, name, _ in report.items)
     for ok, name, detail in report.items:

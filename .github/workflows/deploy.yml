@@ -46,6 +46,13 @@ jobs:
         # 不让失实的「可下载产品」数字上线（2026-10 首页 5-vs-0 事故的守门）。
         run: python3 tests/assert_product_states.py
 
+      - name: Assert SOP pipeline
+        # SOP 发布管线的产物断言（wayfinder 工单 0008/0009 决议）：
+        # 6 篇派生文章的迁移保真（golden 逐字节比对）+ 契约坏用例构建失败
+        # + draft 语义 + README↔注册表漂移 + ref 解析 + 搜索投影。
+        # 失败即阻断部署——源笔记与线上页面的沉默分叉从此不可能发生。
+        run: python3 tests/assert_sop_pipeline.py
+
       - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v4  # 升级：v4 比 v3 更稳定，适配新版权限
         with:
