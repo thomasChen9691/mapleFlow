@@ -20,3 +20,7 @@ map: map-sop-source-sync
 - **H1 标题行**：保留在正文 / 删除（标题已由 front matter 承载，PaperMod 文章页不渲染正文 H1 会与页面标题重复）。
 
 决策依据：工单 0007 的 adapter page map 字段能力（categories/tags 只能进 params，是「集中数据文件」选项的技术前提）；「真源归属」与「派生机制」的方向与形态结论——差异策略是它们的直接下游。
+
+## 预裁记录（工单 0008/0009 质询，2026-10-15）
+
+承载位置已裁（0008 决议第 3 条）：front matter 住 `data/sop.yaml` 注册表；标题从笔记 H1 提取（seam 剥离）；导语为注册表字段。剩余进入 frontier 后确认的只是数据填充与机制细节：逐篇导语/description/tags 的具体值（从现有 6 篇 posts 回填，非决策）；categories 缺省 `['运维']`、tags 可缺省；H1 剥离与导语前置的正文变换顺序。

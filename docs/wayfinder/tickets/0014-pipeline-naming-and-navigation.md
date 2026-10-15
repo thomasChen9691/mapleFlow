@@ -19,3 +19,7 @@ map: map-sop-source-sync
 - **AI 导航路由**：AGENTS.md §9.1 的既有阅读路径（CONTEXT.md + docs/adr/）是否足够让未来会话发现本管线，还是需要在 `docs/sop/README.md` 或 AGENTS.md 关键文件速查表加指针。
 
 本题关闭 = 目的地到达，地图标记 closed。
+
+## 预裁记录（工单 0008 质询，2026-10-15）
+
+命名候选已向「**SOP 发布管线**」收敛（seam = `_content.gotmpl` + `data/sop.yaml` + `docs/sop/`；「管线」准确表达「笔记→注册表→构建期生成」的流向，且不与 CONTEXT.md 现词汇冲突）。`CONTEXT.md`「源笔记」条目预计**无需改写**——目录契约（0009 决议第 1 条）让其定义「尚未发布的 SOP 稿件」原生为真。进入 frontier 后正式落档并裁 ADR-0005 是否记录。

@@ -23,3 +23,7 @@ map: map-sop-source-sync
 - 双构建（fixture + 真实数据）是否必要——参照 ADR-0004「fixture 双构建覆盖全部分支 + 真实数据守线上回归」的既有范式是否需要照搬。
 
 决策依据：ADR-0004 的测试哲学——契约执法在模块内（`errorf`，构建即门禁）+ 存活测试只以构建产物断言；Hugo 生态无模板单测（工单 0001 已证），一切断言只能是 build-then-assert；CI 权威 + 本地 advisory 的运行策略是否沿用。
+
+## 预裁记录（工单 0008/0009 质询，2026-10-15）
+
+测试集已裁（0008 决议第 4 条 + 0009 决议连带裁定）：构建期契约 4 类（死条目 / 无 H1 / 缺 date / 缺 slug）+ 产物断言 6 条（6 篇存在[URL 冻结回归]、标题==H1、日期非零、正文归一化比对、ref 解析、6 slug 无手写残留）+ README↔注册表双向一致 + fixture 双构建。进入 frontier 后只剩正式落档：脚本命名（`tests/assert_sop_pipeline.py`）、fixture 站点组织（临时目录 + dataDir 覆盖，对 ADR-0001 只做加法）、CI 断言步插入点。
