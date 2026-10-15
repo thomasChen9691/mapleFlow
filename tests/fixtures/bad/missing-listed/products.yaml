@@ -1,0 +1,12 @@
+# 契约坏用例：缺少 listed 字段（必填，无缺省）。
+# 期望：构建失败，错误信息来自产品状态模块（含「产品状态」与条目名）。
+- id: fx-missing-listed
+  name: 夹具·缺listed字段
+  kind: workflow
+  summary: 缺 listed 字段，必须构建失败。
+  version: ""
+  scale: 1 个模板
+  updated: 2026-10-15
+  price: 39
+  buy_url: "https://example.com/fx-missing-listed"
+  featured: false

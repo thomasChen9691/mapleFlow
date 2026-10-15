@@ -1,0 +1,49 @@
+{{- /*
+  产品状态模块（CONTEXT.md：产品状态；ADR-0004）
+  ============================================================
+  输入：一个产品条目（data/products.yaml 的元素）
+  输出：dict {
+    listed     bool   已上架（领取入口真实可用）
+    free       bool   免费（price 显式为 0）
+    dataPrice  string "free" | "paid"（筛选属性值）
+    label      string 控件文案：购买 / 免费获取 / 即将上架
+    href       string 领取入口（未上架为 ""）
+    disabled   bool   控件是否禁用
+  }
+
+  消费者（不得自行推导产品状态——ADR-0004）：
+    · layouts/partials/product-index.html —— 产品页索引行
+    · layouts/index.html —— 首页数据条「可下载产品」计数
+
+  契约执法（必填、无缺省、违约即构建失败——A3 draft 分歧的教训：
+  缺失时有两个默认值就会产生分歧，所以这里不给默认值）：
+    · listed 缺失          → errorf
+    · price 缺失           → errorf
+    · 已上架 + buy_url 空   → errorf
+    · 未上架 + buy_url 非空 → errorf
+
+  Hugo 0.164 硬约束（CI 钉 0.164；本机 0.167 之间存在不对称 skew）：
+    单变量 + 根级单条 return。0.166+ 的条件多 return 写法本地过、CI 红，禁止。
+    本 partial 无副作用（纯计算），可安全重复调用；改动前先跑
+    tests/assert_product_states.py。
+*/ -}}
+{{- $p := . -}}
+{{- $name := $p.name | default "(未命名产品)" -}}
+{{- $listed := $p.listed -}}
+{{- $price := $p.price -}}
+{{- $buyURL := $p.buy_url | default "" -}}
+
+{{- if eq $listed nil -}}
+  {{- errorf "产品状态：条目 %q 缺少 listed 字段（必填布尔值，无缺省）" $name -}}
+{{- end -}}
+
+{{- $free := eq (int $price) 0 -}}
+{{- $dataPrice := "paid" -}}
+{{- if $free }}{{ $dataPrice = "free" }}{{ end -}}
+{{- $state := dict "listed" $listed "free" $free "dataPrice" $dataPrice "label" "即将上架" "href" "" "disabled" true -}}
+{{- if and $listed $free -}}
+  {{- $state = dict "listed" true "free" true "dataPrice" "free" "label" "免费获取" "href" $buyURL "disabled" false -}}
+{{- else if $listed -}}
+  {{- $state = dict "listed" true "free" false "dataPrice" "paid" "label" "购买" "href" $buyURL "disabled" false -}}
+{{- end -}}
+{{- return $state -}}

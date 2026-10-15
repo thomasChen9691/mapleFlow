@@ -1,0 +1,5 @@
+# 产品状态模块的测试构建配置。
+# 用法：hugo --config hugo.toml,tests/hugo.test.toml -d tests/tmp/fixture
+# 只覆盖 dataDir 指向 fixture；uglyURLs / timeZone / menu 等继承 hugo.toml。
+# 这是对 ADR-0001 的加法：生产构建命令一字不动。
+dataDir = "tests/fixtures/data"

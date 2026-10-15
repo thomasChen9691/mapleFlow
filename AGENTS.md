@@ -138,6 +138,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `.github/workflows/deploy.yml` | 自动部署流水线 |
 | `backend/` | 内容 API（FastAPI） |
 | `docs/sop/` | 运维 SOP 源笔记 |
+| `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |
 
 ## 9. 工程纪律（realeng）
 

@@ -1,0 +1,60 @@
+# ============================================================
+# 产品状态模块的 fixture 数据（测试专用，不进生产构建）
+# ------------------------------------------------------------
+# 字段与 data/products.yaml 一致，另加 listed（上架状态，必填无缺省）：
+#   listed: true  → 已上架，buy_url 必须非空且真实
+#   listed: false → 未上架（即将上架），buy_url 必须为空
+#   price         → 必填；0 = 免费（显式写 0，不缺省）
+#
+# 本文件覆盖控件语义的四种状态组合（ADR-0004 形状 B）：
+#   已上架+付费 / 已上架+免费 / 未上架+付费 / 未上架+免费
+# 契约坏用例见 tests/fixtures/bad/（每个用例的构建必须失败）。
+# ============================================================
+
+- id: fx-listed-paid
+  name: 夹具·已上架付费
+  kind: workflow
+  summary: 已上架 + 付费 → 可点「购买」+ data-price=paid。
+  version: v1.0.0
+  scale: 1 个模板
+  updated: 2026-10-15
+  price: 39
+  listed: true
+  buy_url: "https://example.com/fx-listed-paid"
+  featured: false
+
+- id: fx-listed-free
+  name: 夹具·已上架免费
+  kind: document
+  summary: 已上架 + 免费 → 可点「免费获取」+ data-price=free。
+  version: v1.0.0
+  scale: 1 页
+  updated: 2026-10-15
+  price: 0
+  listed: true
+  buy_url: "https://example.com/fx-listed-free"
+  featured: false
+
+- id: fx-unlisted-paid
+  name: 夹具·未上架付费
+  kind: question-bank
+  summary: 未上架 + 付费 → 禁用「即将上架」+ data-price=paid（与价格无关）。
+  version: ""
+  scale: 1 题
+  updated: 2026-10-15
+  price: 49
+  listed: false
+  buy_url: ""
+  featured: false
+
+- id: fx-unlisted-free
+  name: 夹具·未上架免费
+  kind: document
+  summary: 未上架 + 免费 → 禁用「即将上架」+ data-price=free（免费同样可以即将上架）。
+  version: ""
+  scale: 1 页
+  updated: 2026-10-15
+  price: 0
+  listed: false
+  buy_url: ""
+  featured: false

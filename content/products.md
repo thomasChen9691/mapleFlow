@@ -5,8 +5,10 @@ draft = false
 layout = "single"
 +++
 
-<!-- 本页资源列表由 data/products.yaml 驱动：新增、下架、改价只改那个文件，本页无需改动。
-     购买链接（buy_url）目前为空，显示为「即将上架」；拿到面包多商品页地址后逐个填入即可。 -->
+<!-- 本页产品列表由 data/products.yaml 驱动（术语：产品，见 CONTEXT.md）：新增、下架、改价只改那个文件，本页无需改动。
+     上架状态由 listed 字段显式标记（必填，无缺省）：listed: false 显示禁用的「即将上架」。
+     拿到真实商品页地址后：填 buy_url 并将 listed 改为 true——两个字段必须同时改
+     （契约由产品状态模块执法，违反则构建失败，见 ADR-0004）。 -->
 
 <div class="mf-hero">
   <p class="mf-eyebrow">Resources</p>

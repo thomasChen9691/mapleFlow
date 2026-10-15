@@ -40,6 +40,12 @@ jobs:
         # （2026-09-20 审计中发现的 posts/aiop.html 即此类残留）。
         run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
+      - name: Assert product states
+        # 产品状态模块的产物断言（ADR-0004 / wayfinder 工单 0005）：
+        # fixture 全分支 + 真实数据线上回归 + 契约坏用例。失败即阻断部署——
+        # 不让失实的「可下载产品」数字上线（2026-10 首页 5-vs-0 事故的守门）。
+        run: python3 tests/assert_product_states.py
+
       - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v4  # 升级：v4 比 v3 更稳定，适配新版权限
         with:
