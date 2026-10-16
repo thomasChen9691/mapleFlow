@@ -1,13 +1,13 @@
 # CLAUDE.md — MapleFlow 博客项目（Claude Code 须知）
 
 本文件为 Claude Code 提供项目上下文与操作约束，内容与根目录 `AGENTS.md` 一致。
+  
 改动前请先阅读 `AGENTS.md` 的「必知坑点」一节。
 
 ## 1. 项目概览
 
 - 使用 **Hugo** + **PaperMod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
 - `themes/PaperMod` 是 Git **子模块**（见 `.gitmodules`）。
-- 后端 `backend/`（FastAPI）解析 `content/posts` 提供内容 API，与静态部署解耦。
 
 ## 2. 分支模型（重要）
 
@@ -27,9 +27,6 @@ hugo server -D
 
 # 生产构建（必须与 CI 完全一致，必须合并两个配置）
 hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
-
-# 后端 API
-pip install -r backend/requirements.txt && python3 run_backend.py   # :8000
 
 # 提交（ASCII 信息，推 main）
 python3 auto_push.py
@@ -55,11 +52,7 @@ python3 auto_push.py
 - 关于页：`content/about.md`（当前为 TEST 测试占位内容，以 `TEST`/HTML 注释标注，**无** `TODO:` 标记；上线前替换为真实信息）。
 - commit 用纯 ASCII 信息，推荐 `python3 auto_push.py`；不自动假设已提交，改动后交用户审阅。
 
-## 6. 后端（`backend/`）
-
-FastAPI：`/api/posts`、`/api/posts/{slug}`、`/api/posts/search`、`/health`；`blog_parser.py` 用 `tomli` 解析 front matter；`python3 run_backend.py` 起服务（:8000）。详见 `AGENTS.md` 第 7 节。
-
-## 7. 工程纪律（realeng）
+## 6. 工程纪律（realeng）
 
 1. 任何会话（含更换模型后的新会话）第一步：读 `CONTEXT.md` 与 `docs/adr/`。术语以 `CONTEXT.md` 为准，禁止另造同义词。
 2. 已被 ADR 记录的决策，禁止重新推导；认为 ADR 错了，先提出重审，不许默认推翻。

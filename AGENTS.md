@@ -8,7 +8,6 @@
 - **性质**：使用 **Hugo** + **PaperMod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
 - **主题**：`themes/PaperMod` 是 Git **子模块**（`.gitmodules` 指向 `adityatelange/hugo-PaperMod`）。
 - **内容方向**：运维开发 / SRE / DevOps 实战 SOP，覆盖 Kubernetes、Docker、CI/CD、AIOps、Prometheus、Grafana、Jenkins、GitLab、Ansible、SonarQube，见 `docs/sop/`。
-- **后端**：`backend/`（FastAPI）解析 `content/posts` 的 Markdown 并暴露内容 API（与静态站点解耦，不影响部署）。
 
 ## 2. 分支模型（重要）
 
@@ -45,10 +44,6 @@ hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.to
 
 # 【本地验证推荐】多一个 --cleanDestinationDir，可清掉草稿孤儿文件（见坑点 7b）
 hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
-
-# 启动后端 API（可选）
-pip install -r backend/requirements.txt   # 或：uv sync
-python3 run_backend.py                     # http://0.0.0.0:8000
 
 # 提交（见 §6 规范）
 python3 auto_push.py                       # 自动 add/commit/push 到 main
@@ -119,16 +114,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 - **不要** `git push` 到 `gh-pages`；也不要 `git commit` 前不确认改动范围。
 - 改动完成后不要自动假设已提交；按规范交给用户审阅。
 
-## 7. 后端（FastAPI，`backend/`）
-
-- `main.py`：FastAPI app，端点 `/api/posts`（列表）、`/api/posts/{slug}`（单篇）、`/api/posts/search`（搜索）、`/health`。
-- `blog_parser.py`：用 `tomli` 解析 `content/posts` 的 front matter 与正文。
-- `models.py` / `config.py` / `requirements.txt`：数据模型、配置、依赖。
-- 运行：`python3 run_backend.py`（端口 8000，热重载）。响应统一 UTF-8（`ensure_ascii=False`）以正确返回中文。
-- 依赖：`pip install -r backend/requirements.txt` 或 `uv sync`（见 `pyproject.toml`）。
-- 测试：`test_api.py`（运行 `python3 test_api.py`）。
-
-## 8. 关键文件速查
+## 7. 关键文件速查
 
 | 文件 | 作用 |
 |------|------|
@@ -138,14 +124,13 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `assets/css/extended/custom.css` | 品牌样式（明暗双主题 CSS 变量） |
 | `static/img/avatar.svg` | 占位头像 |
 | `.github/workflows/deploy.yml` | 自动部署流水线 |
-| `backend/` | 内容 API（FastAPI） |
 | `docs/sop/` | 运维 SOP 源笔记 |
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |
 | `data/sop.yaml` | SOP 发布注册表：slug/note/date/categories 必填，tags 可缺省，`draft: true` = 已注册的草稿 |
 | `docs/sop/README.md` | 源笔记索引（与注册表双向漂移断言守护；`MAPLEFLOW_BLOG_SOP.md` 不发布） |
 
-## 9. 工程纪律（realeng）
+## 8. 工程纪律（realeng）
 
 1. 任何会话（含更换模型后的新会话）第一步：读 `CONTEXT.md` 与 `docs/adr/`。术语以 `CONTEXT.md` 为准，禁止另造同义词。
 2. 已被 ADR 记录的决策，禁止重新推导；认为 ADR 错了，先提出重审，不许默认推翻。

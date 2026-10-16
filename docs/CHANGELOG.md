@@ -1,6 +1,12 @@
 # 更新日志
 
-记录 MapleFlow 博客与后端 API 的变更；与 OpenSpec 变更可互为参考。
+记录 MapleFlow 博客的变更；与 OpenSpec 变更可互为参考。
+
+## 2026-10-16
+
+### SOP 发布管线 + 后端退役
+- 🚀 `content/posts/_content.gotmpl`（seam）+ `data/sop.yaml` 注册表 + `docs/sop/` 源笔记：6 篇 SOP 文改为构建期派生，磁盘上不再有第二份 .md；契约（缺必填字段 / 死条目 / 无 H1 / 无章节标题行）以 errorf 构建期执法；`tests/assert_sop_pipeline.py` 100/100 绿并接入 CI 阻断部署。线上 6 个 URL 冻结，页面与迁移前逐字节一致（golden 断言）。
+- 🗑️ 退役 `backend/`（FastAPI 内容 API）及 `run_backend.py` / `test_api.py` / `verify_encoding.py` / `docs/BACKEND_DOCS.md` / `pyproject.toml`：零消费者（两份历史审计早已结论），且适配器化后其 glob 输入对派生文章失效。代码留 git 历史；ADR-0003 加状态标注（语义裁决仍有效，适用对象已不存在）。
 
 ## 2026-10-10
 
