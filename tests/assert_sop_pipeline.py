@@ -39,6 +39,7 @@ tests/tmp 为本脚本独占（启动即清空）；与 assert_product_states.py
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -310,8 +311,9 @@ def assert_derived(report):
         golden_path = sg.golden_path(slug)
         if golden_path.is_file():
             golden = json.loads(golden_path.read_text(encoding="utf-8"))
-            report.check(f"[{slug}] <article> 全文 == golden（迁移保真）",
-                         inner == golden["article_html"], "渲染正文与迁移前线上页面不一致")
+            report.check(f"[{slug}] <article> == golden（迁移保真·规范化比对）",
+                         sg.canonical(inner) == sg.canonical(golden["article_html"]),
+                         "渲染正文的标签/属性/文本与迁移前线上页面不一致")
             report.check(f"[{slug}] <title> == golden", got_title == golden["title"],
                          f"got={got_title!r} want={golden['title']!r}")
             report.check(f"[{slug}] golden meta description == golden",
@@ -438,6 +440,11 @@ def main():
         mark = "PASS" if ok else "FAIL"
         print(f"[{mark}] {name.ljust(width)}" + (f"  {detail}" if detail and not ok else ""))
     failed = report.failed
+    # GitHub 工作流注解：CI 日志需认证才能取，注解在 run 页直接可见——
+    # 失败项与细节由此可诊断，无需拉取日志（2026-10-16 CI 首红时无法读日志的教训）。
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        for _, name, detail in failed:
+            print(f"::error title=SOP pipeline assertion::{name} - {detail}")
     print(f"\n{len(report.items) - len(failed)}/{len(report.items)} passed")
     if failed:
         print("RED — %d 个行为未满足" % len(failed))

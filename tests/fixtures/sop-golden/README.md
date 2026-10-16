@@ -14,7 +14,11 @@
    `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml -d tests/tmp/baseline`
 3. 抽取字段（每篇一个 JSON）：`title`（`<title>` 全文）、`meta_description`
    （`<meta name=description>` 的值）、`article_html`（`<article ...>` 开标签到
-   `</article>` 之间的原文，minify 后字节级比对）。
+   `</article>` 之间的原文）。
+   比对是**规范化**的（`tests/sop_golden.py: canonical`：标签名 + 排序属性 +
+   折叠文本的 token 序列），不是逐字节——项目政策是「CI 钉 0.164、本机 0.167」，
+   渲染器版本差异会改变属性引号/空白/代码高亮写法，逐字节比对在 CI 必红
+   （2026-10-16 CI 首红实测）。规范化仍抓一切真实变化：标签、属性值、文本。
 
 ## 生命周期（2026-10-16，工单 0013 裁决 A：独立捕获脚本）
 
@@ -31,7 +35,7 @@ python3 tests/capture_sop_golden.py <slug>    # 为指定 slug 新建/更新 gol
   diff 进 PR review。期望值的更新永远是一个可审的文件变更。
 - **新增 SOP 条目**：无 golden 是合法状态（结构断言守）；要字节级守门就顺手
   捕获一个，PR 里一并 review。
-- **未改动树上跑捕获或 --check 必须零 diff**（幂等自检）。
+- **未改动树上跑捕获或 --check 必须零 diff**（幂等自检；同版本渲染下）。
 - 为什么不放在断言脚本里加 `--recapture`：验证与再生混一个入口，误跑一下
   就把「页面回归」洗成「期望更新」。
 

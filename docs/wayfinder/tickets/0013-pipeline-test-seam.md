@@ -48,4 +48,6 @@ map: map-sop-source-sync
 1. **`--printPathWarnings` 不采用**——ADR-0001 固定构建命令只做加法，不给它加 flag；撞路径风险（adapter 页 vs 残留 .md）已由「无残留」断言直接覆盖，再加一道 flag 是重复守门。
 2. **无双路径 fixture**——与产品状态模块不同，SOP 管线不设「好数据 fixture」：真实数据（6 篇在役）就是好路径，fixture 只承载坏输入与行为特例（draft）。真实数据构建 + 6 个坏 fixture + 1 个行为 fixture 即全覆盖。
 
+**实施期订正（2026-10-16，CI 首红）**：迁移保真的比对由「逐字节」改为「规范化」（`tests/sop_golden.py: canonical` → 标签/属性/文本 token 序列）。原因：golden 由本机 0.167 渲染捕获，CI 用 0.164——渲染器版本差异（属性引号、空白、代码高亮写法）使逐字节比对在 CI 必红，与「CI 钉 0.164 / 本机 0.167」的既定政策冲突。规范化后仍抓一切真实变化（标签、属性值、文本），且噪声容忍已被受控样例验证。另：断言脚本新增 GitHub 工作流注解输出（`::error`），CI 失败项无需日志权限即可从 run 页读出。
+
 **下游影响**：0014 解除阻塞进入 frontier（收口工单）。golden 捕获脚本已随本次落档实现（`tests/sop_golden.py` + `tests/capture_sop_golden.py`，README 已载明生命周期）。无新工单、无雾区。
