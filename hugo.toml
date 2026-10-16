@@ -3,6 +3,12 @@
 baseURL = "http://localhost:1313/"
 relativeURLs = true
 
+# 时区必须显式钉住：缺省时 Hugo 用「运行机器的本地时区」渲染时间，
+# 同一份内容在本地（Asia/Shanghai → title 里出 CST）与 CI runner（出 +0800）
+# 产出不同字节——2026-10-16 CI golden 比对首红即此处（post-meta 的 title 属性）。
+# 站点面向中国读者，Asia/Shanghai 也是语义正确值。
+timeZone = "Asia/Shanghai"
+
 # 生产环境配置通过hugo --config参数覆盖
 # 例如创建config.production.toml文件
 # 确保资源路径基于 baseURL 拼接
