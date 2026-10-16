@@ -4,7 +4,9 @@
 - slug: draft-live-entry
   note: LIVE.md
   date: 2026-01-01T00:00:00+08:00
+  categories: [运维]
 - slug: draft-hidden-entry
   note: DRAFT.md
   date: 2026-01-01T00:00:00+08:00
+  categories: [运维]
   draft: true

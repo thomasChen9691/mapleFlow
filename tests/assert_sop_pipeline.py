@@ -74,6 +74,7 @@ BAD_CASE_EXPECT = {
     "sop-dead-entry": "死条目",
     "sop-missing-date": "缺必填字段",
     "sop-missing-slug": "缺必填字段",
+    "sop-missing-categories": "缺必填字段",
     "sop-no-h1": "首行无 H1",
     "sop-h1-only": "无章节标题行",
 }

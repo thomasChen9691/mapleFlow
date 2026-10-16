@@ -1,0 +1,4 @@
+# 契约坏用例：缺 categories（工单 0010 质询裁必填）→ 构建必须失败
+- slug: missing-categories-test
+  note: OK.md
+  date: 2026-01-01T00:00:00+08:00
