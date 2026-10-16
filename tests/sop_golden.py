@@ -60,6 +60,25 @@ def canonical(html):
     return p.tokens
 
 
+def first_divergence(want, got, window=2):
+    """两个 token 序列的首个分歧点，带小窗口上下文——诊断信息。
+
+    CI 日志需认证，本串随断言详情进 GitHub 注解，使「哪一处渲染不同」
+    无需日志权限即可读出（2026-10-16 首次 CI 诊断靠它定位）。
+    """
+    for i, (a, b) in enumerate(zip(want, got)):
+        if a != b:
+            lo = max(0, i - window)
+            return ("token %d: want %r got %r | context want=%r got=%r"
+                    % (i, a, b, want[lo:i + window + 1], got[lo:i + window + 1]))
+    if len(want) != len(got):
+        i = min(len(want), len(got))
+        longer, label = (want, "want") if len(want) > len(got) else (got, "got")
+        return ("length differs (%d vs %d); %s extra from token %d: %r"
+                % (len(want), len(got), label, i, longer[i:i + 3]))
+    return ""
+
+
 def build_real(dest):
     """生产配置构建，与 CI 命令逐字一致（golden 按 minify 后产物捕获）。"""
     return subprocess.run(

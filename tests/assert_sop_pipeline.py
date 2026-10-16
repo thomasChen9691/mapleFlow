@@ -311,9 +311,11 @@ def assert_derived(report):
         golden_path = sg.golden_path(slug)
         if golden_path.is_file():
             golden = json.loads(golden_path.read_text(encoding="utf-8"))
+            want_tokens = sg.canonical(golden["article_html"])
+            got_tokens = sg.canonical(inner)
             report.check(f"[{slug}] <article> == golden（迁移保真·规范化比对）",
-                         sg.canonical(inner) == sg.canonical(golden["article_html"]),
-                         "渲染正文的标签/属性/文本与迁移前线上页面不一致")
+                         want_tokens == got_tokens,
+                         sg.first_divergence(want_tokens, got_tokens))
             report.check(f"[{slug}] <title> == golden", got_title == golden["title"],
                          f"got={got_title!r} want={golden['title']!r}")
             report.check(f"[{slug}] golden meta description == golden",
