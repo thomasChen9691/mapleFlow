@@ -70,3 +70,11 @@ tmp/
 # OpenSpec (keep openspec/ but ignore internal cache if any)
 openspec/.cache/
 openspec/*.lock
+
+# Internal working documents (never publish to the public repo):
+# audit reports, pre-launch checklists, UI proposals, architecture reviews.
+# They contain local machine paths (e.g. the privacy audit's E:\github\...),
+# candid pre-launch assessments, and identity-audit details. Durable
+# decisions live in docs/adr/ + docs/wayfinder/ + CONTEXT.md instead;
+# these are working history kept on disk only.
+internal/
