@@ -1,11 +1,11 @@
 # MapleFlow
 
-MapleFlow 是一个运维 / SRE / DevOps 实战内容站：静态站点与内容 API 共享同一份 Markdown 内容，另有一组对外交付的数字内容包。本文件是该项目的唯一标准术语表——代码、文档、UI 文案与功能设计统一使用这里的词。
+MapleFlow 是一个运维 / SRE / DevOps 实战内容站，另有一组对外交付的数字内容包。本文件是该项目的唯一标准术语表——代码、文档、UI 文案与功能设计统一使用这里的词。
 
 ## 内容形态
 
 **文章 (Post)**：
-content/posts 下的 Markdown 文件，是站点与内容 API 共同的基本内容单元。
+content/posts 下的内容单元，站点的基本组成。手写文章是 Markdown 文件；SOP 文由 SOP 发布管线在构建期派生，磁盘上无 .md（见「发布管线」）。
 _Avoid_: 博文、博客、日志
 
 **页面 (Page)**：
@@ -17,12 +17,22 @@ _Avoid_: 单页、静态页
 _Avoid_: 操作手册、教程、指南
 
 **源笔记**：
-docs/sop/ 下尚未发布的 SOP 稿件，是 SOP 文的上游；不进 Hugo content，不渲染成页面。
+docs/sop/ 下的 SOP 稿件，SOP 文的上游；是否发布由注册表声明（无条目的笔记 = 尚未发布）。不进 Hugo content、不渲染成页面——由发布管线的 seam 在构建期读取。
 _Avoid_: 草稿、底稿
 
 **草稿 (Draft)**：
-带 draft 标记的文章或页面：不进入生产构建，也不进内容 API 的默认列表。缺省未标记即非草稿。
+带 draft 标记的文章或页面，或 SOP 注册表里 draft: true 的条目：不进入生产构建。缺省未标记即非草稿。
 _Avoid_: 私密、隐藏、未发布
+
+## 发布管线
+
+**SOP 发布管线**：
+把源笔记变成线上 SOP 文的构建期机制。seam = content/posts/_content.gotmpl，数据 = data/sop.yaml 注册表 + docs/sop/ 源笔记；模板外无生成物、无第二份 .md。决策见 ADR-0005。
+_Avoid_: 同步脚本、发布系统
+
+**注册表**：
+data/sop.yaml，SOP 文的发布声明：slug/note/date/categories 必填，tags 可缺节，draft: true 表草稿。条目与笔记的配对由构建期契约（errorf）执法，不给缺省值。
+_Avoid_: 配置文件、清单
 
 ## 产品
 

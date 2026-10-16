@@ -2,15 +2,18 @@
 id: map-sop-source-sync
 title: SOP 真源与发布管线图（候选 2）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-15
+closed: 2026-10-16
 ---
 
 # SOP 真源与发布管线图（候选 2）
 
 ## Destination
 
-把 6 对「源笔记 / SOP 文」手抄副本（docs/sop 6 个工具 SOP 共 1243 行 vs content/posts 6 篇 sop-*.md 共 1327 行，逐对 difflib 实测 98.5% 相同、零同步机制）收敛为单一真源的发布管线，达到「可测试、AI 可导航」的可施工状态。本图只产决策，不落地代码；施工留待地图关闭后按 verify-then-commit 展开。
+把 6 对「源笔记 / SOP 文」手抄副本（docs/sop 6 个工具 SOP 共 1243 行 vs content/posts 6 篇 sop-*.md 共 1327 行，逐对 difflib 实测 98.5% 相同、零同步机制）收敛为单一真源的发布管线，达到「可测试、AI 可导航」的可施工状态。
+
+（实施期注记：用户于 2026-10-15/16 指示「按已裁决策实现」，施工在地图关闭前完成——红绿循环 + 双轴评审 + 逐批 commit；「本图只产决策」的原定纪律被用户指令覆盖。）
 
 ## Notes
 
@@ -32,15 +35,18 @@ created: 2026-10-15
 - [SOP 文的派生机制](tickets/0010-sop-post-derivation-mechanism.md) — content adapters 正式落档（排除项复核：mounts / 预构建脚本 / symlink 全部出局）；slug 唯一由注册表给；page map 契约实证（description 必须顶层、dates 必须嵌套）；两项补订：**categories 必填**（tags 仍可缺省）、**「H1 之后无章节标题行」升为正式契约**（注册即承诺可发布）；ref 解析尖峰通过。
 - [backend 取数路由](tickets/0011-backend-data-route.md) — 路由问题溶解为存亡问题：**backend 全套退役**（commit `e2de031`）。前提订正：glob 不是返回空而是静默从 10 篇缩到 4 篇——「接受缺供」的代价不是接近零而是引入静默失效类别；零消费者 + 两份审计建议 + 输入模型失效，改道等于为无人维护新机制。ADR-0003 加状态标注（语义裁决有效、适用对象已不在），非重开。
 - [已分叉差异的消长裁定](tickets/0012-divergence-resolution.md) — 三子问题全部落地（导语/front matter 住注册表、H1 留笔记由 seam 剥除）；残留裁决：导语↔定位段复制对**接受为设计**（双受众双文本，无机械真值可守；golden 钉现值 + README 文档约定兜未来编辑），否决「导语回退」与「前缀弱守门」。
+- [SOP 管线的测试缝形状](tickets/0013-pipeline-test-seam.md) — 测试缝全貌落档（契约 5 类各配归因 fixture / 产物断言 / 结构三断言 / golden 保真 / 漂移 / ref / 投影 / draft / CI 守门）；新裁 golden 生命周期 = 独立捕获脚本（防线在可审 diff，否决断言内 --recapture）；正式声明 --printPathWarnings 不采用（ADR-0001 加法纪律 + 残留断言已覆盖）、无双路径 fixture（真实数据即好路径）。
+- [SOP 管线的命名与导航契约](tickets/0014-pipeline-naming-and-navigation.md) — 定名「SOP 发布管线」；写 ADR-0005（三问全过，决策进强制阅读路由）；CONTEXT.md 术语包执行（文章/源笔记/草稿 sharpen + 新增「发布管线」节两条；订正预裁「源笔记无需改写」的误判）；AGENTS.md 提前落地的文档同步 ratify 保留 + 补 ADR 指针。**本题关闭 = 目的地到达，地图标记 closed。**
 
 ## Not yet specified
 
-（空——雾区已清空；剩余决策仅在 frontier 工单 0013/0014）
+（空——雾区已清空）
 
 ## Out of scope
 
 - **候选 3（后端解析器诚实化）**：随后端退役（工单 0011）而**消解**——无后端则无解析器。
 - **候选 4~6、8**：product-index 接口收窄、reveal 协议、主题 fork、搜索契约——各自独立成图。
 - **候选 7「精选机制落地」**：方向已由项目负责人决议（给文章加 featured 字段），另行开工，不并进本图。
-- **上一图遗留**：commit message 重写、push 35 个 commit、products.yaml 真上架——与本地图无关。
-- **backend 产品 API**：ADR-0003 边界内后端只镜像文章，产品域不进入后端。
+- **上一图遗留**：commit message 重写、push、products.yaml 真上架——与本地图无关。
+- **backend 产品 API**：ADR-0003 边界内后端只镜像文章，产品域不进入后端（随后端整体退役成为历史记录）。
+

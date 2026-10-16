@@ -3,10 +3,11 @@ id: 0014
 title: SOP 管线的命名与导航契约
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: [0013]
 assignee: agent
 claimed: 2026-10-16
+closed: 2026-10-16
 map: map-sop-source-sync
 ---
 
@@ -26,3 +27,24 @@ map: map-sop-source-sync
 命名候选已向「**SOP 发布管线**」收敛（seam = `_content.gotmpl` + `data/sop.yaml` + `docs/sop/`；「管线」准确表达「笔记→注册表→构建期生成」的流向，且不与 CONTEXT.md 现词汇冲突）。`CONTEXT.md`「源笔记」条目预计**无需改写**——目录契约（0009 决议第 1 条）让其定义「尚未发布的 SOP 稿件」原生为真。进入 frontier 后正式落档并裁 ADR-0005 是否记录。
 
 **实施期注记（2026-10-15，code-review 发现）**：AGENTS.md 坑点 10 + 关键文件速查表三行已于实现期提前落地——评审判定此举越权（本题第 4 问「AGENTS.md 是否加指针」未决），但方向无害且服务目的地「AI 可导航」。本题进入 frontier 时，对该文档同步做 **ratify/adjust**（保留、修正或回撤），不从零重决。
+
+## Resolution
+
+2026-10-16 · grilling（用户为决策者）。本题为收口工单，两项裁决 + 三项落档。**本题关闭 = 目的地到达。**
+
+**裁决 1：决策耐久化 = 写 ADR-0005**（三问全过：难逆转 / 无上下文会惊讶 / 真权衡）。`docs/adr/0005-sop-publication-pipeline.md` 已写：真源、机制（含 mounts / 预构建脚本 / symlink 排除理由）、URL 冻结、注册表契约、目录契约、三规则正文变换、测试缝（含 golden 生命周期）、backend 退役连带后果。理由：wayfinder 目录不在 AGENTS.md §8.1 的强制阅读路由上，决策必须活在 docs/adr/——ADR-0004 立过的规矩。
+
+**裁决 2：术语包按草案执行**。`CONTEXT.md` 更新：
+- 文首删「与内容 API 共享同一份 Markdown 内容」（backend 已退役，历史归 ADR-0003 状态标注）；
+- **文章** sharpen 为「content/posts 下的内容单元」并注明 SOP 文为构建期派生、磁盘无 .md；
+- **源笔记** sharpen 为「是否发布由注册表声明（无条目的笔记 = 尚未发布）；由 seam 构建期读取」——**订正预裁记录的误判**：「源笔记条目预计无需改写」不准，原「尚未发布的 SOP 稿件」在 6 篇已注册发布后已失准，当场改写（§8.4 纪律）；
+- **草稿** 删「内容 API 默认列表」死引用，补「SOP 注册表里 draft: true 的条目」同义；
+- 新增「发布管线」节两条术语：**SOP 发布管线**（seam + 数据 + 无生成物；_Avoid: 同步脚本、发布系统）与**注册表**（发布声明 + 契约执法；_Avoid: 配置文件、清单）。
+
+**落档 1：命名** =「**SOP 发布管线**」（预裁收敛案确认）：seam = `_content.gotmpl` + `data/sop.yaml` + `docs/sop/`；「管线」表达「笔记→注册表→构建期生成」的流向，与现词汇自洽。
+
+**落档 2：AGENTS.md 文档同步 ratify**：实现期提前落地的坑点 10 + 速查表三行**保留**（内容准确且服务「AI 可导航」），adjust 一处——管线行补 ADR-0005 指针。不回撤。
+
+**落档 3：AI 导航路由完整**：新会话按 §8.1 读 CONTEXT.md（术语含发布管线/注册表）+ docs/adr/（ADR-0005）即可发现本模块；AGENTS.md 坑点 10 防手写撞路径；docs/sop/README.md 是笔记作者的第一落点（结构约定 + 新增流程）。另订正本题正文对章节号的旧引用（§9.1 → §8.1，随后端退役重编号）。
+
+**终点状态**：本地图 8 张工单（0007~0014）全 closed，雾区空，Destination 到达。施工在地图关闭前完成（用户 2026-10-15/16 指示「按已裁决策实现」），测试 100/100 + 14/14 绿，CI 守门在位。
