@@ -5,7 +5,8 @@ type: grilling
 mode: HITL
 status: open
 blocked_by: [0008]
-assignee:
+assignee: agent
+claimed: 2026-10-16
 map: map-sop-source-sync
 ---
 
