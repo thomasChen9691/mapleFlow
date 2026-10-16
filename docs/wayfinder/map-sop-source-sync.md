@@ -14,13 +14,13 @@ created: 2026-10-15
 
 ## Notes
 
-- 术语以根目录 `CONTEXT.md` 为准：SOP 文、源笔记、草稿。新术语当场进 `CONTEXT.md`，不攒批（AGENTS.md §9.4）。
+- 术语以根目录 `CONTEXT.md` 为准：SOP 文、源笔记、草稿。新术语当场进 `CONTEXT.md`，不攒批（AGENTS.md §8.4）。
 - ADR-0001~0004 闭卷不得重开。最相关先例：ADR-0003「Hugo 是真源，消费方对齐 Hugo」——本图的核心张力是 `CONTEXT.md` 已声称「源笔记是 SOP 文的上游」，但该上游关系没有任何机制承载（grep 全库：docs/sop 被代码/配置引用 0 处）。
 - 已核实事实（2026-10-15 本会话一手复测，非引用旧报告）：6 对副本 901 非空行中 888 行一致（98.5%）；分叉仅在于文章多一段 web 导语、标题进 front matter、多 description/tags/date。另有三个无配对文件：`docs/sop/MAPLEFLOW_BLOG_SOP.md`（157 行，博客自身维护 SOP）、`content/posts/sop-ops-tools-index.md`（30 行，索引文章）、`docs/sop/README.md`（21 行，索引笔记）。
 - 原架构评审的候选 2~6、8 明细只存在于已清理的临时 HTML（`architecture-review-20261015-1736.html`），本图事实为一手复测；其余候选的勘察未恢复，将来选做时重跑 improve-codebase-architecture 或接受重新勘察。
 - Hugo CI 钉 0.164.0、本机 0.167.0；一切 URL/模板行为按 0.164 编写（0.148.0 uglyURLs 修复后语义，见工单 0007）。
 - **URL 冻结已确认为硬约束**（工单 0008 决议）：既有 6 个线上 URL `/posts/sop-*.html` 不得变更（改 URL = 外链 404 + gh-pages 残留；slug 由 `data/sop.yaml` 显式控制）。
-- backend（FastAPI）是文章的第二个磁盘消费者：`blog_parser.py` glob `content/posts/*.md`（ADR-0003 只读镜像）。**已坐实（工单 0008 附带事实）：backend 零消费者，两份历史审计报告均结论「全量死代码、建议删除」**——内存态机制打断 `/api/posts` 的实际代价接近零，正式处置归工单 0011。
+- backend 已退役（工单 0011，commit `e2de031`）：零消费者 + 两份历史审计建议 + 适配器化后 glob 输入对派生文章失效（静默 10→4 篇）。ADR-0003 加状态标注——语义裁决对今后的任何磁盘镜像有效，适用对象已不在。
 - 用户是项目负责人：术语敲定与 ADR 是否记录由用户拍板。质询一次一问，先给推荐答案；**事实自己查**（文件 / 子代理），只有**决策**问用户。
 - 节奏：一次会话最多解决一张工单（research 除外）；HITL 工单必须与用户实时对话解决，agent 不得自答。
 
@@ -30,14 +30,17 @@ created: 2026-10-15
 - [SOP 文与源笔记的真源归属](tickets/0008-sop-source-of-truth.md) — docs/sop 为唯一真源（意图立为机制）；派生机制 = content adapters（排除预构建脚本：ADR-0004 枪毙过的「漏跑即陈旧」失效模式）；**6 个线上 URL `/posts/sop-*.html` 冻结为硬约束**；元数据住 `data/sop.yaml` 注册表，标题由 seam 从笔记 H1 提取并剥除；测试 = 构建期 errorf 契约 + 产物断言（含「渲染正文 == 剥 H1 笔记正文 + 导语」归一化比对——零同步痛点的守门转化）+ fixture 双构建；目录契约 = 注册表驱动、无条目笔记即「尚未发布的稿件」（CONTEXT.md 定义原生为真）。
 - [无配对副本的范围裁定](tickets/0009-unpaired-copies-scope.md) — MAPLEFLOW_BLOG_SOP.md 留下 + README 标注「不发布」（陈旧重复移交 F10 候选）；sop-ops-tools-index.md 保留手写（编辑层资产非 SOP 稿件；残留断言精确化为 6 个派生 slug）；docs/sop/README.md 保留 + README↔注册表双向漂移断言。
 - [SOP 文的派生机制](tickets/0010-sop-post-derivation-mechanism.md) — content adapters 正式落档（排除项复核：mounts / 预构建脚本 / symlink 全部出局）；slug 唯一由注册表给；page map 契约实证（description 必须顶层、dates 必须嵌套）；两项补订：**categories 必填**（tags 仍可缺省）、**「H1 之后无章节标题行」升为正式契约**（注册即承诺可发布）；ref 解析尖峰通过。
+- [backend 取数路由](tickets/0011-backend-data-route.md) — 路由问题溶解为存亡问题：**backend 全套退役**（commit `e2de031`）。前提订正：glob 不是返回空而是静默从 10 篇缩到 4 篇——「接受缺供」的代价不是接近零而是引入静默失效类别；零消费者 + 两份审计建议 + 输入模型失效，改道等于为无人维护新机制。ADR-0003 加状态标注（语义裁决有效、适用对象已不在），非重开。
+- [已分叉差异的消长裁定](tickets/0012-divergence-resolution.md) — 三子问题全部落地（导语/front matter 住注册表、H1 留笔记由 seam 剥除）；残留裁决：导语↔定位段复制对**接受为设计**（双受众双文本，无机械真值可守；golden 钉现值 + README 文档约定兜未来编辑），否决「导语回退」与「前缀弱守门」。
 
 ## Not yet specified
 
-- **/api/posts 改道后的新鲜度语义**：若 backend 改读构建产物（工单 0011 的路由候选之一），API 的缓存与失效语义——等 0011 裁路由。
+（空——雾区已清空；剩余决策仅在 frontier 工单 0013/0014）
 
 ## Out of scope
 
-- **候选 3~6、8**：后端解析器诚实化、product-index 接口收窄、reveal 协议、主题 fork、搜索契约——各自独立成图。
+- **候选 3（后端解析器诚实化）**：随后端退役（工单 0011）而**消解**——无后端则无解析器。
+- **候选 4~6、8**：product-index 接口收窄、reveal 协议、主题 fork、搜索契约——各自独立成图。
 - **候选 7「精选机制落地」**：方向已由项目负责人决议（给文章加 featured 字段），另行开工，不并进本图。
 - **上一图遗留**：commit message 重写、push 35 个 commit、products.yaml 真上架——与本地图无关。
 - **backend 产品 API**：ADR-0003 边界内后端只镜像文章，产品域不进入后端。
