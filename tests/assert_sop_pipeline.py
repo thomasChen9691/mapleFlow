@@ -47,10 +47,12 @@ from datetime import datetime
 from html import unescape
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import sop_golden as sg  # golden 抽取与捕获脚本共用，防规则漂移
+
 REPO = Path(__file__).resolve().parent.parent
 TMP = REPO / "tests" / "tmp"
 REGISTRY = REPO / "data" / "sop.yaml"
-GOLDEN = REPO / "tests" / "fixtures" / "sop-golden"
 BAD_ROOT = REPO / "tests" / "fixtures" / "bad"
 DRAFT_ROOT = REPO / "tests" / "fixtures" / "draft"
 NOTES_DIR = REPO / "docs" / "sop"  # 镜像 hugo.toml 的 params.sopNotesDir 缺省值
@@ -134,14 +136,6 @@ def note_h1(note_file):
         if line.strip():
             return line[2:].strip() if line.startswith("# ") else None
     return None
-
-
-def article_inner(html):
-    m = re.search(r"<article[^>]*>", html)
-    if not m:
-        return None
-    end = html.find("</article>", m.end())
-    return html[m.end():end] if end >= 0 else None
 
 
 def html_to_text(html):
@@ -277,17 +271,17 @@ def assert_derived(report):
             report.check(f"[{slug}] 派生页面存在于冻结 URL", False, f"{page} 不存在")
             continue
         html = page.read_text(encoding="utf-8")
+        fields = sg.extract(html)
+        got_title, got_desc = fields["title"], fields["meta_description"]
+        inner = fields["article_html"] or ""
         # 残留：派生 slug 不得有手写 .md（否则与 adapter 页同路径共存）
         residue = REPO / "content" / "posts" / f"{slug}.md"
         report.check(f"[{slug}] 无手写 .md 残留", not residue.exists(), str(residue))
         # 标题：源笔记 H1 是独立期望值（适配器不得自说自话）
         h1 = note_h1(note)
-        title = re.search(r"<title>(.*?)</title>", html)
-        got_title = title.group(1) if title else ""
         report.check(f"[{slug}] 标题 == 源笔记 H1", h1 is not None and got_title == f"{h1} | MapleFlow",
                      f"h1={h1!r} got={got_title!r}")
         # 日期：零值陷阱回归 + 与注册表 date 独立核对
-        inner = article_inner(html) or ""
         rendered_date = re.search(r"([A-Z][a-z]+ \d{1,2}, \d{4})", inner)
         got_date = rendered_date.group(1) if rendered_date else ""
         want_date = hugo_date_text(e["date"]) if e.get("date") else ""
@@ -295,10 +289,9 @@ def assert_derived(report):
                      got_date == want_date and ZERO_DATE_TEXT not in inner,
                      f"got={got_date!r} want={want_date!r}")
         # description 透传：Plumbing 回归（曾因放 params 而 meta 全空）
-        desc = re.search(r'<meta name=description content="([^"]*)"', html)
         report.check(f"[{slug}] meta description == 注册表",
-                     bool(desc) and desc.group(1) == (e.get("description") or ""),
-                     f"got={(desc.group(1) if desc else None)!r}")
+                     bool(got_desc) and got_desc == (e.get("description") or ""),
+                     f"got={got_desc!r}")
         # 结构断言：派生关系不依赖 golden（新条目同样受守）
         page_text = html_to_text(inner)
         intro_text = md_to_text(e.get("intro") or "")
@@ -314,17 +307,16 @@ def assert_derived(report):
                      bool(tail) and squash(tail) in squash(page_text),
                      f"tail={tail[:60]!r}")
         # 迁移保真：仅迁移条目有 golden；新条目无 golden 是预期（新增流程）
-        golden_path = GOLDEN / f"{slug}.json"
+        golden_path = sg.golden_path(slug)
         if golden_path.is_file():
             golden = json.loads(golden_path.read_text(encoding="utf-8"))
             report.check(f"[{slug}] <article> 全文 == golden（迁移保真）",
                          inner == golden["article_html"], "渲染正文与迁移前线上页面不一致")
             report.check(f"[{slug}] <title> == golden", got_title == golden["title"],
                          f"got={got_title!r} want={golden['title']!r}")
-            gdesc = re.search(r'<meta name=description content="([^"]*)"', html)
             report.check(f"[{slug}] golden meta description == golden",
-                         bool(gdesc) and gdesc.group(1) == golden["meta_description"],
-                         f"got={(gdesc.group(1) if gdesc else None)!r}")
+                         bool(got_desc) and got_desc == golden["meta_description"],
+                         f"got={got_desc!r} want={golden['meta_description']!r}")
 
 
 def assert_bad_cases(report):
