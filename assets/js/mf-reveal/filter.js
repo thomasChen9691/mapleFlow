@@ -1,0 +1,55 @@
+/**
+ * filter.js —— 产品索引筛选引擎（reveal 协议·行为层）
+ * ============================================================
+ * 【本文件是 reveal 协议 DOM 契约的唯一定义处——工单 0022 决议②】
+ * 命名权归协议层：class / data-* / aria 词汇由本文件定义，
+ * product-index 渲染 seam 是消费者，只负责产出符合本契约的 DOM。
+ *
+ * 注册方式（工单 0022 决议③）：import 时自动扫描 `.mf-index` roots 并各自绑定，
+ *   不依赖 uid —— uid 仍是渲染 seam 的 DOM id 契约（必填、兼深链锚），
+ *   但不再是本引擎的注册键。同页多实例各管各的按钮与计数。
+ *
+ * DOM 契约（读 → 写）：
+ *   读  root                    `.mf-index`（筛选区根，每实例一个）
+ *       buttons                 `.mf-filter[data-group][data-value]`（kind 组：all/workflow/document/question-bank；price 组：all/free/paid）
+ *                               词汇表归产品索引渲染链（ADR-0006），引擎不持有词表
+ *       rows                    `.mf-rows > .mf-row[data-kind][data-price]`
+ *       count                   `.mf-count[aria-live="polite"]`
+ *       empty                   `.mf-empty`（无匹配条目时显隐）
+ *   写  aria-pressed            组内互斥：当前值 pressed=true，同组其余 false；再点当前值回到 all
+ *       is-hidden              不匹配行加、匹配行去（配合 CSS display:none）
+ *       is-in                   用户交互后可见行直写终态（不依赖滚动进场点亮）
+ *       --mf-i                  可见序 stagger 变量，第 9 条起截断为 8（长列表防迟钝）
+ *       is-morphing / is-bump   一次性重播动画类（remove → reflow → add；morph 520ms 后由 timer 移除，bump 不设 timer）
+ *       count.textContent       「显示 X / Y」；empty.hidden = (X > 0)
+ *   降级  prefers-reduced-motion: reduce 时仍完整过滤，但不播放 morph / bump
+ *        （matchMedia 不可用时按「不减弱」处理——守卫路径而非悲观禁用）
+ *
+ * 测试：tests/assert_reveal.mjs（seam S1，工单 0022 决议④的 A 类行为项）。
+ * 生产加载：经 assets/js/mf-reveal/app.js 入口由 extend_footer 以 js.Build 引用；
+ *   视觉参数（22ms stagger、520ms  timer、rootMargin 等）属 CSS/调值层，不在契约内。
+ */
+
+const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
+
+function prefersReducedMotion(win) {
+  return !!(win.matchMedia && win.matchMedia(REDUCED_QUERY).matches);
+}
+
+/** 把单个 root 绑定为独立筛选实例；导出供测试逐 root 调用 */
+export function initFilter(root) {
+  const win = root.ownerDocument.defaultView;
+  const rows = root.querySelectorAll('.mf-row');
+  const count = root.querySelector('.mf-count');
+
+  // RGR-1 最小面：初始 apply(false) 写计数。过滤/交互语义按轮次追加。
+  if (count) { count.textContent = `显示 ${rows.length} / ${rows.length}`; }
+}
+
+/** import 时自动注册（浏览器与 jsdom 均以全局 document 为宿主） */
+export function autoInit() {
+  if (typeof document === 'undefined') { return; }
+  document.querySelectorAll('.mf-index').forEach(initFilter);
+}
+
+autoInit();
