@@ -1,0 +1,37 @@
+{{- /*
+  覆盖 PaperMod 的 layouts/partials/post_meta.html（本文件与主题逐字一致，
+  仅第 4 行的 title 属性改为显式时间格式）。升级 PaperMod 子模块时必须回来同步，
+  否则会静默丢失此处修复（同 baseof.html / extend_head.html 的既有约定）。
+
+  为什么改：主题用 printf "%s" .Date，即 Go 的 time.Time.String()——它会打印
+  时区**缩写**。而 Go 解析「带偏移量的时间戳」时，只有偏移量与运行机器的本地
+  时区一致才会用命名时区，否则造一个无名固定区：同一份内容在本机（Asia/Shanghai）
+  渲染出 `2026-01-28 20:00:00 +0800 CST`，在 CI runner（UTC）渲染出
+  `2026-01-28 20:00:00 +0800 +0800`——构建环境决定输出字节，且 CI 版本还很难看。
+  显式 Format 后两端一致为 `2026-01-28 20:00:00 +0800`（悬浮提示也更易读）。
+  注：hugo.toml 的 timeZone 管不到这条路径（它只影响语言级日期格式化），
+  故不能靠配置消除。
+*/ -}}
+{{- $scratch := newScratch }}
+
+{{- if not .Date.IsZero -}}
+{{- $scratch.Add "meta" (slice (printf "<span title='%s'>%s</span>" (.Date.Format "2006-01-02 15:04:05 -0700") (.Date | time.Format (default ":date_long" site.Params.DateFormat)))) }}
+{{- end }}
+
+{{- if (.Param "ShowReadingTime") -}}
+{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "read_time" .ReadingTime | default (printf "%d min" .ReadingTime)))) }}
+{{- end }}
+
+{{- if (.Param "ShowWordCount") -}}
+{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "words" .WordCount | default (printf "%d words" .WordCount)))) }}
+{{- end }}
+
+{{- if not (.Param "hideAuthor") -}}
+{{- with (partial "author.html" .) }}
+{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" .)) }}
+{{- end }}
+{{- end }}
+
+{{- with ($scratch.Get "meta") }}
+{{- delimit . "&nbsp;·&nbsp;" | safeHTML -}}
+{{- end -}}

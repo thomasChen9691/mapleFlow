@@ -123,6 +123,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `content/about.md` | 简历/关于页 |
 | `assets/css/extended/custom.css` | 品牌样式（明暗双主题 CSS 变量） |
 | `static/img/avatar.svg` | 占位头像 |
+| `layouts/partials/post_meta.html` | 主题覆盖：文章元信息（日期悬浮提示改为显式时区格式，消除「构建机器时区决定输出字节」。**升级 PaperMod 子模块时必须回来同步**，同 `_default/baseof.html` / `partials/extend_head.html`） |
 | `.github/workflows/deploy.yml` | 自动部署流水线 |
 | `docs/sop/` | 运维 SOP 源笔记 |
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |

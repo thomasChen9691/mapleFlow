@@ -265,9 +265,6 @@ weight = 10
 [pagination]
 pagerSize = 6  # 每页 6 篇（正式文章 10 篇 → TotalPages=2，分页器可见）
 
-# 时区配置（解决日期显示错误）
-timeZone = "Asia/Shanghai"
-
 # ================= 站内搜索（PaperMod + fuse.js）=================
 # 生成首页 JSON 索引（index.json），供 search.md 的 fuse.js 检索
 [outputs]
