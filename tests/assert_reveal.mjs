@@ -111,5 +111,42 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
+// ---- RGR-3：is-hidden 切换、计数随过滤更新、空态显隐 ----
+{
+  const dom = installDom(sampleIndex());
+  await loadFresh('assets/js/mf-reveal/filter.js');
+  const doc = dom.window.document;
+  const click = (g, v) => doc.querySelector(`.mf-filter[data-group="${g}"][data-value="${v}"]`)
+    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  const row = (id) => doc.getElementById(id);
+  const count = doc.querySelector('.mf-count');
+  const empty = doc.querySelector('.mf-empty');
+
+  click('kind', 'workflow');
+  check(
+    'RGR-3a 筛 workflow：仅匹配行可见，其余加 is-hidden；计数「显示 1 / 3」；空态隐藏',
+    !row('fx-1').classList.contains('is-hidden')
+      && row('fx-2').classList.contains('is-hidden')
+      && row('fx-3').classList.contains('is-hidden')
+      && count.textContent === '显示 1 / 3'
+      && empty.hidden === true,
+    `got fx1=${row('fx-1').className} fx2=${row('fx-2').className} fx3=${row('fx-3').className} count=${count.textContent} empty.hidden=${empty.hidden}`,
+  );
+
+  click('price', 'paid'); // workflow + paid 仍命中 fx-1
+  check(
+    'RGR-3b 追加 price=paid：计数不变「显示 1 / 3」',
+    count.textContent === '显示 1 / 3',
+    `got count=${count.textContent}`,
+  );
+
+  click('kind', 'document'); // document + paid 无命中（fx-2 是 free）
+  check(
+    'RGR-3c 组合筛到 0 匹配：空态显示、计数「显示 0 / 3」',
+    empty.hidden === false && count.textContent === '显示 0 / 3',
+    `got empty.hidden=${empty.hidden} count=${count.textContent}`,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

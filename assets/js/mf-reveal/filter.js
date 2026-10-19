@@ -44,8 +44,17 @@ export function initFilter(root) {
   const state = { kind: 'all', price: 'all' };
 
   function apply(animate) {
-    // 过滤可见性/计数语义按 RGR-3 追加；当前仅维持计数占位。
-    if (count) { count.textContent = `显示 ${rows.length} / ${rows.length}`; }
+    let shown = 0;
+    rows.forEach((el) => {
+      const okKind = state.kind === 'all' || el.dataset.kind === state.kind;
+      const okPrice = state.price === 'all' || el.dataset.price === state.price;
+      const visible = okKind && okPrice;
+      el.classList.toggle('is-hidden', !visible);
+      if (visible) { shown++; }
+    });
+    if (count) { count.textContent = `显示 ${shown} / ${rows.length}`; }
+    const empty = root.querySelector('.mf-empty');
+    if (empty) { empty.hidden = shown > 0; }
   }
 
   root.querySelectorAll('.mf-filter').forEach((btn) => {
