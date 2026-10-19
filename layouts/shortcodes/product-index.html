@@ -1,11 +1,16 @@
 {{- /*
   短代码包装：{{< product-index featured="true" limit="3" filters="false" >}}
-  真正的渲染逻辑在 layouts/partials/product-index.html
+  渲染逻辑在 layouts/partials/product-index.html（纯渲染 seam）；
+  数据准备在 layouts/partials/product-items.html（工单 0015 双 seam 拆分）。
+  短代码对外接口不变（featured/limit/filters 属性）。
 */ -}}
 
-{{- partial "product-index.html" (dict
+{{- $items := partial "product-items.html" (dict
     "featured" (eq (.Get "featured" | default "false") "true")
     "limit" (int (.Get "limit" | default 0))
+) -}}
+{{- partial "product-index.html" (dict
+    "items" $items
     "filters" (ne (.Get "filters" | default "true") "false")
     "uid" (printf "mf-idx-%d" .Ordinal)
 ) -}}

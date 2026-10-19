@@ -1,0 +1,15 @@
+# 契约坏用例：kind 不在 CONTEXT.md 交付形态封闭词表内。
+# listed / price / buy_url 均合法，单独暴露 kind 词汇契约。
+# 期望：构建失败，错误信息来自产品索引数据门禁
+#       （含「产品索引数据：」、条目 id 与坏值 kind）。
+- id: fx-unknown-kind
+  name: 夹具·未知交付形态
+  kind: poster
+  summary: kind=poster 不在闭环词表内，必须构建失败。
+  version: ""
+  scale: 1 个
+  updated: 2026-10-15
+  price: 39
+  listed: true
+  buy_url: "https://example.com/fx-unknown-kind"
+  featured: false

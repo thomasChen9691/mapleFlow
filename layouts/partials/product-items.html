@@ -1,0 +1,45 @@
+{{- /*
+  product-items（partial）—— 索引渲染链的**数据准备 seam**
+  ============================================================
+  工单 0015 决议：本 partial 是索引渲染链中**唯一读 hugo.Data.products 的宿主**；
+  渲染 seam（product-index.html）零全局依赖，行为完全由入参决定。
+
+  入参（dict）：
+    featured  bool   只保留 featured: true 的产品（缺省 false = 不过滤）
+    limit     int    只取前 N 个产品（缺省或 0 = 全部）
+
+  输出：slice（产品）。空态返回空 slice，空态文案归渲染 seam。
+
+  契约执法（必填、无缺省、违约即构建失败——不给缺省值）：
+    · kind 不在交付形态封闭词表 → errorf
+      （工单 0016 决议：kind ∈ workflow/document/question-bank，
+       即 CONTEXT.md「交付形态」封闭词表；模板按钮是该词表的执行区。
+       工单 0005 曾评估「未知 kind 不进产品状态契约」——kind 是事实，
+       由本数据门禁检查，产品状态模块不碰。）
+    · limit 为负数 → errorf
+      （工单 0015 决议：旧行为负数走 gt 0 分支外静默全量，属静默失效类。）
+
+  调用方（不自行推导/不过滤数据——数据准备只此一处）：
+    · layouts/shortcodes/product-index.html（产品页）
+    · layouts/index.html（首页精选区）
+*/ -}}
+{{- $items := hugo.Data.products | default slice -}}
+{{- $featured := .featured | default false -}}
+{{- $limit := .limit | default 0 -}}
+
+{{- range $i, $p := $items -}}
+  {{- $id := $p.id | default "<缺失>" -}}
+  {{- $kind := $p.kind | default "<缺失>" -}}
+  {{- if not (in (slice "workflow" "document" "question-bank") $p.kind) -}}
+    {{- errorf "产品索引数据：%q 的 kind=%q 不在交付形态封闭词表（workflow/document/question-bank）内" $id $kind -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if $featured }}{{ $items = where $items "featured" true }}{{ end -}}
+{{- if lt (int $limit) 0 -}}
+  {{- errorf "产品索引数据：limit 不能为负数（got %d）" (int $limit) -}}
+{{- else if gt (int $limit) 0 -}}
+  {{- $items = $items | first (int $limit) -}}
+{{- end -}}
+
+{{- return $items -}}

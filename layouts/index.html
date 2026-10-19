@@ -107,7 +107,8 @@
     <a class="mf-more" href="{{ .RelPermalink }}">全部资源 →</a>
     {{- end }}
   </div>
-  {{ partial "product-index.html" (dict "featured" true "limit" 3 "filters" false "uid" "mf-idx-home") }}
+  {{- $featuredItems := partial "product-items.html" (dict "featured" true "limit" 3) -}}
+  {{ partial "product-index.html" (dict "items" $featuredItems "filters" false "uid" "mf-idx-home") }}
 </section>
 
 {{- end }}{{/* end 仅第 1 页显示 */}}

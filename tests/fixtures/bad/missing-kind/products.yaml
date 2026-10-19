@@ -1,0 +1,14 @@
+# 契约坏用例：kind 字段缺失（必填，无缺省）。
+# listed / price / buy_url 均合法，单独暴露 kind 缺失。
+# 期望：构建失败，错误信息来自产品索引数据门禁
+#       （含「产品索引数据：」、产品 id 与 kind="<缺失>"）。
+- id: fx-missing-kind
+  name: 夹具·缺kind字段
+  summary: kind 字段缺失，必须构建失败。
+  version: ""
+  scale: 1 个
+  updated: 2026-10-15
+  price: 39
+  listed: true
+  buy_url: "https://example.com/fx-missing-kind"
+  featured: false

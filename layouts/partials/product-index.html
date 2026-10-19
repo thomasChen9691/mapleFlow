@@ -1,23 +1,23 @@
 {{- /*
-  product-index（partial）—— 资源索引渲染核心
-  数据源：data/products.yaml
-  被两处调用：
-    · layouts/shortcodes/product-index.html（产品页正文）
-    · layouts/index.html（首页精选资源）
+  product-index（partial）—— 资源索引渲染核心（纯渲染 seam）
+  工单 0015 决议：本 partial **零全局依赖**——不读 hugo.Data.products、
+  不做 featured/limit 过滤；数据准备归 product-items.html（唯一宿主），
+  本模板只渲染传入的产品。
 
   入参（dict）：
-    featured  bool   只显示精选
-    limit     int    显示条数（0 或空 = 全部）
+    featured  —— 已移除（过滤归 product-items）
+    limit     —— 已移除（截断归 product-items）
     filters   bool   是否输出筛选控件与交互脚本
     uid       string DOM id，同页多次调用必须不同
+    items     slice  待渲染产品（由 product-items.html 供给；必填，缺失即构建失败）
+  渲染 seam 不做数据契约——契约执法在数据 seam（kind 词汇）与
+  产品状态模块（listed/price/buy_url，ADR-0004）。
 */ -}}
 
-{{- /* default slice：data/products.yaml 整体缺席（如 fixture 构建覆盖 dataDir）时
-       site.Data.products 为 nil，第 16 行 where 会以「can't iterate over <nil>」
-       崩溃——空态分支为此而写却永不可达。default slice 让 nil 走既定空态。 */ -}}
-{{- $items := hugo.Data.products | default slice -}}
-{{- if .featured }}{{ $items = where $items "featured" true }}{{ end -}}
-{{- with .limit }}{{ if gt (int .) 0 }}{{ $items = $items | first (int .) }}{{ end }}{{ end -}}
+{{- if eq .items nil -}}
+  {{- errorf "产品索引：items 必填（数据准备由 product-items.html 供给，渲染 seam 不收裸数据）" -}}
+{{- end -}}
+{{- $items := .items -}}
 {{- $uid := .uid | default "mf-idx" -}}
 {{- $showFilters := ne (.filters | default true) false -}}
 

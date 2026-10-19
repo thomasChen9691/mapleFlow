@@ -8,6 +8,8 @@
 #
 # 本文件覆盖控件语义的四种状态组合（ADR-0004 形状 B）：
 #   已上架+付费 / 已上架+免费 / 未上架+付费 / 未上架+免费
+# featured 混合（0015 接线后回归守门）：fx-listed-paid = true，其余 false
+#   ——首页精选区经 product-items featured 过滤后应只剩它一行。
 # 契约坏用例见 tests/fixtures/bad/（每个用例的构建必须失败）。
 # ============================================================
 
@@ -21,7 +23,7 @@
   price: 39
   listed: true
   buy_url: "https://example.com/fx-listed-paid"
-  featured: false
+  featured: true
 
 - id: fx-listed-free
   name: 夹具·已上架免费

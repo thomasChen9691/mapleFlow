@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""产品状态模块的产物断言（ADR-0004；wayfinder 工单 0002/0005 定案）。
+"""产品状态模块与产品索引接口的产物断言（ADR-0004；wayfinder 工单 0002/0005 定案；
+候选 4 施工：工单 0015/0016 决议 + 评审加固）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
-    与 index.html（「可下载产品」计数）
-  · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败
-    （输入契约由模块内 errorf 执法，非零退出 + 错误信息含「产品状态」）
+    与 index.html（「可下载产品」计数、首页精选区 featured 分栏）
+  · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
+    逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）
+    与产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
+  · 调用方 seam —— 经真实调用链（短代码 / 直接调 partial）触发的契约失败
+  · 空态 seam —— 产品数据整体缺席时渲染「暂无资源」而非崩溃或静默空页
   · 真实数据 seam —— 生产配置构建的 products.html / index.html，线上回归守门
 
 用法：
@@ -60,9 +64,33 @@ FIXTURE_ROWS = {
         "data_price": "free", "price_text": "免费", "aria_disabled": "true",
     },
 }
-FIXTURE_LISTED_COUNT = 2   # 4 条 fixture 中已上架 2 条
-REAL_ROW_COUNT = 5         # data/products.yaml 现有 5 条
+FIXTURE_LISTED_COUNT = 2   # 4 条 fixture 中已上架 2 个产品
+FIXTURE_PAGE_ROW_COUNT = 4  # 产品页（短代码默认 limit=0）经 product-items 渲染全部产品
+FIXTURE_HOME_FEATURED_IDS = ["fx-listed-paid"]  # 首页精选区：featured 混合数据经过滤后只剩它
+EMPTY_STATE_TEXT = "暂无资源"  # 渲染 seam 的空态文案（空 slice 时；存量 UI 文案）
+REAL_ROW_COUNT = 5         # data/products.yaml 现有 5 个产品
 REAL_LISTED_COUNT = 0      # 迁移后全部未上架（占位），可下载产品为 0（工单 0004：显示 0）
+
+# 契约坏用例的逐条期望子串（0018 事实底座：旧判定只匹配模块统一前缀，偏弱；
+# 此表按用例钉归属，与 SOP 脚本的逐用例子串登记同型）。缺省沿用产品状态模块前缀。
+# 0016 决议：产品索引数据门禁的消息必须含产品 id 与坏 kind——断言子串照钉。
+BAD_CASE_EXPECT = {
+    "listed-no-url": "产品状态：",
+    "missing-listed": "产品状态：",
+    "missing-price": "产品状态：",
+    "unlisted-with-url": "产品状态：",
+    "unknown-kind": '产品索引数据："fx-unknown-kind" 的 kind="poster"',
+    "missing-kind": '产品索引数据："fx-missing-kind" 的 kind="<缺失>"',
+}
+
+# 调用方级契约（0015 决议：limit 负数即 errorf，不允许静默全量）。
+# 经真实调用链触发：临时 contentDir 里的一个页面调短代码，走完
+# product-items → 契约执法，不是直接调 partial。
+CALLER_LIMIT_NEGATIVE_EXPECT = "产品索引数据：limit 不能为负数"
+
+# 渲染 seam 的输入契约：items 必填（施工期按「无缺省」宗教补的守卫，
+# 留工单 0020 追认）。经 layoutsDir 覆盖直接调 partial 触发。
+CALLER_MISSING_ITEMS_EXPECT = "产品索引：items 必填"
 
 
 class ProductRowParser(HTMLParser):
@@ -142,8 +170,9 @@ def run(cmd):
     return subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
 
 
-def build(config, dest):
-    return run(["hugo", "--cleanDestinationDir", "--config", config, "-d", str(dest)])
+def build(config, dest, flags=None):
+    return run(["hugo", "--cleanDestinationDir", "--config", config, "-d", str(dest)]
+               + (flags or []))
 
 
 class Report:
@@ -177,6 +206,9 @@ def assert_fixture(report):
     if proc.returncode != 0:
         return
     rows = parse_rows(dest / "products.html")
+    report.check(f"fixture 产品页渲染全部 {FIXTURE_PAGE_ROW_COUNT} 条（limit 缺省=全量）",
+                 len(rows) == FIXTURE_PAGE_ROW_COUNT,
+                 f"got {len(rows)}: {sorted(rows)}")
     for pid, exp in FIXTURE_ROWS.items():
         row = rows.get(pid)
         if row is None:
@@ -188,9 +220,37 @@ def assert_fixture(report):
         report.check(exp["name"], ok,
                      f"got control={row['control']} label={row['label']!r} data-price={row['data_price']} "
                      f"price={row['price_text']!r} href={row['href']!r} aria-disabled={row['aria_disabled']!r}")
+    home_rows = parse_rows(dest / "index.html")
+    # 首页同时渲染文章列表（li.mf-row 无 id），只取产品行（有 id = 产品锚点）
+    home_product_ids = [pid for pid in home_rows if pid]
+    report.check("首页精选区 featured 分栏 = 仅 featured 产品（0015 接线回归）",
+                 home_product_ids == FIXTURE_HOME_FEATURED_IDS,
+                 f"got {home_product_ids}")
     count = parse_spec_count((dest / "index.html").read_text(encoding="utf-8"), "可下载产品")
     report.check("fixture 首页计数 = 已上架条数（2）", count == FIXTURE_LISTED_COUNT, f"got {count}")
     assert_search_index(report, dest)
+
+
+def assert_empty_state(report):
+    """空态守门：产品数据整体缺席（hugo.Data.products 为 nil）时，
+    product-items 返回空 slice，渲染 seam 出「暂无资源」——nil 路径
+    （0018 缺口清单第 6 项）不得变成崩溃或静默空页。
+
+    dataDir 覆盖只丢 products：同目录放 fixture 的 sop.yaml 镜像，
+    否则 SOP 适配器生成 0 页、首页索引页 ref 解析失败（与 fixture 同构，
+    见 tests/fixtures/data/sop.yaml 头注释的踩坑记录）。
+    """
+    empty = TMP / "empty-data"
+    empty.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / "tests" / "fixtures" / "data" / "sop.yaml", empty / "sop.yaml")
+    cfg = TMP / "empty-state.toml"
+    cfg.write_text('dataDir = "tests/tmp/empty-data"\n', encoding="utf-8")
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / "empty-state")
+    if proc.returncode != 0:
+        report.check("空态构建成功", False, proc.stderr[-300:])
+        return
+    html = (TMP / "empty-state" / "products.html").read_text(encoding="utf-8")
+    report.check(f"空态渲染「{EMPTY_STATE_TEXT}」", EMPTY_STATE_TEXT in html, "")
 
 
 def assert_bad_cases(report):
@@ -210,9 +270,66 @@ def assert_bad_cases(report):
         cfg.parent.mkdir(parents=True, exist_ok=True)
         cfg.write_text('dataDir = "tests/fixtures/bad/%s"\n' % case, encoding="utf-8")
         proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / f"bad-{case}")
-        ok = proc.returncode != 0 and "产品状态" in (proc.stderr + proc.stdout)
-        report.check(f"契约[{case}] → 构建失败且错误来自产品状态模块", ok,
-                     "" if ok else "exit=%d stderr=%s" % (proc.returncode, (proc.stderr or proc.stdout)[-300:]))
+        expect = BAD_CASE_EXPECT.get(case, "产品状态")
+        report_build_failure(report, f"契约[{case}]", proc, expect)
+
+
+def report_build_failure(report, label, proc, expect):
+    """构建必须失败且输出含 expect——契约执法的统一判定（三种 seam 共用）。"""
+    ok = proc.returncode != 0 and expect in (proc.stderr + proc.stdout)
+    report.check(f"{label} → 构建失败且错误含 {expect!r}", ok,
+                 "" if ok else "exit=%d stderr=%s" % (proc.returncode, (proc.stderr or proc.stdout)[-300:]))
+
+
+def assert_bad_caller_limit(report):
+    """调用方级坏用例：页面经短代码传 limit=-1，构建必须失败。
+
+    构造 tests/tmp/content-limit-negative/ 作为 contentDir 覆盖，
+    其中的页面 {{< product-index limit="-1" >}} 走完整调用链
+    （短代码 → product-items → errorf）。只覆盖 dataDir/contentDir，
+    layouts/其余配置用真实站点。契约落点：layouts/partials/product-items.html。
+    """
+    content = TMP / "content-limit-negative"
+    content.mkdir(parents=True, exist_ok=True)
+    (content / "limit-negative.md").write_text(
+        "+++\ntitle = \"fixture-limit-negative\"\ndraft = false\n+++\n\n"
+        '{{< product-index limit="-1" >}}\n', encoding="utf-8")
+    cfg = TMP / "caller-limit-negative.toml"
+    cfg.write_text('dataDir = "tests/fixtures/data"\n'
+                   'contentDir = "tests/tmp/content-limit-negative"\n', encoding="utf-8")
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / "caller-limit-negative")
+    report_build_failure(report, "调用方[limit=-1]", proc, CALLER_LIMIT_NEGATIVE_EXPECT)
+
+
+def assert_bad_caller_missing_items(report):
+    """调用方级坏用例：直接调渲染 seam 而不传 items，构建必须失败。
+
+    经 --layoutDir/--contentDir flag + dataDir 配置文件构造最小站点：
+    临时 single.html 里 `partial "product-index.html" (dict "filters" false
+    "uid" "mf-x")`（无 items）。partial 解析根随 layoutsDir 走，故把被测
+    的两个 partial 复制进临时布局树（仓库真实文件的副本）。契约落点：
+    layouts/partials/product-index.html。防的是 nil 路径静默渲染空态
+    （0018 缺口清单第 6 项）。
+
+    注：layoutsDir 写在追加配置文件里不生效（Hugo 合并语义，实测），必须走
+    CLI flag；dataDir 无 CLI flag，走配置文件。二者组合使用。
+    """
+    layout_root = TMP / "layouts-missing-items"
+    (layout_root / "partials").mkdir(parents=True, exist_ok=True)
+    (layout_root / "_default").mkdir(parents=True, exist_ok=True)
+    for name in ("product-index.html", "product-state.html"):
+        shutil.copy(REPO / "layouts" / "partials" / name, layout_root / "partials" / name)
+    (layout_root / "_default" / "single.html").write_text(
+        '{{ partial "product-index.html" (dict "filters" false "uid" "mf-x") }}\n',
+        encoding="utf-8")
+    content = TMP / "content-missing-items"
+    content.mkdir(parents=True, exist_ok=True)
+    (content / "page.md").write_text('+++\ntitle = "t"\ndraft = false\n+++\n', encoding="utf-8")
+    cfg = TMP / "caller-missing-items.toml"
+    cfg.write_text('dataDir = "tests/fixtures/data"\n', encoding="utf-8")
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / "caller-missing-items",
+                 ["--layoutDir", str(layout_root), "--contentDir", str(content)])
+    report_build_failure(report, "调用方[items 缺失]", proc, CALLER_MISSING_ITEMS_EXPECT)
 
 
 def assert_real(report):
@@ -245,7 +362,10 @@ def main():
 
     report = Report()
     assert_fixture(report)
+    assert_empty_state(report)
     assert_bad_cases(report)
+    assert_bad_caller_limit(report)
+    assert_bad_caller_missing_items(report)
     if not args.quick:
         assert_real(report)
 
