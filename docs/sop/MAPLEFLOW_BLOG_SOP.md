@@ -1,5 +1,9 @@
 # MapleFlow 博客维护标准操作规范（SOP）
 
+> **文档状态**（2026-10-19 更新）：
+> - 本文件**不在 SOP 注册表**（`data/sop.yaml`）中，不发布上线；仓库运维的权威指令以根目录 `AGENTS.md` 为准，本文件是其对外 SOP 化副本，**两者冲突时以 AGENTS.md 为准**。
+> - 下文「启动后端内容 API」为历史指令：backend 已于 2026-10-16 退役（wayfinder 工单 0011、ADR-0003；`backend/` 目录已删除）。项目负责人计划未来重启后端开发，故该段**保留作参考**，但当前不可直接执行。若重启后端，ADR-0003 的语义裁决继续有效：后端只镜像、分歧时后端对齐 Hugo。
+
 ## 1. 简介
 
 MapleFlow 是基于 **Hugo** 静态站点生成器 + **PaperMod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
@@ -70,12 +74,14 @@ git -c submodule.recurse=false checkout -f main
 hugo server -D                 # http://localhost:1313/
 
 # 生产构建（必须与 CI 完全一致：合并两份配置）
-hugo --minify --config hugo.toml,config.production.toml
+hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
 # 新增文章（套用 archetypes/default.md）
 hugo new posts/my-new-post.md
 
 # 启动后端内容 API（可选，FastAPI :8000）
+# ⚠️ backend 已于 2026-10-16 退役（工单 0011 / ADR-0003，backend/ 目录已删除）。
+#    以下指令保留仅为未来重启后端时参考，当前仓库中不可执行。
 pip install -r backend/requirements.txt
 python3 run_backend.py
 
@@ -108,7 +114,7 @@ python3 auto_push.py
    ```
 4. 生产构建验证（不带 `--minify` 也行，但建议与 CI 一致）：
    ```bash
-   hugo --minify --config hugo.toml,config.production.toml
+   hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
    ```
 5. 提交推送，触发自动部署：
    ```bash
@@ -119,7 +125,7 @@ python3 auto_push.py
 ### 4.2 调整站点品牌与导航
 
 - **站点信息/菜单/首页介绍**：编辑 `hugo.toml`
-  - 导航栏：`[[menu.main]]`（含 `identifier`/`name`/`url`/`weight`）+ `[params.reorderNavItems]` 控制顺序。
+  - 导航栏：`[[menu.main]]`（含 `identifier`/`name`/`url`/`weight`），顺序由 `weight` 控制（`[params.reorderNavItems]` 在当前 PaperMod 版本不被读取，无效）。
   - 首页个人介绍：`[params.homeInfoParams]`（`Title` 与 `Content` 字段；**不使用 ImageUrl**，PaperMod 不渲染它）。
   - 页脚社交图标：`[[params.socialIcons]]`（`name` 须为 PaperMod 内置图标名，如 `github`/`mail`）。
 - **品牌配色**：编辑 `assets/css/extended/custom.css`，覆盖 `--primary` 等 CSS 变量（Hugo Pipes 自动并入，无需 `customCSS` 引用）。
@@ -138,7 +144,7 @@ python3 auto_push.py
 |------|------|------|
 | `found no layout file for "html"` / 分类页为空 | `themes/PaperMod` 子模块未初始化 | `git submodule update --init themes/PaperMod` |
 | `git checkout main` 卡死/超时 | 切分支时递归联网拉子模块 | 加 `git -c submodule.recurse=false checkout -f main` |
-| 线上链接指向 `localhost` 或路径错误 | 未用生产配置构建 | 必须用 `hugo --minify --config hugo.toml,config.production.toml` |
+| 线上链接指向 `localhost` 或路径错误 | 未用生产配置构建 | 必须用 `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml` |
 | 「关于」页面 404 | `uglyURLs=true` 下页面是 `.html`；菜单写成 `/about/` | 菜单 `url` 改为 `/about.html`；独立页放 `content/about.md`（勿放 `content/page/`） |
 | 改了主题色/导航「没效果」 | 用了 PaperMod 不识别的参数（`navItems`、`lightTheme/darkTheme`、`headerTitle`、`advanced.customCSS`、`experimental.jsDate`） | 删除这些字段，改用 `[[menu.main]]`/`homeInfoParams`/`socialIcons`/`assets/css/extended/` |
 | 首页预览不显示文章 | 文章 `draft = true` 或未设 `categories`/`tags` | 发布设 `draft = false`；本地预览加 `-D` |
