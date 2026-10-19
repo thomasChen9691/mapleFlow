@@ -63,13 +63,23 @@ FIXTURE_ROWS = {
         "control": "disabled", "label": "即将上架", "href": None,
         "data_price": "free", "price_text": "免费", "aria_disabled": "true",
     },
+    "fx-unlisted-plain": {
+        "name": "非 featured 对照行 → 禁用「即将上架」（产品页可见、不上首页）",
+        "control": "disabled", "label": "即将上架", "href": None,
+        "data_price": "free", "price_text": "免费", "aria_disabled": "true",
+    },
 }
-FIXTURE_LISTED_COUNT = 2   # 4 条 fixture 中已上架 2 个产品
-FIXTURE_PAGE_ROW_COUNT = 4  # 产品页（短代码默认 limit=0）经 product-items 渲染全部产品
-FIXTURE_HOME_FEATURED_IDS = ["fx-listed-paid"]  # 首页精选区：featured 混合数据经过滤后只剩它
+FIXTURE_LISTED_COUNT = 2   # 5 条 fixture 中已上架 2 个产品
+FIXTURE_PAGE_ROW_COUNT = 5  # 产品页（短代码默认 limit=0）经 product-items 渲染全部产品
+FIXTURE_NON_FEATURED_ID = "fx-unlisted-plain"  # featured: false 对照行：必须不上首页
+FIXTURE_HOME_FEATURED_IDS = ["fx-listed-paid", "fx-listed-free", "fx-unlisted-paid"]  # 4 条 featured，首页 limit=3 截断后按数据序取前 3
+FIXTURE_HOME_TRUNCATED_ID = "fx-unlisted-free"  # featured=true 但被 limit=3 截断，必须不上首页
 EMPTY_STATE_TEXT = "暂无资源"  # 渲染 seam 的空态文案（空 slice 时；存量 UI 文案）
 REAL_ROW_COUNT = 5         # data/products.yaml 现有 5 个产品
 REAL_LISTED_COUNT = 0      # 迁移后全部未上架（占位），可下载产品为 0（工单 0004：显示 0）
+# 真实数据首页精选（0019 评审补漏）：fixture 改全 featured 后 where featured 分支
+# 只剩真实数据这一层回归保护——3 条 featured（yaml 序），limit=3 不截断但保过滤。
+REAL_HOME_FEATURED_IDS = ["n8n-dify-workflows", "sre-learning-docs", "sre-interview-bank"]
 
 # 契约坏用例的逐条期望子串（0018 事实底座：旧判定只匹配模块统一前缀，偏弱；
 # 此表按用例钉归属，与 SOP 脚本的逐用例子串登记同型）。缺省沿用产品状态模块前缀。
@@ -91,6 +101,9 @@ CALLER_LIMIT_NEGATIVE_EXPECT = "产品索引数据：limit 不能为负数"
 # 渲染 seam 的输入契约：items 必填（施工期按「无缺省」宗教补的守卫，
 # 留工单 0020 追认）。经 layoutsDir 覆盖直接调 partial 触发。
 CALLER_MISSING_ITEMS_EXPECT = "产品索引：items 必填"
+
+# uid 必填（工单 0017 决议：显式必填，删 default "mf-idx" 死缺省）。
+CALLER_MISSING_UID_EXPECT = "产品索引：uid 必填"
 
 
 class ProductRowParser(HTMLParser):
@@ -223,11 +236,30 @@ def assert_fixture(report):
     home_rows = parse_rows(dest / "index.html")
     # 首页同时渲染文章列表（li.mf-row 无 id），只取产品行（有 id = 产品锚点）
     home_product_ids = [pid for pid in home_rows if pid]
-    report.check("首页精选区 featured 分栏 = 仅 featured 产品（0015 接线回归）",
+    report.check("首页精选区 featured 分栏 = 前 3 条 featured 产品（0019 截断覆盖）",
                  home_product_ids == FIXTURE_HOME_FEATURED_IDS,
                  f"got {home_product_ids}")
+    report.check(f"非 featured 产品不上首页（{FIXTURE_NON_FEATURED_ID}，where featured 分支回归）",
+                 FIXTURE_NON_FEATURED_ID not in home_product_ids,
+                 f"got {home_product_ids}")
+    report.check(f"首页 limit=3 截断：{FIXTURE_HOME_TRUNCATED_ID} 不上首页",
+                 FIXTURE_HOME_TRUNCATED_ID not in home_product_ids,
+                 f"got {home_product_ids}")
+    # 被截断的产品仍上产品页（短代码默认 limit=0 全量）——截断只发生在首页调用点
+    report.check(f"被截断产品仍在产品页（{FIXTURE_HOME_TRUNCATED_ID}）",
+                 FIXTURE_HOME_TRUNCATED_ID in rows, f"products rows={sorted(rows)}")
     count = parse_spec_count((dest / "index.html").read_text(encoding="utf-8"), "可下载产品")
     report.check("fixture 首页计数 = 已上架条数（2）", count == FIXTURE_LISTED_COUNT, f"got {count}")
+    # filters 开关差异（0019 决议）：产品页（短代码缺省 filters=true）出筛选控件；
+    # 首页精选区（index.html 传 filters=false）不出——渲染 seam 自身分支
+    products_html = (dest / "products.html").read_text(encoding="utf-8")
+    home_html = (dest / "index.html").read_text(encoding="utf-8")
+    has_filters_products = "mf-filter" in products_html
+    has_filters_home = "mf-filter" in home_html
+    report.check("产品页渲染筛选控件（filters 缺省=true）", has_filters_products,
+                 f"got products_html has mf-filter={has_filters_products}")
+    report.check("首页精选区不出筛选控件（filters=false）", not has_filters_home,
+                 f"got index.html has mf-filter={has_filters_home}")
     assert_search_index(report, dest)
 
 
@@ -301,35 +333,43 @@ def assert_bad_caller_limit(report):
     report_build_failure(report, "调用方[limit=-1]", proc, CALLER_LIMIT_NEGATIVE_EXPECT)
 
 
-def assert_bad_caller_missing_items(report):
-    """调用方级坏用例：直接调渲染 seam 而不传 items，构建必须失败。
-
-    经 --layoutDir/--contentDir flag + dataDir 配置文件构造最小站点：
-    临时 single.html 里 `partial "product-index.html" (dict "filters" false
-    "uid" "mf-x")`（无 items）。partial 解析根随 layoutsDir 走，故把被测
-    的两个 partial 复制进临时布局树（仓库真实文件的副本）。契约落点：
-    layouts/partials/product-index.html。防的是 nil 路径静默渲染空态
-    （0018 缺口清单第 6 项）。
+def assert_bad_caller_direct(report, case, label, expect, single_html):
+    """调用方级坏用例（直调 partial 族）：layoutsDir/contentDir flag + dataDir
+    配置文件构造最小站点，临时 single.html 直接调渲染 seam。partial 解析根随
+    layoutsDir 走，故把被测 partial 复制进临时布局树（仓库真实文件的副本）。
 
     注：layoutsDir 写在追加配置文件里不生效（Hugo 合并语义，实测），必须走
     CLI flag；dataDir 无 CLI flag，走配置文件。二者组合使用。
+
+    现役两格：items 缺失（0018 缺口第 6 项）、uid 缺失（0017 决议）。
     """
-    layout_root = TMP / "layouts-missing-items"
+    layout_root = TMP / f"layouts-{case}"
     (layout_root / "partials").mkdir(parents=True, exist_ok=True)
     (layout_root / "_default").mkdir(parents=True, exist_ok=True)
-    for name in ("product-index.html", "product-state.html"):
+    for name in ("product-index.html", "product-state.html", "product-items.html"):
         shutil.copy(REPO / "layouts" / "partials" / name, layout_root / "partials" / name)
-    (layout_root / "_default" / "single.html").write_text(
-        '{{ partial "product-index.html" (dict "filters" false "uid" "mf-x") }}\n',
-        encoding="utf-8")
-    content = TMP / "content-missing-items"
+    (layout_root / "_default" / "single.html").write_text(single_html, encoding="utf-8")
+    content = TMP / f"content-{case}"
     content.mkdir(parents=True, exist_ok=True)
     (content / "page.md").write_text('+++\ntitle = "t"\ndraft = false\n+++\n', encoding="utf-8")
-    cfg = TMP / "caller-missing-items.toml"
+    cfg = TMP / f"caller-{case}.toml"
     cfg.write_text('dataDir = "tests/fixtures/data"\n', encoding="utf-8")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / "caller-missing-items",
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / f"caller-{case}",
                  ["--layoutDir", str(layout_root), "--contentDir", str(content)])
-    report_build_failure(report, "调用方[items 缺失]", proc, CALLER_MISSING_ITEMS_EXPECT)
+    report_build_failure(report, f"调用方[{label}]", proc, expect)
+
+
+def assert_bad_caller_missing_items(report):
+    assert_bad_caller_direct(
+        report, "items", "items 缺失", CALLER_MISSING_ITEMS_EXPECT,
+        '{{ partial "product-index.html" (dict "filters" false "uid" "mf-x") }}\n')
+
+
+def assert_bad_caller_missing_uid(report):
+    assert_bad_caller_direct(
+        report, "uid", "uid 缺失", CALLER_MISSING_UID_EXPECT,
+        '{{- $items := partial "product-items.html" (dict) -}}\n'
+        '{{ partial "product-index.html" (dict "items" $items "filters" false) }}\n')
 
 
 def assert_real(report):
@@ -346,6 +386,9 @@ def assert_real(report):
                  f"got {len(rows)} rows: " + ", ".join("%s=%s/%s" % (k, v["control"], v["label"]) for k, v in rows.items()))
     count = parse_spec_count((dest / "index.html").read_text(encoding="utf-8"), "可下载产品")
     report.check(f"真实数据可下载产品计数 = {REAL_LISTED_COUNT}", count == REAL_LISTED_COUNT, f"got {count}")
+    home_ids = [pid for pid in parse_rows(dest / "index.html") if pid]
+    report.check("真实数据首页精选 = 3 条 featured 产品（yaml 序）", home_ids == REAL_HOME_FEATURED_IDS,
+                 f"got {home_ids}")
 
 
 def main():
@@ -366,6 +409,7 @@ def main():
     assert_bad_cases(report)
     assert_bad_caller_limit(report)
     assert_bad_caller_missing_items(report)
+    assert_bad_caller_missing_uid(report)
     if not args.quick:
         assert_real(report)
 

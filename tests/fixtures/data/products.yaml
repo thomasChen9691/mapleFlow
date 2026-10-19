@@ -6,12 +6,30 @@
 #   listed: false → 未上架（即将上架），buy_url 必须为空
 #   price         → 必填；0 = 免费（显式写 0，不缺省）
 #
-# 本文件覆盖控件语义的四种状态组合（ADR-0004 形状 B）：
-#   已上架+付费 / 已上架+免费 / 未上架+付费 / 未上架+免费
-# featured 混合（0015 接线后回归守门）：fx-listed-paid = true，其余 false
-#   ——首页精选区经 product-items featured 过滤后应只剩它一行。
+# 控件语义四状态组合（ADR-0004 形状 B）：已上架+付费 / 已上架+免费 /
+#   未上架+付费 / 未上架+免费。
+# featured 布局（0019 决议：过滤与截断双分支可分辨）：
+#   第 1 行 fx-unlisted-plain featured: false —— 非 featured 对照行，
+#     必须不上首页（守住 product-items 的 where featured 分支；旧布局
+#     4 行全 featured 且排在 yaml 前部，「取前 3」与「过滤后取前 3」
+#     结果重合，该分支实际无回归保护——变异检验实测）。
+#   后 4 行全部 featured: true —— 首页 limit=3 截断后出前 3 条，
+#     第 4 条（fx-unlisted-free）必须不上首页。
+#   产品页（短代码默认 limit=0）渲染全部 5 行。
 # 契约坏用例见 tests/fixtures/bad/（每个用例的构建必须失败）。
 # ============================================================
+
+- id: fx-unlisted-plain
+  name: 夹具·未上架免费（非精选）
+  kind: document
+  summary: "featured: false 对照行——必须不上首页，但在产品页可见。"
+  version: ""
+  scale: 1 页
+  updated: 2026-10-15
+  price: 0
+  listed: false
+  buy_url: ""
+  featured: false
 
 - id: fx-listed-paid
   name: 夹具·已上架付费
@@ -35,7 +53,7 @@
   price: 0
   listed: true
   buy_url: "https://example.com/fx-listed-free"
-  featured: false
+  featured: true
 
 - id: fx-unlisted-paid
   name: 夹具·未上架付费
@@ -47,7 +65,7 @@
   price: 49
   listed: false
   buy_url: ""
-  featured: false
+  featured: true
 
 - id: fx-unlisted-free
   name: 夹具·未上架免费
@@ -59,4 +77,4 @@
   price: 0
   listed: false
   buy_url: ""
-  featured: false
+  featured: true

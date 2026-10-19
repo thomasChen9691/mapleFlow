@@ -25,6 +25,9 @@
 {{- end -}}
 {{- with site.GetPage "page" "products" -}}
   {{- $productsPermalink := .RelPermalink -}}
+  {{- /* 覆盖边界（0019 决议）：此处直读 site.Data.products，不经 product-items 的
+         kind 词汇门禁。门禁的实际覆盖靠「产品页恒渲染全量 → product-items 恒被调用」
+         这一隐式依赖兜底；索引投影是否重复校验/如何校验，随候选 8「搜索契约」定案。 */ -}}
   {{- range site.Data.products -}}
     {{- $index = $index | append (dict
         "title" .name

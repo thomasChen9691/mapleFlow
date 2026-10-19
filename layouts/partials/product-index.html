@@ -8,7 +8,10 @@
     featured  —— 已移除（过滤归 product-items）
     limit     —— 已移除（截断归 product-items）
     filters   bool   是否输出筛选控件与交互脚本
-    uid       string DOM id，同页多次调用必须不同
+    uid       string DOM id，**必填**（筛选 script 的 getElementById 挂点，
+                   兼深链锚）。同页多次调用必须不同：短代码由 .Ordinal
+                   保证页内唯一；模板调用方人工保唯一（0017 决议：重名
+                   不执法——partial 无页级视野，检测成本与收益悬殊）
     items     slice  待渲染产品（由 product-items.html 供给；必填，缺失即构建失败）
   渲染 seam 不做数据契约——契约执法在数据 seam（kind 词汇）与
   产品状态模块（listed/price/buy_url，ADR-0004）。
@@ -17,8 +20,11 @@
 {{- if eq .items nil -}}
   {{- errorf "产品索引：items 必填（数据准备由 product-items.html 供给，渲染 seam 不收裸数据）" -}}
 {{- end -}}
+{{- if not .uid -}}
+  {{- errorf "产品索引：uid 必填（DOM id：筛选 script 挂点兼深链锚；同页多实例须不同，短代码用 .Ordinal、模板调用方传字面量）" -}}
+{{- end -}}
 {{- $items := .items -}}
-{{- $uid := .uid | default "mf-idx" -}}
+{{- $uid := .uid -}}
 {{- $showFilters := ne (.filters | default true) false -}}
 
 {{- if not $items -}}
