@@ -25,6 +25,8 @@ closed:
 ## Decisions so far
 
 - [fixture 与测试缝的事实底座](tickets/0018-fixture-test-seam-facts.md) — 三种构建原语已存在（fixture 双 config 覆盖 dataDir / 坏用例动态 TOML 直指 bad/<case>、判定=非零退出+「产品状态」前缀 / 真实数据生产构建）；现有 fixture 只覆盖产品状态 2×2，product-index 输入组合仅默认路径一格被断言，缺口 11 项；契约断言语义偏弱（只匹配统一前缀，SOP 的逐用例子串手法可复用）；Hugo 版本 skew 无脚本级适配，CI 守门点在两个断言步。
+- [product-index 职责边界与数据注入方向](tickets/0015-product-index-responsibility-boundary.md) — 双 seam 拆分：product-items（唯一读 hugo.Data.products，featured 缺省 false + limit 缺省/0=全量、负数 errorf，无 source 注入位）+ product-index（纯渲染 items + 筛选 UI + uid，零全局读，空态留渲染 seam）；范围只收窄索引渲染链，首页计数条与搜索索引不动。
+- [筛选词汇来源：写死还是数据派生](tickets/0016-filter-vocabulary-source.md) — 契约化写死：三枚 kind 按钮 = CONTEXT.md 交付形态封闭词表的执行区；kind ∈ 三值封闭集由 product-items 数据门禁逐条校验，未知 kind 即 errorf（前缀「产品索引数据：」，含产品 id + 坏值）；产品状态模块不碰，0005 裁决不变。
 
 ## Not yet specified
 
