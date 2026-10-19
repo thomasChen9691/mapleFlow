@@ -87,5 +87,29 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
+// ---- RGR-2：点击切换 state，同值再点回 all，组内 aria-pressed 互斥 ----
+{
+  const dom = installDom(sampleIndex());
+  await loadFresh('assets/js/mf-reveal/filter.js');
+  const doc = dom.window.document;
+  const at = (g, v) => doc.querySelector(`.mf-filter[data-group="${g}"][data-value="${v}"]`);
+  const allBtn = at('kind', 'all');
+  const wfBtn = at('kind', 'workflow');
+  const click = (el) => el.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+
+  click(wfBtn);
+  check(
+    'RGR-2a 点击 workflow：workflow aria-pressed=true、all 归 false',
+    wfBtn.getAttribute('aria-pressed') === 'true' && allBtn.getAttribute('aria-pressed') === 'false',
+    `got wf=${wfBtn.getAttribute('aria-pressed')} all=${allBtn.getAttribute('aria-pressed')}`,
+  );
+  click(wfBtn);
+  check(
+    'RGR-2b 同值再点回 all：all=true、workflow 归 false',
+    allBtn.getAttribute('aria-pressed') === 'true' && wfBtn.getAttribute('aria-pressed') === 'false',
+    `got wf=${wfBtn.getAttribute('aria-pressed')} all=${allBtn.getAttribute('aria-pressed')}`,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

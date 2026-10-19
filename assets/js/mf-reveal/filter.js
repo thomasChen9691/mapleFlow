@@ -41,9 +41,26 @@ export function initFilter(root) {
   const win = root.ownerDocument.defaultView;
   const rows = root.querySelectorAll('.mf-row');
   const count = root.querySelector('.mf-count');
+  const state = { kind: 'all', price: 'all' };
 
-  // RGR-1 最小面：初始 apply(false) 写计数。过滤/交互语义按轮次追加。
-  if (count) { count.textContent = `显示 ${rows.length} / ${rows.length}`; }
+  function apply(animate) {
+    // 过滤可见性/计数语义按 RGR-3 追加；当前仅维持计数占位。
+    if (count) { count.textContent = `显示 ${rows.length} / ${rows.length}`; }
+  }
+
+  root.querySelectorAll('.mf-filter').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.group;
+      const value = btn.dataset.value;
+      state[group] = state[group] === value ? 'all' : value;
+      root.querySelectorAll(`.mf-filter[data-group="${group}"]`).forEach((other) => {
+        other.setAttribute('aria-pressed', other.dataset.value === state[group] ? 'true' : 'false');
+      });
+      apply(true);
+    });
+  });
+
+  apply(false);
 }
 
 /** import 时自动注册（浏览器与 jsdom 均以全局 document 为宿主） */
