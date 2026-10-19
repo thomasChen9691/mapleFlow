@@ -4,4 +4,4 @@
 
 **Considered Options**：预构建派生脚本（拒绝：漏跑即腐化）；独立契约检查器（拒绝：契约规则的第二实现，必然漂移）；规则级单测（Hugo 生态不存在模板单测机制，非主动放弃）。
 
-**Consequences**：模板与首页不得自行推导产品状态，发现第二处推导即违本 ADR；模块必须保持 0.164 语义（单变量 + 根级单条 return）——本机 hugo 0.167 与 CI 钉版 0.164 之间存在不对称 skew，0.166+ 的条件多 return 写法本地过、CI 红；测试运行策略（CI 权威 + 本地 advisory，tests/assert_product_states.py）随模块落地一并建设。
+**Consequences**：模板与首页不得自行推导产品状态，发现第二处推导即违本 ADR；模块必须保持 0.164 语义（单变量 + 根级单条 return）——本机 hugo 0.167 与 CI 钉版 0.164 之间存在不对称 skew，0.166+ 的条件多 return 写法本地过、CI 红；测试运行策略（CI 权威 + 本地 advisory，tests/assert_product_states.py）随模块落地一并建设。产品索引接口的收窄见 ADR-0006。

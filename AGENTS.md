@@ -99,6 +99,8 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 10. **SOP 文是构建期派生的，不要手写**（wayfinder 工单 0008/0009）：`content/posts/` 下 6 个 `sop-*.md` 已删除，文章由 `content/posts/_content.gotmpl`（seam）从 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记在构建期生成，磁盘上没有第二份 .md。手写同名 .md 会与派生页撞路径（产物不确定），由「无残留」断言守。改 SOP 内容 = 改 `docs/sop/` 笔记；改 web 包装（标题由笔记 H1 承载，日期/分类/标签/描述/导语在注册表）= 改 `data/sop.yaml`。无注册条目的笔记 = 尚未发布的稿件；已注册的草稿 = 条目 `draft: true`（不进生产构建）。契约四类以 errorf 让构建失败：缺必填字段（slug/note/date/categories，tags 可缺省）、死条目（有条目无笔记）、笔记首行无 H1、H1 之后无章节标题行。测试 `python3 tests/assert_sop_pipeline.py`（CI 权威、本地 advisory，改动前先跑）。
 
+11. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_product_states.py`。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
@@ -127,6 +129,8 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `.github/workflows/deploy.yml` | 自动部署流水线 |
 | `docs/sop/` | 运维 SOP 源笔记 |
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |
+| `layouts/partials/product-items.html` | 产品索引·数据准备 seam：索引渲染链唯一读 `hugo.Data.products` 处，featured 过滤 + limit 截断（缺省/0=全量，负数 errorf）+ 交付形态词汇契约（词表外 kind 即 errorf）。ADR-0006；测试 `tests/assert_product_states.py`，改动前先跑 |
+| `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI 与交互脚本。ADR-0006；测试 `tests/assert_product_states.py`，改动前先跑 |
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（ADR-0005；契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |
 | `data/sop.yaml` | SOP 发布注册表：slug/note/date/categories 必填，tags 可缺省，`draft: true` = 已注册的草稿 |
 | `docs/sop/README.md` | 源笔记索引（与注册表双向漂移断言守护；`MAPLEFLOW_BLOG_SOP.md` 不发布） |
