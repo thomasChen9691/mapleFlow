@@ -195,5 +195,35 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
+// ---- RGR-5：morph/bump 一次性重播，morph 520ms 后由 timer 移除，bump 无 timer ----
+{
+  const dom = installDom(sampleIndex());
+  // 捕获 timer：不睡真时间，手动 flush
+  const timers = [];
+  dom.window.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
+  dom.window.clearTimeout = () => {};
+  await loadFresh('assets/js/mf-reveal/filter.js');
+
+  const doc = dom.window.document;
+  const list = doc.querySelector('.mf-rows');
+  const count = doc.querySelector('.mf-count');
+  doc.querySelector('.mf-filter[data-group="kind"][data-value="workflow"]')
+    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+
+  check(
+    'RGR-5a 交互后 list 加 is-morphing、count 加 is-bump；仅 morph 挂 520ms timer',
+    list.classList.contains('is-morphing') && count.classList.contains('is-bump')
+      && timers.length === 1 && timers[0].ms === 520,
+    `got list=${list.className} count=${count.className} timers=${JSON.stringify(timers.map((t) => t.ms))}`,
+  );
+
+  timers.forEach((t) => t.fn());
+  check(
+    'RGR-5b flush 520ms timer 后 morph 移除、bump 保留（一次性）',
+    !list.classList.contains('is-morphing') && count.classList.contains('is-bump'),
+    `got list=${list.className} count=${count.className}`,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

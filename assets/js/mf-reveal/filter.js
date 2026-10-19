@@ -43,6 +43,21 @@ export function initFilter(root) {
   const count = root.querySelector('.mf-count');
   const state = { kind: 'all', price: 'all' };
 
+  let morphTimer;
+
+  /* 重播一次性动画：移除 class → 强制回流 → 重新加上。
+     少了中间的 reflow，浏览器会合并成一次样式变更，动画不会重播。 */
+  function replay(el, cls, ms) {
+    if (!el) { return; }
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    if (ms) {
+      win.clearTimeout(morphTimer);
+      morphTimer = win.setTimeout(() => { el.classList.remove(cls); }, ms);
+    }
+  }
+
   function apply(animate) {
     let shown = 0;
     rows.forEach((el) => {
@@ -62,6 +77,12 @@ export function initFilter(root) {
     if (count) { count.textContent = `显示 ${shown} / ${rows.length}`; }
     const empty = root.querySelector('.mf-empty');
     if (empty) { empty.hidden = shown > 0; }
+
+    /* 只在用户点筛选时播放；首屏那次（animate=false）保持静止，
+       否则会和 .reveal 的滚动进场撞在一起 */
+    if (!animate || prefersReducedMotion(win)) { return; }
+    replay(root.querySelector('.mf-rows'), 'is-morphing', 520);
+    replay(count, 'is-bump', 0);
   }
 
   root.querySelectorAll('.mf-filter').forEach((btn) => {
