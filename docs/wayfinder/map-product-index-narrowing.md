@@ -2,9 +2,9 @@
 id: map-product-index-narrowing
 title: product-index 接口收窄图（候选 4）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-19
-closed:
+closed: 2026-10-19
 ---
 
 # product-index 接口收窄图（候选 4）
@@ -12,6 +12,8 @@ closed:
 ## Destination
 
 候选 4「product-index 接口收窄」的决策集定稿：`layouts/partials/product-index.html` 的接口形状（入参 / 数据来源 / 多实例契约）、筛选词汇来源、测试缝形状、命名与导航契约——达到「可测试、AI 可导航」的可施工状态。本图只产决策，不落地代码；施工留待地图关闭后按 verify-then-commit 展开。
+
+**状态：已收口（2026-10-19）。** 目的地到达——六张工单全 closed，无剩余 frontend 决策。代码与测试已按决议施工完毕（产品 29/29、SOP 100/100、生产构建干净）；文档写入（ADR-0006、CONTEXT.md 术语、AGENTS.md 导航痕迹）按 0020 决议执行中，不涉新决策。
 
 ## Notes
 
@@ -30,6 +32,7 @@ closed:
 - [筛选词汇来源：写死还是数据派生](tickets/0016-filter-vocabulary-source.md) — 契约化写死：三枚 kind 按钮 = CONTEXT.md 交付形态封闭词表的执行区；kind ∈ 三值封闭集由 product-items 数据门禁逐条校验，未知 kind 即 errorf（前缀「产品索引数据：」，含产品 id + 坏值）；产品状态模块不碰，0005 裁决不变。
 - [同页多实例契约 uid](tickets/0017-multi-instance-uid-contract.md) — uid 显式必填（删 default "mf-idx" 死缺省）；短代码由 .Ordinal 页内保唯一、模板调用方写字面量（兼深链锚）；重名纯文档约定不执法（partial 无页级视野，检测成本与收益悬殊）。
 - [接口收窄后的测试缝形状](tickets/0019-narrowed-interface-test-seam.md) — 合流追认（测试留在 assert_product_states.py，5 条缝）；收口三格全补：limit 截断（fixture 4 featured 逼真截断 + 第 4 条不上首页断言）、filters 开关差异、uid 必填坏用例；搜索索引 kind 门禁归候选 8，index.json 留边界注释。
+- [命名、导航契约与 ADR 耐久化](tickets/0020-naming-navigation-adr.md) — 文件名保留，CONTEXT.md 新增「产品索引」术语条（seam 分工进 AGENTS.md 不进术语表）；新开 ADR-0006 承载候选 4 决策集，ADR-0004 加指针行；导航痕迹三处齐落（AGENTS 速查 2 行 + 坑点 1 条 + 交付形态封闭集执法注记）。**本题关闭 = 目的地到达，地图标记 closed。**
 
 ## Not yet specified
 
@@ -40,7 +43,7 @@ closed:
 
 ## Out of scope
 
-- **reveal 协议（候选 5）、主题 fork、搜索契约**：各自独立成图，不并进本图。
+- **reveal 协议（候选 5）、主题 fork、搜索契约**：各自独立成图，不并进本图。其中**搜索索引的 kind 门禁**经 0019 决议明确归候选 8（搜索契约）——`index.json` 已留边界注释。
 - **backend 产品 API**：ADR-0003 边界内后端只镜像文章，产品域不进后端；用户重启后端计划不改变此边界。
 - **`data/products.yaml` 占位产品填充**（`buy_url` 填空 + `listed` 翻 true）：施工动作，且卡在用户提供真实商品页地址，不随本图。
 - **视觉 / CSS 改动**：本图只收窄接口、契约与测试缝，不动样式。
