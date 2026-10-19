@@ -18,10 +18,36 @@ REAL_CONFIG = "hugo.toml,config.production.toml"
 GOLDEN_DIR = REPO / "tests" / "fixtures" / "sop-golden"
 
 
+# 形如「2026-01-28 20:00:00 +0800 CST」的时间戳属性值：base + 任意个时区标记
+_DT_ATTR = re.compile(
+    r"^(?P<base>\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?)"
+    r"(?P<rest>(?:\s+[+-]\d{2}:?\d{2}|\s+[A-Za-z]{2,5})*)$")
+_OFFSET = re.compile(r"[+-]\d{2}:?\d{2}")
+
+
+def _normalize_attr_value(value):
+    """时间戳属性值 → 只保留数字偏移，丢弃时区缩写/重复偏移。
+
+    为什么：Go 解析带偏移量的时间戳时，只有偏移量与**运行机器的本地时区**一致
+    才会用命名时区，否则造一个无名固定区——同一个时间戳 String() 出来在本机
+    （Asia/Shanghai）是 `... +0800 CST`，在 CI runner（UTC）是 `... +0800 +0800`。
+    这是构建环境元数据，不是内容差异（hugo.toml 的 timeZone 管不到这条路径：
+    它影响语言级日期格式化，不改变已带偏移量的 time.Time 的 Location）。
+    模板侧已改为显式格式（layouts/partials/post_meta.html，消掉不确定性），
+    这里保留容错，使旧 golden 与未来任何 .Date 字符串化不再产生同类假红。
+    """
+    m = _DT_ATTR.match(value)
+    if not m:
+        return value
+    offsets = _OFFSET.findall(m.group("rest") or "")
+    return m.group("base") + (" " + offsets[0] if offsets else "")
+
+
 class _Canonicalizer(HTMLParser):
     """把 HTML 归一到 token 序列：标签名 + 排序后的属性 + 折叠空白后的文本。
 
-    忽略的属性面 = 渲染器版本差异（属性引号/顺序、空白、实体写法）；
+    忽略的属性面 = 渲染器版本差异（属性引号/顺序、空白、实体写法）与
+    时间戳的时区标记（见 _normalize_attr_value）；
     保留的属性面 = 一切内容与结构变化（标签、class/id/href 等、文本）。
     """
 
@@ -30,7 +56,9 @@ class _Canonicalizer(HTMLParser):
         self.tokens = []
 
     def handle_starttag(self, tag, attrs):
-        self.tokens.append(("tag", tag, tuple(sorted(attrs))))
+        norm = tuple(sorted((k, v if v is None else _normalize_attr_value(v))
+                            for k, v in attrs))
+        self.tokens.append(("tag", tag, norm))
 
     # 自闭合写法（<br/> 与 <br>）视为同一 token——minify 版本会换写法
     handle_startendtag = handle_starttag
