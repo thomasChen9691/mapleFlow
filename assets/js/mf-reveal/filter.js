@@ -50,7 +50,14 @@ export function initFilter(root) {
       const okPrice = state.price === 'all' || el.dataset.price === state.price;
       const visible = okKind && okPrice;
       el.classList.toggle('is-hidden', !visible);
-      if (visible) { shown++; }
+      if (visible) {
+        /* 小分组 stagger：第 9 条起不再累加延迟，长列表会显得迟钝 */
+        el.style.setProperty('--mf-i', Math.min(shown, 8));
+        /* 用户已交互过 —— 直接把条目落到终态（否则未进入过视口的条目仍带
+           .reveal(opacity:0)，动画结束会重新变回透明，像"筛完又消失了"） */
+        if (animate) { el.classList.add('is-in'); }
+        shown++;
+      }
     });
     if (count) { count.textContent = `显示 ${shown} / ${rows.length}`; }
     const empty = root.querySelector('.mf-empty');

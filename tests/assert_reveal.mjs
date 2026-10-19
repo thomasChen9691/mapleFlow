@@ -73,6 +73,29 @@ function sampleIndex() {
 </div>`;
 }
 
+/** 样本：N 行产品（kind 三元循环、price 交替），用于 stagger 截断等需要长列表的行为 */
+function sampleIndexLong(n) {
+  const kinds = ['workflow', 'document', 'question-bank'];
+  const rows = Array.from({ length: n }, (_, i) =>
+    `<li class="mf-row reveal" id="fx-${i + 1}" data-kind="${kinds[i % 3]}" data-price="${i % 2 ? 'free' : 'paid'}"><div class="mf-row-num">${String(i + 1).padStart(2, '0')}</div></li>`).join('\n');
+  return `<div class="mf-index" id="mf-idx-long">
+  <div class="mf-filters">
+    <button type="button" class="mf-filter" data-group="kind" data-value="all" aria-pressed="true">全部</button>
+    <button type="button" class="mf-filter" data-group="kind" data-value="workflow" aria-pressed="false">工作流</button>
+    <button type="button" class="mf-filter" data-group="kind" data-value="document" aria-pressed="false">文档</button>
+    <button type="button" class="mf-filter" data-group="kind" data-value="question-bank" aria-pressed="false">题库</button>
+    <span class="mf-sep" aria-hidden="true"></span>
+    <button type="button" class="mf-filter" data-group="price" data-value="free" aria-pressed="false">免费</button>
+    <button type="button" class="mf-filter" data-group="price" data-value="paid" aria-pressed="false">付费</button>
+    <span class="mf-count" aria-live="polite"></span>
+  </div>
+  <ol class="mf-rows">
+    ${rows}
+  </ol>
+  <p class="mf-empty" hidden>没有符合筛选条件的资源。</p>
+</div>`;
+}
+
 console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
 
 // ---- RGR-1：引擎存在且 import 时自动注册 roots，初始 apply(false) 写计数 ----
@@ -145,6 +168,30 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
     'RGR-3c 组合筛到 0 匹配：空态显示、计数「显示 0 / 3」',
     empty.hidden === false && count.textContent === '显示 0 / 3',
     `got empty.hidden=${empty.hidden} count=${count.textContent}`,
+  );
+}
+
+// ---- RGR-4：animate 路径直写 is-in，--mf-i 第 9 条起截断为 8 ----
+{
+  const dom = installDom(sampleIndexLong(12));
+  await loadFresh('assets/js/mf-reveal/filter.js');
+  const doc = dom.window.document;
+  const rows = [...doc.querySelectorAll('.mf-row')];
+  doc.querySelector('.mf-filter[data-group="kind"][data-value="all"]')
+    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+
+  const allIn = rows.every((el) => el.classList.contains('is-in'));
+  const mfI = rows.map((el) => el.style.getPropertyValue('--mf-i'));
+  const expectI = [...Array.from({ length: 9 }, (_, i) => String(i)), '8', '8', '8'];
+  check(
+    'RGR-4a 交互后 12 个可见行全部直写 is-in 终态',
+    allIn,
+    `got rows without is-in: ${rows.filter((el) => !el.classList.contains('is-in')).map((el) => el.id).join(',')}`,
+  );
+  check(
+    'RGR-4b --mf-i 前 9 条为 0..8，第 10-12 条截断为 8',
+    JSON.stringify(mfI) === JSON.stringify(expectI),
+    `got ${JSON.stringify(mfI)}`,
   );
 }
 
