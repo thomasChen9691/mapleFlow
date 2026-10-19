@@ -225,5 +225,28 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
+// ---- RGR-6：prefers-reduced-motion 下仍完整过滤，但不播放 morph/bump ----
+{
+  const dom = installDom(sampleIndex());
+  dom.window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
+  await loadFresh('assets/js/mf-reveal/filter.js');
+  const doc = dom.window.document;
+  const list = doc.querySelector('.mf-rows');
+  const count = doc.querySelector('.mf-count');
+  doc.querySelector('.mf-filter[data-group="kind"][data-value="workflow"]')
+    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+
+  check(
+    'RGR-6 减弱动效：过滤与 is-in 照常，morph/bump 不播放',
+    !doc.getElementById('fx-1').classList.contains('is-hidden')
+      && doc.getElementById('fx-2').classList.contains('is-hidden')
+      && count.textContent === '显示 1 / 3'
+      && doc.getElementById('fx-1').classList.contains('is-in')
+      && !list.classList.contains('is-morphing')
+      && !count.classList.contains('is-bump'),
+    `got list=${list.className} count=${count.className} count.text=${count.textContent}`,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
