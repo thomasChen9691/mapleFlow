@@ -5,8 +5,8 @@
 
 ## 1. 项目概览
 
-- **性质**：使用 **Hugo** + **PaperMod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
-- **主题**：`themes/PaperMod` 是 Git **子模块**（`.gitmodules` 指向 `adityatelange/hugo-PaperMod`）。
+- **性质**：使用 **Hugo** + **maplemod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
+- **主题**：`themes/maplemod` 是**仓内第一方主题**（2026-10 自 PaperMod v8.0-55 fork 并修剪；无子模块、无上游同步义务）。
 - **内容方向**：运维开发 / SRE / DevOps 实战 SOP，覆盖 Kubernetes、Docker、CI/CD、AIOps、Prometheus、Grafana、Jenkins、GitLab、Ansible、SonarQube，见 `docs/sop/`。
 
 ## 2. 分支模型（重要）
@@ -17,7 +17,7 @@
 | `gh-pages` | 由 GitHub Actions 自动构建的静态站点产物 | **不要手动修改/提交** |
 | `origin/main` | 远端源码；推送到它会触发部署 | 仅通过 push 更新 |
 
-- 部署流水线见 `.github/workflows/deploy.yml`：push `main` → 检出（含子模块）→ `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml` → 推 `gh-pages`。
+- 部署流水线见 `.github/workflows/deploy.yml`：push `main` → 检出 → `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml` → 推 `gh-pages`。
 - 切勿直接编辑 `gh-pages` 或本地 `public/`（构建产物会覆盖）。
 
 ## 3. 核心命令
@@ -27,10 +27,6 @@
 # Windows:  winget install Hugo.Hugo.Extended
 # macOS:    brew install hugo
 # 验证:     hugo version   （需 0.154.5+）
-
-# 首次初始化主题子模块（关键！否则 hugo 报 "found no layout file"）
-git submodule update --init themes/PaperMod
-# 若因代理/SSL 失败，先 git config --global --unset http(s).proxy 再试
 
 # 本地开发预览（含草稿）—— 只用 hugo.toml，不要带生产配置！
 hugo server -D        # 访问 http://localhost:1313/
@@ -42,7 +38,7 @@ hugo server -D        # 访问 http://localhost:1313/
 # 生产构建（必须与 CI 命令完全一致！不能只跑 hugo）
 hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
-# 【本地验证推荐】多一个 --cleanDestinationDir，可清掉草稿孤儿文件（见坑点 7b）
+# 【本地验证推荐】多一个 --cleanDestinationDir，可清掉草稿孤儿文件（见坑点 6b）
 hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
 # 提交（见 §6 规范）
@@ -73,18 +69,11 @@ npm test
 
 5. **`[params.homeInfoParams]` 只使用 `Title` 与 `Content` 字段**：PaperMod 的 `home_info.html` 不渲染 `ImageUrl`。首页头像请用文章页 `avatar` 参数或直接在 `Content`（HTML）里引图。
 
-6. **切换/检出分支会卡死（网络）**：`git checkout main` 触发 PaperMod 子模块递归联网拉取而超时。
-   **正确做法**：先关闭子模块递归：
-   ```bash
-   git -c submodule.recurse=false checkout -f main
-   ```
-   （本项目已踩过此坑；不要反复裸 `git checkout main` 或 `git worktree add` 而不加此开关。）
-
-7. **Windows 上删除大量文件很慢**：`Remove-Item public -Recurse` 会触发 Defender 全量扫描而超时。
+6. **Windows 上删除大量文件很慢**：`Remove-Item public -Recurse` 会触发 Defender 全量扫描而超时。
    重建时**直接再跑一次 hugo 构建**即可（Hugo 会覆盖变更文件），无需先删 `public`。
-   **例外见 7b：存在孤儿文件时此建议不成立。**
+   **例外见 6b：存在孤儿文件时此建议不成立。**
 
-7b. **草稿孤儿文件会让线上残留 `localhost:1313`（已实测踩坑）**：
+6b. **草稿孤儿文件会让线上残留 `localhost:1313`（已实测踩坑）**：
    流程：本地跑过 `hugo server -D`（含草稿）→ 生成了草稿专属的分类/标签页（如 `categories/随笔/`）
    → 之后跑生产构建（不含草稿）→ Hugo **不会删除**这些已生成的页面，成为孤儿文件。
    后果：`grep -r "localhost:1313" public/` 命中，这些页面带着 localhost 绝对链接被推上线。
@@ -96,15 +85,15 @@ npm test
    验证：`grep -r "localhost:1313" public/` 必须无输出。
    注：CI（GitHub Actions）每次全新 checkout，`public/` 本就为空，不受此问题影响。
 
-8. **图片/资源在 GitHub Pages 子路径下**：站点部署在 `.../mapleFlow/`（非根域）。页面内联 SVG 头像比引用 `static/img/*` 更稳；若引用静态资源，路径需相对正确。
+7. **图片/资源在 GitHub Pages 子路径下**：站点部署在 `.../mapleFlow/`（非根域）。页面内联 SVG 头像比引用 `static/img/*` 更稳；若引用静态资源，路径需相对正确。
 
-9. **`public/` 为构建产物，当前未被 git 跟踪**（`git ls-files | grep '^public/'` → 0 文件）：`git add .` 不会包含它，真正对外的是 `gh-pages`，不必纠结 `main` 上的 `public`。
+8. **`public/` 为构建产物，当前未被 git 跟踪**（`git ls-files | grep '^public/'` → 0 文件）：`git add .` 不会包含它，真正对外的是 `gh-pages`，不必纠结 `main` 上的 `public`。
 
-10. **SOP 文是构建期派生的，不要手写**（wayfinder 工单 0008/0009）：`content/posts/` 下 6 个 `sop-*.md` 已删除，文章由 `content/posts/_content.gotmpl`（seam）从 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记在构建期生成，磁盘上没有第二份 .md。手写同名 .md 会与派生页撞路径（产物不确定），由「无残留」断言守。改 SOP 内容 = 改 `docs/sop/` 笔记；改 web 包装（标题由笔记 H1 承载，日期/分类/标签/描述/导语在注册表）= 改 `data/sop.yaml`。无注册条目的笔记 = 尚未发布的稿件；已注册的草稿 = 条目 `draft: true`（不进生产构建）。契约四类以 errorf 让构建失败：缺必填字段（slug/note/date/categories，tags 可缺省）、死条目（有条目无笔记）、笔记首行无 H1、H1 之后无章节标题行。测试 `python3 tests/assert_sop_pipeline.py`（CI 权威、本地 advisory，改动前先跑）。
+9. **SOP 文是构建期派生的，不要手写**（wayfinder 工单 0008/0009）：`content/posts/` 下 6 个 `sop-*.md` 已删除，文章由 `content/posts/_content.gotmpl`（seam）从 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记在构建期生成，磁盘上没有第二份 .md。手写同名 .md 会与派生页撞路径（产物不确定），由「无残留」断言守。改 SOP 内容 = 改 `docs/sop/` 笔记；改 web 包装（标题由笔记 H1 承载，日期/分类/标签/描述/导语在注册表）= 改 `data/sop.yaml`。无注册条目的笔记 = 尚未发布的稿件；已注册的草稿 = 条目 `draft: true`（不进生产构建）。契约四类以 errorf 让构建失败：缺必填字段（slug/note/date/categories，tags 可缺省）、死条目（有条目无笔记）、笔记首行无 H1、H1 之后无章节标题行。测试 `python3 tests/assert_sop_pipeline.py`（CI 权威、本地 advisory，改动前先跑）。
 
-11. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_product_states.py`。
+10. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_product_states.py`。
 
-12. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_product_states.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 升级同步件，保持内联。
+11. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_product_states.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 升级同步件，保持内联。
 
 ## 5. 内容规范
 
@@ -130,7 +119,7 @@ npm test
 | `content/about.md` | 简历/关于页 |
 | `assets/css/extended/custom.css` | 品牌样式（明暗双主题 CSS 变量） |
 | `static/img/avatar.svg` | 占位头像 |
-| `layouts/partials/post_meta.html` | 主题覆盖：文章元信息（日期悬浮提示改为显式时区格式，消除「构建机器时区决定输出字节」。**升级 PaperMod 子模块时必须回来同步**，同 `_default/baseof.html` / `partials/extend_head.html`） |
+| `themes/maplemod/layouts/partials/post_meta.html` | 文章元信息（日期悬浮提示显式时区格式，消除「构建机器时区决定输出字节」）；主题层文件，无同步义务（0030 合并后站点层无覆盖） |
 | `.github/workflows/deploy.yml` | 自动部署流水线 |
 | `docs/sop/` | 运维 SOP 源笔记 |
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |
