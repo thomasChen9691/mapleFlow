@@ -10,6 +10,7 @@
  *   读  `.reveal`（document 全量扫描；首页 hero 下方、精选区、产品行共用）
  *   写  is-in     进入视口后加，一次性（加完即 unobserve，不重播）
  *   降级  ① prefers-reduced-motion: reduce → 全量直写 is-in，不做动画
+ *            （判定来源：motion.js，与筛选引擎共用同一判定）
  *        ② 浏览器无 IntersectionObserver → 同上（内容不得因引擎缺席而消失）
  *   阈值  rootMargin `0px 0px -6% 0px`、threshold 0.06（观感参数，不属契约）
  *
@@ -20,7 +21,7 @@
  * 以 js.Build 引用。
  */
 
-const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
+import { prefersReducedMotion } from './motion.js';
 
 /** 扫描并绑定当前 document 的全部 .reveal 元素；导出供测试调用 */
 export function initScrollIn(doc) {
@@ -28,7 +29,7 @@ export function initScrollIn(doc) {
   const els = doc.querySelectorAll('.reveal');
   if (!els.length) { return; }
 
-  const reduce = !!(win.matchMedia && win.matchMedia(REDUCED_QUERY).matches);
+  const reduce = prefersReducedMotion(win);
   if (reduce || !('IntersectionObserver' in win)) {
     els.forEach((el) => el.classList.add('is-in'));
     return;

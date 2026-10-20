@@ -22,19 +22,15 @@
  *       --mf-i                  可见序 stagger 变量，第 9 条起截断为 8（长列表防迟钝）
  *       is-morphing / is-bump   一次性重播动画类（remove → reflow → add；morph 520ms 后由 timer 移除，bump 不设 timer）
  *       count.textContent       「显示 X / Y」；empty.hidden = (X > 0)
- *   降级  prefers-reduced-motion: reduce 时仍完整过滤，但不播放 morph / bump
- *        （matchMedia 不可用时按「不减弱」处理——守卫路径而非悲观禁用）
+ * 降级  prefers-reduced-motion: reduce 时仍完整过滤，但不播放 morph / bump
+ *        （判定来源：motion.js，两引擎共用；matchMedia 不可用时按「不减弱」处理）
  *
  * 测试：tests/assert_reveal.mjs（seam S1，工单 0022 决议④的 A 类行为项）。
  * 生产加载：经 assets/js/mf-reveal/app.js 入口由 extend_footer 以 js.Build 引用；
  *   视觉参数（22ms stagger、520ms  timer、rootMargin 等）属 CSS/调值层，不在契约内。
  */
 
-const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
-
-function prefersReducedMotion(win) {
-  return !!(win.matchMedia && win.matchMedia(REDUCED_QUERY).matches);
-}
+import { prefersReducedMotion } from './motion.js';
 
 /** 把单个 root 绑定为独立筛选实例；导出供测试逐 root 调用 */
 export function initFilter(root) {
