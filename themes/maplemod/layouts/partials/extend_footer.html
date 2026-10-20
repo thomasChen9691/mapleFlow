@@ -1,3 +1,17 @@
-{{- /* Footer custom content area start */ -}}
-{{- /*     Insert any custom code web-analytics, resources, etc. here */ -}}
-{{- /* Footer custom content area end */ -}}
+{{- /*
+  reveal 协议引擎加载点（工单 0022 决议①：分层提取）
+  ============================================================
+  引擎源码在 assets/js/mf-reveal/：
+    · scroll-in.js  滚动进场（.reveal → is-in 的 IO 写入方）
+    · filter.js     产品索引筛选（自动注册 .mf-index roots）
+  本文件只做 js.Build 打包与引用，不承载行为逻辑；
+  DOM 契约的定义处是各引擎文件头 docstring（工单 0022 决议②）。
+  测试：tests/assert_reveal.mjs（行为）+ tests/assert_product_states.py（产物）。
+  注：js.Build 管线与主题自家 head.html 的 fastsearch 加载同款（0.164 生产验证）。
+*/ -}}
+{{- $src := resources.Get "js/mf-reveal/app.js" -}}
+{{- if not $src -}}
+  {{- errorf "reveal 协议引擎入口缺失：assets/js/mf-reveal/app.js" -}}
+{{- end -}}
+{{- $js := $src | js.Build (dict "format" "iife") | resources.Minify | fingerprint }}
+<script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" crossorigin="anonymous" defer></script>

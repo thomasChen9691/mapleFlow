@@ -1,4 +1,15 @@
-{{- /* Head custom content area start */ -}}
-{{- /*     Insert any custom code (web-analytics, resources, etc.) - it will appear in the <head></head> section of every page. */ -}}
-{{- /*     Can be overwritten by partial with the same name in the global layouts. */ -}}
-{{- /* Head custom content area end */ -}}
+{{- /*
+  渐进增强：先假定 JS 不可用（<html class="no-js">），能执行时立刻改成 .js。
+  这段必须内联且尽量靠前，避免脚本加载完成前页面已经用 no-js 样式绘制一次。
+
+  目的：.reveal / .mf-rise 的初始隐藏只应在 JS 确实可用时才生效。
+  JS 被禁用、加载失败、或（搜索引擎爬虫 / 社交抓取）根本不执行 JS 时，
+  元素保持默认可见，内容不会凭空消失。
+*/ -}}
+<script>
+  (function () {
+    var el = document.documentElement;
+    el.classList.remove('no-js');
+    el.classList.add('js');
+  })();
+</script>
