@@ -12,6 +12,9 @@
   · 调用方 seam —— 经真实调用链（短代码 / 直接调 partial）触发的契约失败
   · 空态 seam —— 产品数据整体缺席时渲染「暂无资源」而非崩溃或静默空页
   · 真实数据 seam —— 生产配置构建的 products.html / index.html，线上回归守门
+  · 主题层契约 seam —— 全站 no-js 基线 / post_meta 显式时区格式 / 菜单渲染序 /
+    RSS 只收 posts / search DOM 挂点 / ogImage 兜底 / 站点与主题同路径不变量
+    （候选 6 工单 0032 决议；B7-B13，逐条变异检验）
 
 用法：
   python3 tests/assert_product_states.py          # 全套
@@ -530,6 +533,19 @@ def assert_theme_contract(report, dest):
                  "about.html 缺 og:image 或未命中 ogImage 值")
 
 
+def assert_single_copy(report):
+    """0030 决策的永久断言：站点层与主题层不得有同相对路径文件（覆盖层已消除）。
+
+    覆盖层复活 = 两份文件、两种真相、同步义务回归——本断言把它变成构建前可发现的错误。
+    """
+    site_root = REPO / "layouts"
+    theme_root = REPO / "themes" / "maplemod" / "layouts"
+    site = {p.relative_to(site_root).as_posix() for p in site_root.rglob("*") if p.is_file()}
+    theme = {p.relative_to(theme_root).as_posix() for p in theme_root.rglob("*") if p.is_file()}
+    dup = sorted(site & theme)
+    report.check("站点层与主题层无同相对路径文件（覆盖层已消除）", not dup, f"重复: {dup}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="产品状态模块产物断言")
     parser.add_argument("--quick", action="store_true", help="跳过真实数据构建")
@@ -543,6 +559,7 @@ def main():
     TMP.mkdir(parents=True, exist_ok=True)
 
     report = Report()
+    assert_single_copy(report)
     assert_fixture(report)
     assert_empty_state(report)
     assert_bad_cases(report)
