@@ -22,8 +22,7 @@ locale = "zh-CN"
 title = "MapleFlow"
 theme = "maplemod"
 
-# 页脚版权（顶层参数；PaperMod footer.html 优先用 site.Copyright，覆盖默认的 © now.Year）
-# 注意：siteStartYear 不被 PaperMod footer 读取（footer 仅用 now.Year），故用 copyright 控制年份范围
+# 页脚版权（footer.html 优先用 site.Copyright，覆盖默认的 © now.Year）
 copyright = "© 2019 - 2026 thomasChen"
 
 # ================= 服务设置 =================
@@ -47,7 +46,6 @@ defaultTheme = "auto"
 
 author = "thomasChen"
 description = "运维开发 / SRE / DevOps 实战 SOP：Kubernetes、Docker、CI/CD、AIOps 与可观测性"
-avatar = "img/avatar.svg"      # static/img/avatar.svg 占位头像（原 img/tn.png 不存在，会 404）
 # SOP 发布管线的源笔记目录（content/posts/_content.gotmpl 的输入；
 # wayfinder 工单 0008/0009 决议）。测试构建可覆盖此值指向 fixture 笔记目录。
 sopNotesDir = "docs/sop"
@@ -60,9 +58,6 @@ ogImage = "img/og-cover.png"
 # 页脚自定义文字
 # footerBottomText = ""
 
-# RSS 图标
-rss = true
-
 # 评论系统 (按需打开)
 # utterancesRepo = ""
 # valine = true
@@ -70,22 +65,6 @@ rss = true
 # LEANCLOUD_APP_KEY = ""
 # waline = true
 # walineServer = ""
-
-# === 联系方式 (原版字段) ===
-# TEST：占位测试邮箱，上线前请替换为真实邮箱（三处须保持一致：本行 / socialIcons / menu.main）
-email = "test@example.com"  # 取消注释，适配侧边栏邮箱图标显示
-
-siteStartYear = 2019
-
-# ================= 首页品牌信息（homeInfoParams） =================
-# 【P2-1 已停用】首页由 layouts/index.html 自定义模板完全覆盖，本区块不参与任何渲染。
-# 为消除死配置，已整块注释（保留原文备查）；若将来改回主题默认首页，取消注释即可。
-# [params.homeInfoParams]
-# Title = "MapleFlow"
-# Content = """
-# 运维开发 / SRE / DevOps 实战 SOP。把重复的劳动自动化，把不可控的故障变成可观测的指标。
-# """
-# AlignSocialIconsTo = "center"
 
 # ================= 社交图标（socialIcons） =================
 [[params.socialIcons]]
@@ -102,46 +81,14 @@ title = "GitHub"
 [params.assets]
 favicon = "favicon.svg"
 
-# 代码高亮开关（PaperMod 自带高亮，保持关闭）
-customSyntaxHighlighting = false
-
-# ================= 功能开关 =================
-# 导航栏吸顶
-stickyNav = true
-
-# 导航菜单排序（按 identifier 列出期望顺序；GitHub / Email 置于末尾）
-# 注：categories 的子项（运维/ops、k8s、docker、aiops）在此不单列——与既有的
-#     k8s/docker/aiops 保持一致；且当前 PaperMod v8 未读取该字段（保留仅为文档价值）。
-reorderNavItems = ["home", "posts", "categories", "tags", "about", "search", "products", "github", "email", "RSS"]
-
-# 移动端折叠菜单（适配 PaperMod 命名规范）
-collapseNavItems = ["Posts", "Categories", "Tags"]
-
-# 隐藏默认封面（核心修复：避免 cover 模板解析错误）
-noDefaultSummaryCover = true
 # 【P2-1 保留】全局 cover 配置（字典格式）。
 # 主题 layouts/partials/cover.html:2 无条件访问 .Params.cover.image，
 # 若移除本块，.Params.cover 为 nil 时该链式访问会触发模板解析错误（此前踩过的坑）。
-# 故保留空字典（image="" 语义即「不设全局封面」），与 noDefaultSummaryCover=true 一致。
+# 故保留空字典（image="" 语义即「不设全局封面」）。
 [params.cover]
 image = ""        # 留空表示不设置全局封面，避免字符串格式错误
 hidden = false    # 封面是否隐藏
 relative = false  # 图片路径是否相对
-
-# 显示文章目录
-showTableOfContents = true
-
-# 文章页显示封面图
-showSummaryCoverInPost = true
-
-# 图片点击放大
-imageZoomableInPost = true
-
-# 显示上下篇导航
-showPrevNextPost = true
-
-# 分享按钮 (留空数组 = 关闭)
-reorderShares = []
 
 # ================= 自定义菜单 =================
 # 注意：[params.navItems] 为无效字段（PaperMod 不读取），导航由上方 [[menu.main]] 驱动，已删除
