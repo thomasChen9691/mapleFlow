@@ -29,15 +29,15 @@ created: 2026-10-20
 - [主题 fork 事实底座（本地盘点）](tickets/0027-theme-fork-facts.md) — gitlink 干净、116 文件 dirty 实锤纯 CRLF；9/25 partial 可达、16/25 不可达、archives 模板与 6 个短代码不可达、robots.txt 被 static/ 遮蔽、head.html:201 悬空引用 google_analytics；站点 4 个近逐字覆盖（baseof/post_meta/extend_head/extend_footer，opengraph 亦近逐字）+ rss.xml/index.json 语义重写 + index.html/product-* net-new，**ADR-0002 漏列 post_meta 与 opengraph 两个同步义务文件（实为 4 个）**；主题行为零断言 9 处（no-js 全站面、post_meta 时区回退不红、菜单/URL、RSS、404、list/taxonomy、search、dev-vs-prod 双守卫）；hugo.toml 死配置 8+（reorderNavItems 复核确认真不读）；构建触点清单（deploy.yml 1 处、AGENTS.md 5 处、README 5 处、.gitmodules、auto_push.py 无需改）。
 - [上游与外部事实](tickets/0028-upstream-external-facts.md) — 钉住点 6c5a8f6（2026-01-09）落后 master 92 提交（上游 2026-10-18 仍活跃，release 停 v8.0/2024-11）；官方明示 theme 名须匹配 themes/ 目录名（改名必须同步 hugo.toml）；项目 layouts 对主题同名文件「项目最左、文件级优先」；themes/ 下普通目录即 vendored 主题、与子模块构建等价；vendor 化机械路径 = `git rm --cached` + 删 .gitmodules + add；actions/checkout 默认不拉子模块，移除后构建不依赖改 deploy.yml；MIT 最低义务=随附 LICENSE+版权行、无强制署名；官方无 fork 跟上游专指南（社区实践=upstream remote 按需 merge）。
 - [fork 形态与修剪范围](tickets/0029-fork-form-and-pruning-scope.md) — vendored + 改名第一方：`themes/maplemod`，hugo.toml theme 同步改；删死面档（删 12 不可达 partial + 6 短代码 + archives/robots 模板 + .github + 45 i18n，同删守卫调用点；留 google_analytics 钩子与 cover；assets 不碰）；行尾复用现有 .gitattributes（add 时归一 + 验证）；死配置同批清理独立 commit（对 maplemod 重新 grep 取证，键名错配组明确「从未生效」；socialIcons 因 schema_json 读取而保留，修正 0027 误判）。施工已获指示，同场红绿循环展开。
+- [分层契约：覆盖文件归并与站点层剩余](tickets/0030-layering-contract-overrides.md) — 合并入主题层（覆盖层消除，文件唯一）：5 个站点版搬进 maplemod（baseof/extend_head/extend_footer/post_meta/opengraph），rss.xml 与 index.json 留站点（内容策略/站点数据），两个主题死副本删除；站点层最终 7 文件，判据「因什么而变」；验证 = public/ 逐字节 diff 零差异 + 三套件 + 同路径不变量；ADR-0002 义务消失（实际涉 5 文件非 2），指针行由 0034 统一落。
+- [子模块退役与构建链触点](tickets/0031-submodule-retirement-build-touchpoints.md) — `.git/modules` 10M 缓存保留（0033 期权，本地状态不进仓库）、历史 gitlink 不 rewrite；CI 删 `submodules: true` + `fetch-depth: 0`（.GitInfo 零使用）；文档触点表（AGENTS 5 处/README 3 处，坑点 6 删+顺延编号+改唯一交叉引用）；边界「0031 清子模块事实 / 0033 管命名导航」；验收 = 本地 5 条（构建+三套件、无子模块指令、无 gitlink 条目、LF 复验、localhost 零残留）+ CI 实证 push 后回填，本地绿即 closed。
 
 ## Not yet specified
 
-<!-- frontier 入口：0030（分层契约）与 0031（子模块退役触点）——0029 已 closed。以下雾区随工单决议逐步毕业 -->
+<!-- frontier：0032（主题层可测试的缝）与 0033（命名/AI 导航/上游关系）——0030/0031 已 closed。以下雾区随工单决议逐步毕业 -->
 
-- **修剪方案的颗粒度清单**：若 0029 择修剪档位——哪些 partial / 短代码 / 模板 / 配置项退役、dev-vs-prod 双守卫面的存废，待形态定后才可精确表述。
-- **主题内部结构是否随 fork 重组**：assets/css 分文件、partial 目录卫生、上游痕迹抹除程度，待 0029/0033。
+- **主题内部结构是否随 fork 重组**：assets/css 分文件、partial 目录卫生、上游痕迹抹除程度，待 0033。
 - **fork 后的版本钉记与再同步机制细节**：upstream remote 取名、merge 节奏、冲突高发面预警，待 0033 定上游关系。
-- **死配置清理的归属**：8+ 个主题零读取参数随 fork 顺手清 vs 独立小改，待 0029。
 
 ## Out of scope
 
