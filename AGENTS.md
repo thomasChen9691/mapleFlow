@@ -47,6 +47,9 @@ hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.to
 
 # 提交（见 §6 规范）
 python3 auto_push.py                       # 自动 add/commit/push 到 main
+
+# reveal 协议行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
+npm test
 ```
 
 ## 4. 必知坑点（改动前先读）
@@ -101,6 +104,8 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 11. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_product_states.py`。
 
+12. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_product_states.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 升级同步件，保持内联。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
@@ -131,6 +136,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |
 | `layouts/partials/product-items.html` | 产品索引·数据准备 seam：索引渲染链唯一读 `hugo.Data.products` 处，featured 过滤 + limit 截断（缺省/0=全量，负数 errorf）+ 交付形态词汇契约（词表外 kind 即 errorf）。ADR-0006；测试 `tests/assert_product_states.py`，改动前先跑 |
 | `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_product_states.py`，改动前先跑 |
+| `assets/js/mf-reveal/` | reveal 协议引擎（**契约定义处**）：app.js 入口 / filter.js 筛选 / scroll-in.js 滚动进场 / reduced-motion.js 降级判定。ADR-0007；测试 `npm test`（行为）+ `tests/assert_product_states.py`（产物），改动前先跑 |
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（ADR-0005；契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |
 | `data/sop.yaml` | SOP 发布注册表：slug/note/date/categories 必填，tags 可缺省，`draft: true` = 已注册的草稿 |
 | `docs/sop/README.md` | 源笔记索引（与注册表双向漂移断言守护；`MAPLEFLOW_BLOG_SOP.md` 不发布） |
