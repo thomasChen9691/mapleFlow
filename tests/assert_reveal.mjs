@@ -287,5 +287,29 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
+// ---- RGR-8：同页多实例 roots 各自独立（state/计数/aria 不外溢）----
+{
+  const one = (suffix) => sampleIndex()
+    .replace(/mf-idx-0/g, `mf-idx-${suffix}`)
+    .replace(/fx-(\d)/g, `fx-${suffix}$1`);
+  const dom = installDom(`<div>${one('a')}${one('b')}</div>`);
+  await loadFresh('assets/js/mf-reveal/filter.js');
+  const doc = dom.window.document;
+  const rootA = doc.getElementById('mf-idx-a');
+  const rootB = doc.getElementById('mf-idx-b');
+  rootA.querySelector('.mf-filter[data-group="kind"][data-value="workflow"]')
+    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+
+  const countA = rootA.querySelector('.mf-count').textContent;
+  const countB = rootB.querySelector('.mf-count').textContent;
+  const bAll = rootB.querySelector('.mf-filter[data-group="kind"][data-value="all"]').getAttribute('aria-pressed');
+  const bHidden = [...rootB.querySelectorAll('.mf-row')].some((el) => el.classList.contains('is-hidden'));
+  check(
+    'RGR-8 点 A 的 workflow：A 计数「显示 1 / 3」，B 计数/aria/可见性均不受影响',
+    countA === '显示 1 / 3' && countB === '显示 3 / 3' && bAll === 'true' && !bHidden,
+    `got countA=${countA} countB=${countB} bAll=${bAll} bHidden=${bHidden}`,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
