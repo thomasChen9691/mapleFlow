@@ -49,7 +49,7 @@ description = "运维开发 / SRE / DevOps 实战 SOP：Kubernetes、Docker、CI
 # SOP 发布管线的源笔记目录（content/posts/_content.gotmpl 的输入；
 # wayfinder 工单 0008/0009 决议）。测试构建可覆盖此值指向 fixture 笔记目录。
 sopNotesDir = "docs/sop"
-# 社交分享 OG 图：用 ogImage（PaperMod opengraph 读取此参数，不读 [params].images）
+# 社交分享 OG 图：用 ogImage（ layouts/partials/templates/opengraph.html 的兜底分支读取此参数）
 # 必须无前导斜杠，Hugo 会用 .Permalink 自动带 /mapleFlow/ 子路径，避免 404
 ogImage = "img/og-cover.png"
 # headerTitle 为无效字段（PaperMod 不识别），已移除
