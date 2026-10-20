@@ -40,6 +40,23 @@ jobs:
         # （2026-09-20 审计中发现的 posts/aiop.html 即此类残留）。
         run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install test deps
+        # jsdom 只为 tests/assert_reveal.mjs 服务；Hugo 站点本体不依赖 npm。
+        # --ignore-scripts：不执行依赖的安装脚本。
+        run: npm ci --ignore-scripts
+
+      - name: Assert reveal behavior
+        # reveal 协议行为断言（wayfinder 工单 0023 决议：CI 权威）：
+        # jsdom 执行引擎源码，覆盖筛选/aria/计数/空态/减弱动效/IO 降级/多实例。
+        # 失败即阻断部署——行为回归不靠人眼。
+        run: node tests/assert_reveal.mjs
+
       - name: Assert product states
         # 产品状态模块的产物断言（ADR-0004 / wayfinder 工单 0005）：
         # fixture 全分支 + 真实数据线上回归 + 契约坏用例。失败即阻断部署——

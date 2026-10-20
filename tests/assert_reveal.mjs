@@ -7,15 +7,17 @@
  * 断言方式：jsdom 加载镜像渲染 seam DOM 契约的样本 HTML，
  *   import 引擎模块（cache-bust 强制重新求值），交互后断言可观测 DOM 状态。
  *
- * seam 约定（工单 0022 决议④，本文件为施工期 provisional）：
- *   A 行为 harness 9 项全部落本文件；样本 HTML 为手写（镜像 DOM 契约），
- *   样本来源 / 套件归并 / CI 守门待工单 0023 质询追认。
+ * seam 约定（工单 0022 决议④ + 0023 决议，正式 seam）：
+ *   A 类 9 项行为全部落本文件；样本 HTML 手写、镜像引擎 docstring 的 DOM 契约；
+ *   渲染 seam 是否偏离契约由 B 类产物断言（tests/assert_product_states.py）守。
+ *   依赖由 package.json 声明（jsdom devDependency），CI 以 npm ci + 本文件为
+ *   权威守门（0023 决议①），本地跑同一命令即可复现。
  *
  * 与 Hugo 版本 skew 的关系：断言只消费引擎源码，不经 Hugo 构建，
  *   与 CI 钉版 0.164 / 本机 0.167 无关。
  *
- * 跑法（jsdom 经 node_modules symlink 从 managed workspace 解析，不入仓）：
- *   node tests/assert_reveal.mjs
+ * 跑法：
+ *   npm ci && node tests/assert_reveal.mjs
  */
 import { JSDOM } from 'jsdom';
 import { pathToFileURL, fileURLToPath } from 'node:url';
