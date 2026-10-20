@@ -105,6 +105,10 @@ CALLER_MISSING_ITEMS_EXPECT = "产品索引：items 必填"
 # uid 必填（工单 0017 决议：显式必填，删 default "mf-idx" 死缺省）。
 CALLER_MISSING_UID_EXPECT = "产品索引：uid 必填"
 
+# 主题层契约（0032 决议）的独立字面量：post_meta 的 title 属性必须是显式时区格式，
+# 不是 Go 的 time.Time.String()（后者由构建机时区决定输出字节）。
+POST_META_TITLE_RE = re.compile(r"title='\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4}'")
+
 
 class ProductRowParser(HTMLParser):
     """抽取 products.html 中每条 mf-row 的产品状态可观测面。"""
@@ -464,6 +468,14 @@ def assert_theme_contract(report, dest):
                  f"缺类: {', '.join(bad_class[:3])}")
     report.check(f"全站 {len(pages)} 页均含内联 no-js→js 交换脚本", not bad_swap,
                  f"缺脚本: {', '.join(bad_swap[:3])}")
+
+    # B8: post_meta 的 title 属性为显式时区格式（手写文章；SOP golden 不覆盖此路径，
+    # 且 golden 的规范化器刻意容忍两种时区形态——回归牙口由本条提供）。
+    post = dest / "posts" / "aiops-state-and-tools.html"
+    post_html = post.read_text(encoding="utf-8") if post.exists() else ""
+    report.check("post_meta title 属性为显式时区格式（YYYY-MM-DD HH:MM:SS +0800）",
+                 bool(POST_META_TITLE_RE.search(post_html)),
+                 "未匹配显式时区格式（可能回退为裸 .Date）")
 
 
 def main():
