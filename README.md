@@ -17,8 +17,6 @@ git clone git@github.com:thomasChen9691/mapleFlow.git
 cd mapleFlow
 ```
 
-> **若出现 `found no layout file for "html"` 或分类/文章不显示**：先确认 `themes/maplemod` 目录非空（主题已随仓库分发，无需额外拉取）。
-
 - **本地开发模式（推荐）**
 
 开发环境使用 `hugo.toml` 中的配置（`baseURL` 为 `http://localhost:1313/`）：

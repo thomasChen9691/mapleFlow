@@ -1,5 +1,5 @@
 {{- /*
-  覆盖主题 baseof.html，仅为一件事：给 <html> 加 class="no-js"。
+  maplemod 的 baseof.html（0030 合并后唯一副本；原站点覆盖层已并入本文件）。
 
   渐进增强基线 —— 默认假定 JS 不可用。layouts/partials/extend_head.html 里的
   内联脚本会在 <head> 内立刻把 no-js 换成 js。这样：
@@ -7,8 +7,7 @@
     · JS 被禁用/失败 → 保持 .no-js，元素按默认可见渲染，内容不会消失
     · 爬虫/社交抓取  → 同上（它们不执行 JS），正文对搜索引擎可见
 
-  除 <html> 的 class 外，其余与 themes/PaperMod/layouts/_default/baseof.html 完全一致。
-  主题升级时需回来同步本文件。
+  与上游 PaperMod 的唯一实质差异是 <html> 的 class="no-js"（ADR-0002）。
 */ -}}
 {{- if lt hugo.Version "0.146.0" }}
 {{- errorf "=> hugo v0.146.0 or greater is required for hugo-PaperMod to build " }}

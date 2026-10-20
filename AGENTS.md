@@ -5,7 +5,7 @@
 
 ## 1. 项目概览
 
-- **性质**：使用 **Hugo** + **maplemod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
+- **性质**：使用 **Hugo** + **PaperMod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
 - **主题**：`themes/maplemod` 是**仓内第一方主题**（2026-10 自 PaperMod v8.0-55 fork 并修剪；无子模块、无上游同步义务）。
 - **内容方向**：运维开发 / SRE / DevOps 实战 SOP，覆盖 Kubernetes、Docker、CI/CD、AIOps、Prometheus、Grafana、Jenkins、GitLab、Ansible、SonarQube，见 `docs/sop/`。
 
@@ -93,7 +93,7 @@ npm test
 
 10. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_product_states.py`。
 
-11. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_product_states.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 升级同步件，保持内联。
+11. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_product_states.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 基线的一部分，保持内联。
 
 ## 5. 内容规范
 

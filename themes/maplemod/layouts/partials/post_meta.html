@@ -1,7 +1,8 @@
 {{- /*
-  覆盖 PaperMod 的 layouts/partials/post_meta.html（本文件与主题逐字一致，
-  仅第 4 行的 title 属性改为显式时间格式）。升级 PaperMod 子模块时必须回来同步，
-  否则会静默丢失此处修复（同 baseof.html / extend_head.html 的既有约定）。
+  maplemod 的 post_meta.html（0030 合并后唯一副本；原站点覆盖层已并入本文件）。
+
+  与上游 PaperMod 的唯一实质差异：title 属性改用显式时间格式
+  （.Date.Format "2006-01-02 15:04:05 -0700"），消除「构建机器时区决定输出字节」。
 
   为什么改：主题用 printf "%s" .Date，即 Go 的 time.Time.String()——它会打印
   时区**缩写**。而 Go 解析「带偏移量的时间戳」时，只有偏移量与运行机器的本地
