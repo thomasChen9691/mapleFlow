@@ -522,6 +522,13 @@ def assert_theme_contract(report, dest):
     report.check("search 页三挂点齐全（searchbox/searchInput/searchResults）", not missing,
                  f"缺: {missing}")
 
+    # B12: og:image 兜底——无封面图的页面也输出 og:image（来自 site.Params.ogImage）。
+    about_path = dest / "about.html"
+    about_html = about_path.read_text(encoding="utf-8") if about_path.exists() else ""
+    report.check("无封面页仍输出 og:image（ogImage 兜底）",
+                 'property="og:image"' in about_html and "img/og-cover.png" in about_html,
+                 "about.html 缺 og:image 或未命中 ogImage 值")
+
 
 def main():
     parser = argparse.ArgumentParser(description="产品状态模块产物断言")
