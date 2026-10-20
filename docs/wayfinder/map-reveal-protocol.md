@@ -26,10 +26,13 @@ created: 2026-10-19
 
 - [reveal 面事实底座与 JS 可测试性事实](tickets/0021-reveal-surface-facts.md) — 12+ 契约点盘点（含两个 is-in 写入方）+ 测试覆盖近乎零（唯一相邻断言是 mf-filter 有无）；js.Build 自 v0.74.0 引入、0.164 可用且源码保持可单测形态；--minify 改 JS 不改语义；jsdom/happy-dom 可行（未安装，CI 增量为行数级）；harness 与 Hugo 版本 skew 解耦。
 - [模块边界内的 seam 划分与脚本落点](tickets/0022-module-seam-and-script-placement.md) — 分层提取（swap 留 inline、IO+筛选引擎提取 assets/js 走 js.Build，PaperMod 同款管线先例）；三层文档契约（术语/docstring 唯一定义处/测试字面量），不提前建 ADR-0006 挂起的词汇 seam；DOM 契约命名权归协议层，ADR-0006 接口语义不动（uid 仍必填兼锚，引擎遍历 .mf-index roots 注册）；测试分流定案：行为 harness 9 项 / 产物断言 6 项 / 逐出 2 项。
+- [可测试的缝：JS 行为测试与产物断言的分工](tickets/0023-reveal-test-seam.md) — 依赖入仓 + CI 权威（package.json/lock + npm ci + node harness 两步）；套件两脚本两 step；行为用手写样本、契约合规由 B 类产物断言守；no-js 基线缺口落 B 类。
+- [筛选交互语义定案](tickets/0024-filter-interaction-semantics.md) — 全部确认现状：同值回 all、aria-pressed 组内互斥、计数「显示 X / Y」、空态双文案、uid 不扩 hash、reduced-motion 不播动画。
+- [is-in 写入方协议与动效降级统一](tickets/0025-is-in-writer-protocol.md) — is-in 一次性终态（IO unobserve + 筛选直写）；--mf-i 语义归协议、数值归 CSS；降级 JS 共享单一判定 + CSS 兜底保留；mf-rise 契约到存在性+降级。
 
 ## Not yet specified
 
-- JS harness 的样本 HTML 来源（若 0023 引入 harness：fixture 构建产物、真实数据产物、还是手写样本）——取决于 0023。
+<!-- 空：0023 已定样本来源与 CI 供给；目的地前仅剩 0026 收口（术语/命名/ADR） -->
 
 ## Out of scope
 
