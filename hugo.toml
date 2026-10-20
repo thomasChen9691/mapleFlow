@@ -20,7 +20,7 @@ defaultContentLanguage = "zh-cn"
 # locale 取代已废弃的 languageCode（Hugo v0.158.0 起 languageCode 弃用；CI 使用 0.164.0）
 locale = "zh-CN"
 title = "MapleFlow"
-theme = "PaperMod"
+theme = "maplemod"
 
 # 页脚版权（顶层参数；PaperMod footer.html 优先用 site.Copyright，覆盖默认的 © now.Year）
 # 注意：siteStartYear 不被 PaperMod footer 读取（footer 仅用 now.Year），故用 copyright 控制年份范围
