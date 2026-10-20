@@ -444,6 +444,26 @@ def assert_real(report):
     home_ids = [pid for pid in parse_rows(dest / "index.html") if pid]
     report.check("真实数据首页精选 = 3 条 featured 产品（yaml 序）", home_ids == REAL_HOME_FEATURED_IDS,
                  f"got {home_ids}")
+    assert_theme_contract(report, dest)
+
+
+def assert_theme_contract(report, dest):
+    """主题层契约（0032 决议：B7-B12）。期望值为独立字面量，不从实现重算。"""
+    # B7: no-js 基线全站面——每页 <html> 带 no-js，且含内联 no-js→js 交换脚本。
+    # 排除 Hugo 的别名/跳转页（page/1.html 等，meta refresh，不走 baseof）。
+    pages = sorted(p for p in dest.rglob("*.html")
+                   if 'http-equiv="refresh"' not in p.read_text(encoding="utf-8"))
+    bad_class, bad_swap = [], []
+    for page in pages:
+        html = page.read_text(encoding="utf-8")
+        if not re.search(r"<html[^>]*class=[\"']?no-js", html):
+            bad_class.append(page.relative_to(dest).as_posix())
+        if "classList.remove(" not in html or "no-js" not in html:
+            bad_swap.append(page.relative_to(dest).as_posix())
+    report.check(f"全站 {len(pages)} 页均带 no-js 基线类", not bad_class,
+                 f"缺类: {', '.join(bad_class[:3])}")
+    report.check(f"全站 {len(pages)} 页均含内联 no-js→js 交换脚本", not bad_swap,
+                 f"缺脚本: {', '.join(bad_swap[:3])}")
 
 
 def main():
