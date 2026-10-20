@@ -238,11 +238,13 @@ def assert_reveal_artifacts(report, dest):
         rel = re.sub(r'^(/|mapleFlow/)', '', m.group(1))
         report.check("B2 引擎脚本文件已落盘", (dest / rel).exists(), f"missing {dest / rel}")
 
-    # B3 DOM 契约挂点：产品行 .reveal、首页 hero mf-rise
+    # B3 DOM 契约挂点：产品行 .reveal、首页 hero mf-rise（含三档延迟类）
     report.check("B3 产品行带 .reveal 进场类", 'mf-row reveal' in products_html,
                  "no 'mf-row reveal' in products.html")
-    report.check("B3 首页 hero 带 .mf-rise 进场类", 'mf-rise' in home_html,
-                 "no mf-rise in index.html")
+    missing_mrise = [c for c in ('mf-rise d1', 'mf-rise d2', 'mf-rise d3') if c not in home_html]
+    report.check("B3 首页 hero 带 .mf-rise 进场类（d1/d2/d3 三档）",
+                 'mf-rise' in home_html and not missing_mrise,
+                 f"missing {missing_mrise}")
 
     # B4 筛选数据挂点（协议层读、渲染 seam 写）
     hooks = ['data-group="kind"', 'data-value="workflow"', 'data-kind=', 'data-price=']
@@ -251,10 +253,10 @@ def assert_reveal_artifacts(report, dest):
                  f"missing {missing}")
 
     # B5 筛选按钮词汇集（kind 三值 + price 两值；ADR-0006 封闭词表的执行区）
-    values = re.findall(r'data-value="([^"]+)"', products_html)
-    expect = ["all", "workflow", "document", "question-bank", "free", "paid"]
-    report.check("B5 mf-filter 按钮词汇集 = kind 三值 + price 两值",
-                 all(v in values for v in expect), f"got {values}")
+    values = sorted(re.findall(r'data-value="([^"]+)"', products_html))
+    expect = sorted(["all", "workflow", "document", "question-bank", "free", "paid"])
+    report.check("B5 mf-filter 按钮词汇集 = kind 三值 + price 两值（精确集合）",
+                 values == expect, f"got {values}")
 
     # B6 no-js 降级 CSS 规则在产物里（基线兜底：无 JS 时内容可见）
     css_text = "\n".join(p.read_text(encoding="utf-8") for p in dest.rglob("*.css"))

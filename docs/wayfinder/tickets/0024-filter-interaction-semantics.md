@@ -19,3 +19,14 @@ map: map-reveal-protocol.md
 4. 空态「没有符合筛选条件的资源」的 hidden 切换规则；
 5. uid 深链锚是否扩展 hash / URL 行为（当前仅 DOM id，无 pushState）；
 6. 减弱动效（prefers-reduced-motion）下筛选是否仍播放 morph 动画（现状不播）。
+
+## 施工期注记（2026-10-20，待本工单追认）
+
+引擎提取施工已把**现状语义**固化为代码与行为断言（`assets/js/mf-reveal/filter.js` + `tests/assert_reveal.mjs`），本题质询将以这些为基线确认或修改——每条决议一旦定案，就是行为断言与引擎 docstring 的字面期望值：
+
+- 同值再点 → 回 all（toggle-off）；
+- aria-pressed 组内互斥（当前值 true，同组其余 false）；
+- 计数文案「显示 X / Y」，无动画时机差异；
+- 空态 `.mf-empty` hidden = (X > 0)；
+- uid 仅 DOM id/深链锚，无 hash/URL 行为；
+- reduced-motion：过滤与 is-in 照常，morph/bump 不播放。

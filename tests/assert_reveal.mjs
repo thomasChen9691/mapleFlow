@@ -18,9 +18,8 @@
  *   node tests/assert_reveal.mjs
  */
 import { JSDOM } from 'jsdom';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let passed = 0;
@@ -51,10 +50,9 @@ function installDom(html) {
   return dom;
 }
 
-/** 样本：镜像 product-index.html 渲染 seam 的 DOM 契约（3 条产品，filters=true） */
-function sampleIndex() {
-  return `<div class="mf-index" id="mf-idx-0">
-  <div class="mf-filters">
+/** 筛选控件条：镜像 product-index.html 渲染 seam 的 DOM 契约（词汇归 ADR-0006） */
+function filtersBar() {
+  return `<div class="mf-filters">
     <button type="button" class="mf-filter" data-group="kind" data-value="all" aria-pressed="true">全部</button>
     <button type="button" class="mf-filter" data-group="kind" data-value="workflow" aria-pressed="false">工作流</button>
     <button type="button" class="mf-filter" data-group="kind" data-value="document" aria-pressed="false">文档</button>
@@ -63,37 +61,31 @@ function sampleIndex() {
     <button type="button" class="mf-filter" data-group="price" data-value="free" aria-pressed="false">免费</button>
     <button type="button" class="mf-filter" data-group="price" data-value="paid" aria-pressed="false">付费</button>
     <span class="mf-count" aria-live="polite"></span>
-  </div>
+  </div>`;
+}
+
+/** 产品行：kind 三元循环、price 交替（第 1 行 workflow/paid，第 2 行 document/free…） */
+function rowsHtml(n) {
+  const kinds = ['workflow', 'document', 'question-bank'];
+  return Array.from({ length: n }, (_, i) =>
+    `<li class="mf-row reveal" id="fx-${i + 1}" data-kind="${kinds[i % 3]}" data-price="${i % 2 ? 'free' : 'paid'}"><div class="mf-row-num">${String(i + 1).padStart(2, '0')}</div></li>`).join('\n');
+}
+
+function sampleIndex(n = 3, id = 'mf-idx-0') {
+  return `<div class="mf-index" id="${id}">
+  ${filtersBar()}
   <ol class="mf-rows">
-    <li class="mf-row reveal" id="fx-1" data-kind="workflow" data-price="paid"><div class="mf-row-num">01</div></li>
-    <li class="mf-row reveal" id="fx-2" data-kind="document" data-price="free"><div class="mf-row-num">02</div></li>
-    <li class="mf-row reveal" id="fx-3" data-kind="question-bank" data-price="paid"><div class="mf-row-num">03</div></li>
+    ${rowsHtml(n)}
   </ol>
   <p class="mf-empty" hidden>没有符合筛选条件的资源。</p>
 </div>`;
 }
 
-/** 样本：N 行产品（kind 三元循环、price 交替），用于 stagger 截断等需要长列表的行为 */
-function sampleIndexLong(n) {
-  const kinds = ['workflow', 'document', 'question-bank'];
-  const rows = Array.from({ length: n }, (_, i) =>
-    `<li class="mf-row reveal" id="fx-${i + 1}" data-kind="${kinds[i % 3]}" data-price="${i % 2 ? 'free' : 'paid'}"><div class="mf-row-num">${String(i + 1).padStart(2, '0')}</div></li>`).join('\n');
-  return `<div class="mf-index" id="mf-idx-long">
-  <div class="mf-filters">
-    <button type="button" class="mf-filter" data-group="kind" data-value="all" aria-pressed="true">全部</button>
-    <button type="button" class="mf-filter" data-group="kind" data-value="workflow" aria-pressed="false">工作流</button>
-    <button type="button" class="mf-filter" data-group="kind" data-value="document" aria-pressed="false">文档</button>
-    <button type="button" class="mf-filter" data-group="kind" data-value="question-bank" aria-pressed="false">题库</button>
-    <span class="mf-sep" aria-hidden="true"></span>
-    <button type="button" class="mf-filter" data-group="price" data-value="free" aria-pressed="false">免费</button>
-    <button type="button" class="mf-filter" data-group="price" data-value="paid" aria-pressed="false">付费</button>
-    <span class="mf-count" aria-live="polite"></span>
-  </div>
-  <ol class="mf-rows">
-    ${rows}
-  </ol>
-  <p class="mf-empty" hidden>没有符合筛选条件的资源。</p>
-</div>`;
+/** 点击某组某值按钮 */
+function clickFilter(dom, group, value) {
+  dom.window.document
+    .querySelector(`.mf-filter[data-group="${group}"][data-value="${value}"]`)
+    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
 }
 
 console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
@@ -115,18 +107,16 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   const dom = installDom(sampleIndex());
   await loadFresh('assets/js/mf-reveal/filter.js');
   const doc = dom.window.document;
-  const at = (g, v) => doc.querySelector(`.mf-filter[data-group="${g}"][data-value="${v}"]`);
-  const allBtn = at('kind', 'all');
-  const wfBtn = at('kind', 'workflow');
-  const click = (el) => el.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  const allBtn = doc.querySelector('.mf-filter[data-group="kind"][data-value="all"]');
+  const wfBtn = doc.querySelector('.mf-filter[data-group="kind"][data-value="workflow"]');
 
-  click(wfBtn);
+  clickFilter(dom, 'kind', 'workflow');
   check(
     'RGR-2a 点击 workflow：workflow aria-pressed=true、all 归 false',
     wfBtn.getAttribute('aria-pressed') === 'true' && allBtn.getAttribute('aria-pressed') === 'false',
     `got wf=${wfBtn.getAttribute('aria-pressed')} all=${allBtn.getAttribute('aria-pressed')}`,
   );
-  click(wfBtn);
+  clickFilter(dom, 'kind', 'workflow');
   check(
     'RGR-2b 同值再点回 all：all=true、workflow 归 false',
     allBtn.getAttribute('aria-pressed') === 'true' && wfBtn.getAttribute('aria-pressed') === 'false',
@@ -139,13 +129,11 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   const dom = installDom(sampleIndex());
   await loadFresh('assets/js/mf-reveal/filter.js');
   const doc = dom.window.document;
-  const click = (g, v) => doc.querySelector(`.mf-filter[data-group="${g}"][data-value="${v}"]`)
-    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
   const row = (id) => doc.getElementById(id);
   const count = doc.querySelector('.mf-count');
   const empty = doc.querySelector('.mf-empty');
 
-  click('kind', 'workflow');
+  clickFilter(dom, 'kind', 'workflow');
   check(
     'RGR-3a 筛 workflow：仅匹配行可见，其余加 is-hidden；计数「显示 1 / 3」；空态隐藏',
     !row('fx-1').classList.contains('is-hidden')
@@ -156,14 +144,14 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
     `got fx1=${row('fx-1').className} fx2=${row('fx-2').className} fx3=${row('fx-3').className} count=${count.textContent} empty.hidden=${empty.hidden}`,
   );
 
-  click('price', 'paid'); // workflow + paid 仍命中 fx-1
+  clickFilter(dom, 'price', 'paid');
   check(
     'RGR-3b 追加 price=paid：计数不变「显示 1 / 3」',
     count.textContent === '显示 1 / 3',
     `got count=${count.textContent}`,
   );
 
-  click('kind', 'document'); // document + paid 无命中（fx-2 是 free）
+  clickFilter(dom, 'kind', 'document');
   check(
     'RGR-3c 组合筛到 0 匹配：空态显示、计数「显示 0 / 3」',
     empty.hidden === false && count.textContent === '显示 0 / 3',
@@ -173,12 +161,11 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
 
 // ---- RGR-4：animate 路径直写 is-in，--mf-i 第 9 条起截断为 8 ----
 {
-  const dom = installDom(sampleIndexLong(12));
+  const dom = installDom(sampleIndex(12));
   await loadFresh('assets/js/mf-reveal/filter.js');
   const doc = dom.window.document;
   const rows = [...doc.querySelectorAll('.mf-row')];
-  doc.querySelector('.mf-filter[data-group="kind"][data-value="all"]')
-    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  clickFilter(dom, 'kind', 'all');
 
   const allIn = rows.every((el) => el.classList.contains('is-in'));
   const mfI = rows.map((el) => el.style.getPropertyValue('--mf-i'));
@@ -195,10 +182,10 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
-// ---- RGR-5：morph/bump 一次性重播，morph 520ms 后由 timer 移除，bump 无 timer ----
+// ---- RGR-5：morph/bump 一次性重播，morph 由 timer 移除，bump 无 timer ----
 {
   const dom = installDom(sampleIndex());
-  // 捕获 timer：不睡真时间，手动 flush
+  // 捕获 timer：不睡真时间，手动 flush；不断言具体毫秒值（C 类：调值属视觉层）
   const timers = [];
   dom.window.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
   dom.window.clearTimeout = () => {};
@@ -207,19 +194,18 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   const doc = dom.window.document;
   const list = doc.querySelector('.mf-rows');
   const count = doc.querySelector('.mf-count');
-  doc.querySelector('.mf-filter[data-group="kind"][data-value="workflow"]')
-    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  clickFilter(dom, 'kind', 'workflow');
 
   check(
-    'RGR-5a 交互后 list 加 is-morphing、count 加 is-bump；仅 morph 挂 520ms timer',
+    'RGR-5a 交互后 list 加 is-morphing、count 加 is-bump；仅 morph 挂一个 timer',
     list.classList.contains('is-morphing') && count.classList.contains('is-bump')
-      && timers.length === 1 && timers[0].ms === 520,
-    `got list=${list.className} count=${count.className} timers=${JSON.stringify(timers.map((t) => t.ms))}`,
+      && timers.length === 1,
+    `got list=${list.className} count=${count.className} timers=${timers.length}`,
   );
 
   timers.forEach((t) => t.fn());
   check(
-    'RGR-5b flush 520ms timer 后 morph 移除、bump 保留（一次性）',
+    'RGR-5b flush timer 后 morph 移除、bump 保留（一次性）',
     !list.classList.contains('is-morphing') && count.classList.contains('is-bump'),
     `got list=${list.className} count=${count.className}`,
   );
@@ -233,8 +219,7 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   const doc = dom.window.document;
   const list = doc.querySelector('.mf-rows');
   const count = doc.querySelector('.mf-count');
-  doc.querySelector('.mf-filter[data-group="kind"][data-value="workflow"]')
-    .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  clickFilter(dom, 'kind', 'workflow');
 
   check(
     'RGR-6 减弱动效：过滤与 is-in 照常，morph/bump 不播放',
@@ -248,7 +233,7 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
-// ---- RGR-7：滚动进场引擎三态（无 IO 全量 / IO 视口点亮 / unobserve 一次性）----
+// ---- RGR-7：滚动进场引擎三态（无 IO 全量 / IO 视口点亮 / 减弱动效直落）----
 {
   /* 7a：无 IntersectionObserver（jsdom 默认缺席）→ 全量直写 is-in */
   const dom = installDom(`<div><p class="reveal" id="r1">a</p><p class="reveal" id="r2">b</p></div>`);
@@ -286,13 +271,31 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
     `got r1=${doc.getElementById('r1').className} unobserved=${unobserved.length} r2=${doc.getElementById('r2').className}`,
   );
 }
+{
+  /* 7c：减弱动效 → 不走 IO，全量直落终态（A7 的 reduce 分支） */
+  const dom = installDom(`<div><p class="reveal" id="r1">a</p><p class="reveal" id="r2">b</p></div>`);
+  dom.window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
+  const observed = [];
+  dom.window.IntersectionObserver = class {
+    constructor() {}
+    observe(el) { observed.push(el); }
+    unobserve() {}
+    disconnect() {}
+  };
+  await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  const doc = dom.window.document;
+  check(
+    'RGR-7c 减弱动效：不构造 IO、全部直落 is-in',
+    observed.length === 0
+      && doc.getElementById('r1').classList.contains('is-in')
+      && doc.getElementById('r2').classList.contains('is-in'),
+    `got observed=${observed.length} r1=${doc.getElementById('r1').className}`,
+  );
+}
 
 // ---- RGR-8：同页多实例 roots 各自独立（state/计数/aria 不外溢）----
 {
-  const one = (suffix) => sampleIndex()
-    .replace(/mf-idx-0/g, `mf-idx-${suffix}`)
-    .replace(/fx-(\d)/g, `fx-${suffix}$1`);
-  const dom = installDom(`<div>${one('a')}${one('b')}</div>`);
+  const dom = installDom(`<div>${sampleIndex(3, 'mf-idx-a')}${sampleIndex(3, 'mf-idx-b')}</div>`);
   await loadFresh('assets/js/mf-reveal/filter.js');
   const doc = dom.window.document;
   const rootA = doc.getElementById('mf-idx-a');

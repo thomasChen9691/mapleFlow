@@ -24,7 +24,7 @@
   {{- errorf "产品索引：items 必填（数据准备由 product-items.html 供给，渲染 seam 不收裸数据）" -}}
 {{- end -}}
 {{- if not .uid -}}
-  {{- errorf "产品索引：uid 必填（DOM id：筛选 script 挂点兼深链锚；同页多实例须不同，短代码用 .Ordinal、模板调用方传字面量）" -}}
+  {{- errorf "产品索引：uid 必填（DOM id：深链锚；同页多实例须不同，短代码用 .Ordinal、模板调用方传字面量。筛选引擎按 .mf-index roots 自动注册，uid 不再是注册键）" -}}
 {{- end -}}
 {{- $items := .items -}}
 {{- $uid := .uid -}}

@@ -1,9 +1,9 @@
 /**
  * filter.js —— 产品索引筛选引擎（reveal 协议·行为层）
  * ============================================================
- * 【本文件是 reveal 协议 DOM 契约的唯一定义处——工单 0022 决议②】
- * 命名权归协议层：class / data-* / aria 词汇由本文件定义，
- * product-index 渲染 seam 是消费者，只负责产出符合本契约的 DOM。
+ * 【筛选交互契约的定义处——工单 0022 决议②：协议层拥有 DOM 契约命名权】
+ * （`.reveal → is-in` 的契约定义处在 scroll-in.js；两文件合起来是 reveal 协议。
+ *   product-index 渲染 seam 是消费者，只负责产出符合本契约的 DOM。）
  *
  * 注册方式（工单 0022 决议③）：import 时自动扫描 `.mf-index` roots 并各自绑定，
  *   不依赖 uid —— uid 仍是渲染 seam 的 DOM id 契约（必填、兼深链锚），

@@ -130,7 +130,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 | `docs/sop/` | 运维 SOP 源笔记 |
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_product_states.py`，改动前先跑） |
 | `layouts/partials/product-items.html` | 产品索引·数据准备 seam：索引渲染链唯一读 `hugo.Data.products` 处，featured 过滤 + limit 截断（缺省/0=全量，负数 errorf）+ 交付形态词汇契约（词表外 kind 即 errorf）。ADR-0006；测试 `tests/assert_product_states.py`，改动前先跑 |
-| `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI 与交互脚本。ADR-0006；测试 `tests/assert_product_states.py`，改动前先跑 |
+| `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_product_states.py`，改动前先跑 |
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（ADR-0005；契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |
 | `data/sop.yaml` | SOP 发布注册表：slug/note/date/categories 必填，tags 可缺省，`draft: true` = 已注册的草稿 |
 | `docs/sop/README.md` | 源笔记索引（与注册表双向漂移断言守护；`MAPLEFLOW_BLOG_SOP.md` 不发布） |
