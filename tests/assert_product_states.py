@@ -109,6 +109,23 @@ CALLER_MISSING_UID_EXPECT = "产品索引：uid 必填"
 # 不是 Go 的 time.Time.String()（后者由构建机时区决定输出字节）。
 POST_META_TITLE_RE = re.compile(r"title='\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4}'")
 
+# 菜单渲染契约（0032 决议 B9）：hugo.toml 有 13 条 menu.main，但 header.html 只渲染
+# 顶层项——4 个 categories 子项（parent=categories）当前不渲染，属既有事实。
+# 期望值 = 实际渲染的 9 项，按 weight 序；内部链接必须符合 uglyURLs 形态（.html 或 /）。
+MENU_RENDERED_KEYS = [
+    "/", "/posts/", "/categories/", "/tags/", "/about.html", "/search.html",
+    "/products.html", "https://github.com/thomasChen9691", "mailto:test@example.com",
+]
+
+
+def _nav_key(href):
+    """把构建产物里的绝对 href 归一成菜单键（站点子路径 /mapleFlow/ 之后的部分）。"""
+    if href.startswith(("mailto:", "https://github.com/")):
+        return href
+    if "/mapleFlow/" in href:
+        return "/" + href.split("/mapleFlow/", 1)[1]
+    return href
+
 
 class ProductRowParser(HTMLParser):
     """抽取 products.html 中每条 mf-row 的产品状态可观测面。"""
@@ -476,6 +493,19 @@ def assert_theme_contract(report, dest):
     report.check("post_meta title 属性为显式时区格式（YYYY-MM-DD HH:MM:SS +0800）",
                  bool(POST_META_TITLE_RE.search(post_html)),
                  "未匹配显式时区格式（可能回退为裸 .Date）")
+
+    # B9: 菜单渲染契约——9 个顶层项按 weight 序；内部链接符合 uglyURLs 形态。
+    # 注意：测试构建不带 --minify（属性带引号），public/ 产物是 minify 的（属性无引号），
+    # 正则必须两种形态都吃。
+    menu = re.search(r"<ul id=[\"']?menu[\"']?>(.*?)</ul>", post_html, re.S)
+    keys = ([_nav_key(h) for h in re.findall(r"<a href=[\"']?([^\"' >]+)", menu.group(1))]
+            if menu else [])
+    report.check(f"菜单渲染 {len(MENU_RENDERED_KEYS)} 项且顺序正确",
+                 keys == MENU_RENDERED_KEYS, f"got {keys}")
+    bad_urls = [k for k in keys if not (k.endswith(".html") or k.endswith("/")
+                                        or k.startswith(("mailto:", "https://github.com/")))]
+    report.check("菜单内部链接符合 uglyURLs 形态（.html 或 / 结尾）", not bad_urls,
+                 f"bad: {bad_urls}")
 
 
 def main():
