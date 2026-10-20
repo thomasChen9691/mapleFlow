@@ -3,11 +3,13 @@ id: 0033
 title: 命名、AI 导航契约与上游关系
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: [0029, 0030, 0028]
-assignee:
+assignee: agent
 map: map-theme-fork.md
 created: 2026-10-20
+claimed: 2026-10-20
+closed: 2026-10-20
 ---
 
 ## Question
@@ -23,3 +25,14 @@ created: 2026-10-20
 5. **许可落点**：MIT 最低义务=分发时随附 LICENSE+版权行——保留 themes/*/LICENSE 原位即可；是否需要额外 provenance 注记（主题 README 注明 fork 自 adityatelange/hugo-PaperMod @ 6c5a8f6）；无强制署名条款，页脚是否自愿加鸣谢由用户定。
 
 决策记录：本题 Resolution 落命名 + 术语条措辞 + 主题内导航文档形态 + 上游关系策略 + 许可/provenance 落点。
+
+## Resolution
+
+2026-10-20 · grilling（五问全决，用户为决策者；施工待项目负责人指示）：
+
+1. **命名与术语**：主题名 `maplemod` 沿用 0029 决议；CONTEXT.md 新增**概念级**「主题层」术语条——主题层 = 呈现与行为基线（themes/maplemod），与站点层（内容与数据）相对；不载文件布局（0020 纪律），与「产品索引」「reveal 协议」同级。
+2. **主题内导航文档 = 原地重写 `themes/maplemod/README.md`**（现有上游安装/宣传文档已误导）。内容：fork 点与日期、保留/修剪清单与理由、分层契约（主题层 vs 站点层，含「因什么而变」判据）、**五个合并文件的合并前历史在旧站点路径**（0030 施工订正遗留）、MIT 许可。文档跟代码走，进目录即见。
+3. **AGENTS 导航**：坑点 3 改写为**前向参数纪律**（每个 hugo.toml 参数必须在 maplemod 有读取点，grep 验证；无读取点即死配置——0029 已清 14 个）；坑点 5（homeInfoParams）是已删功能残留，**整条删除并顺延编号**（6→5、6b→5b、7→6…11→10），同步改唯一交叉引用（§3「见坑点 6b」→「5b」）；§7 速查表新增 `themes/maplemod/` 目录级一行（主题层，导航见其 README，无同步义务）。
+4. **上游关系 = cut cord**：不建 upstream remote；fork 点（6c5a8f6 / v8.0-55 / 2026-01-09）记入主题 README；**删除 `.git/modules` 的 10M 孤立缓存**（0031 留的处置时机在此兑现）。理由：0029 已删 70 文件 + 改名 + 合并覆盖，merge 上游必然冲突风暴，跟踪与设计对抗。
+5. **许可与 provenance**：`themes/maplemod/LICENSE` 原样保留（两行上游版权）；README 注明 fork 来源、commit、日期、MIT 与修改范围；**页脚不加鸣谢**（MIT 无强制要求，且与「第一方主题」定位矛盾）。
+6. **雾区毕业（本题顺带定）**：主题内部结构**不重组**——assets/css 分文件与 partial 目录保持上游布局（无功能收益，且保留与上游的对照性）；fork 后**无再同步机制**（cut cord 的推论），版本钉记只在 README 的 fork 点一行。
