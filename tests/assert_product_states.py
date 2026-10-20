@@ -507,6 +507,13 @@ def assert_theme_contract(report, dest):
     report.check("菜单内部链接符合 uglyURLs 形态（.html 或 / 结尾）", not bad_urls,
                  f"bad: {bad_urls}")
 
+    # B10: 首页 RSS 只收 posts（内容策略，站点 rss.xml 的核心语义）。
+    rss_path = dest / "index.xml"
+    rss = rss_path.read_text(encoding="utf-8") if rss_path.exists() else ""
+    items = re.findall(r"<item>.*?<link>(.*?)</link>", rss, re.S)
+    report.check(f"首页 RSS {len(items)} 条 item 全部为 posts", bool(items) and all("/posts/" in link for link in items),
+                 f"非 posts 条目: {[l for l in items if '/posts/' not in l][:3]}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="产品状态模块产物断言")
