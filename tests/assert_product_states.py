@@ -514,6 +514,14 @@ def assert_theme_contract(report, dest):
     report.check(f"首页 RSS {len(items)} 条 item 全部为 posts", bool(items) and all("/posts/" in link for link in items),
                  f"非 posts 条目: {[l for l in items if '/posts/' not in l][:3]}")
 
+    # B11: search 页 DOM 三挂点（fastsearch 的挂点契约；坏了搜索静默失效）。
+    search_path = dest / "search.html"
+    search_html = search_path.read_text(encoding="utf-8") if search_path.exists() else ""
+    missing = [anchor for anchor in ("searchbox", "searchInput", "searchResults")
+               if not re.search(rf"id=[\"']?{anchor}[\"' >]", search_html)]
+    report.check("search 页三挂点齐全（searchbox/searchInput/searchResults）", not missing,
+                 f"缺: {missing}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="产品状态模块产物断言")
