@@ -2,8 +2,9 @@
 id: map-theme-fork
 title: 主题 fork 图（候选 6）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-20
+closed: 2026-10-20
 ---
 
 # 主题 fork 图（候选 6）
@@ -11,6 +12,8 @@ created: 2026-10-20
 ## Destination
 
 候选 6「主题 fork」的决策集定稿：themes/PaperMod 从外挂 git 子模块转为仓内第一方主题（或经 0029 裁定的其他形态）的全部待决问题——fork 形态与修剪范围、分层契约（四个近逐字覆盖 + 两个语义重写 + net-new 的归属）、子模块退役与构建链触点、主题层「可测试」的缝、命名 / AI 导航契约 / 上游关系与许可。达到「可测试、AI 可导航」的可施工状态即收口。本图只产决策；施工按候选 5 先例，经项目负责人指示后展开。
+
+**状态：已收口（2026-10-20）。** 目的地到达——八张工单全 closed（0027/0028 研究、0029 形态修剪、0030 分层、0031 退役触点、0032 测试缝、0033 命名导航上游、0034 收口），无剩余决策。施工已按决议落地（vendored 48 文件主题、站点层 7 文件、B7-B13 断言 48/48、文档与 ADR 齐落）；决策集耐久化在 ADR-0008。
 
 ## Notes
 
@@ -33,6 +36,7 @@ created: 2026-10-20
 - [子模块退役与构建链触点](tickets/0031-submodule-retirement-build-touchpoints.md) — `.git/modules` 10M 缓存保留（0033 期权，本地状态不进仓库）、历史 gitlink 不 rewrite；CI 删 `submodules: true` + `fetch-depth: 0`（.GitInfo 零使用）；文档触点表（AGENTS 5 处/README 3 处，坑点 6 删+顺延编号+改唯一交叉引用）；边界「0031 清子模块事实 / 0033 管命名导航」；验收 = 本地 5 条（构建+三套件、无子模块指令、无 gitlink 条目、LF 复验、localhost 零残留）+ CI 实证 push 后回填，本地绿即 closed。
 - [主题层可测试的缝](tickets/0032-theme-test-seam.md) — 必锚 6 条（B7 no-js 全站 / B8 post_meta 时区 / B9 菜单 13 项与 URL / B10 RSS 仅 posts / B11 search DOM / B12 ogImage 兜底），5/6/9 不锚；落 `assert_product_states.py`（fixture 单份，命名债记账待第三类职责时改名）；golden 不收严（B8 提供牙口）；完整性只加同路径不变量、不建清单快照；逐条变异检验。
 - [命名、AI 导航契约与上游关系](tickets/0033-naming-ai-nav-upstream.md) — CONTEXT.md 加概念级「主题层」条；原地重写 themes/maplemod/README.md（fork 点/保留修剪清单/分层契约/历史在旧路径/MIT）；AGENTS 坑点 3 改参数纪律、坑点 5 删+顺延、§7 加主题目录行；上游 **cut cord**（无 remote，删 10M 孤立缓存）；LICENSE 保留 + README 注 provenance、页脚不鸣谢；内部结构不重组、无再同步机制（雾区两条毕业）。
+- [收口：术语、导航与 ADR 耐久化](tickets/0034-closure-terminology-adr.md) — 新开 ADR-0008 承载六题决策集 + ADR-0002 指针行（义务消失、实涉 5 文件非 2）；术语保持现状（不补站点层条）；README 标题/描述与 AGENTS 性质行 3 处改 maplemod；候选 8 边界写入 Consequences；同场 handoff + 地图 closed。**本题关闭 = 目的地到达。**
 
 ## Not yet specified
 

@@ -3,11 +3,13 @@ id: 0034
 title: 收口：术语、导航与 ADR 耐久化
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: [0031, 0032, 0033]
-assignee:
+assignee: agent
 map: map-theme-fork.md
 created: 2026-10-20
+claimed: 2026-10-20
+closed: 2026-10-20
 ---
 
 ## Question
@@ -23,3 +25,15 @@ created: 2026-10-20
 5. **收口判据**：本题 Resolution 约定「决策全部耐久化 + 导航痕迹齐落」即目的地到达，地图标记 closed；施工（gitlink 摘除、文件入库、行尾归一、测试扩展）按候选 5 先例，经项目负责人指示后另起——本图只产决策。是否同场写 handoff（docs/handoffs/）由用户定。
 
 决策记录：本题 Resolution = ADR-0008 定稿 + 术语/导航落点清单 + 地图 closed。地图 closed 后本目录留作决策耐久化的检索入口，后续施工会话按 AGENTS.md §8.1 路由（CONTEXT.md + docs/adr/）发现本模块。
+
+## Resolution
+
+2026-10-20 · grilling（五问全决，用户为决策者；Q5 授权同场施工 + handoff + closed）：
+
+1. **耐久化形式 = 新开 ADR-0008**（0005/0006/0007 同款格式：状态/决策过程/编号决策/Considered Options/Consequences），承载候选 6 六题决策集（形态/修剪/分层/退役/测试/命名）；**ADR-0002 加指针行**——覆盖文件已合并入主题、同步义务消失、**实际涉 5 个文件而非原文所记 2 个**（正文不改，「ADR 是历史记录」先例）。ADR-0003/0006/0007 无需改（语义裁决不受影响）。
+2. **术语终态 = 保持现状**：CONTEXT.md 只保留「主题层」一条（内含对比定义与判据）；**不补「站点层」独立条**——术语表只收有独立决策的概念，不追求对称。
+3. **命名残留 = 3 处全改**：README 标题 →「MapleFlow（Hugo + maplemod）」、README 描述改第一方主题表述、AGENTS §1 性质行同步；**渊源表述保留**（AGENTS 主题行「自 PaperMod v8.0-55 fork」、主题 README、CONTEXT `_Avoid_`）。
+4. **候选 8 边界写进 ADR-0008 Consequences**：搜索 JS（fastsearch）与 index.json 投影契约归候选 8，本图未动，0019 边界注释继续有效；不新增代码注释。
+5. **收口节奏**：同场施工（ADR-0008 + 0002 指针 + 3 处命名）→ 跑守门 → 写 `docs/handoffs/` 交接（候选 6 全程）→ **地图标记 closed**。CI 结果待 push 后回填（不卡地图）。
+
+**本题关闭 = 目的地到达。** 施工与交接同场完成，见 git log 与 handoff。
