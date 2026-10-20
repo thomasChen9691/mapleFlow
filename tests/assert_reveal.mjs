@@ -248,5 +248,44 @@ console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
   );
 }
 
+// ---- RGR-7：滚动进场引擎三态（无 IO 全量 / IO 视口点亮 / unobserve 一次性）----
+{
+  /* 7a：无 IntersectionObserver（jsdom 默认缺席）→ 全量直写 is-in */
+  const dom = installDom(`<div><p class="reveal" id="r1">a</p><p class="reveal" id="r2">b</p></div>`);
+  await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  check(
+    'RGR-7a 无 IntersectionObserver：全部 .reveal 直写 is-in 终态',
+    dom.window.document.getElementById('r1').classList.contains('is-in')
+      && dom.window.document.getElementById('r2').classList.contains('is-in'),
+    `got r1=${dom.window.document.getElementById('r1').className} r2=${dom.window.document.getElementById('r2').className}`,
+  );
+}
+{
+  /* 7b：IO stub → 仅视口内点亮，点亮即 unobserve，视口外保持 */
+  const dom = installDom(`<div><p class="reveal" id="r1">a</p><p class="reveal" id="r2">b</p></div>`);
+  let fire; const observed = []; const unobserved = [];
+  dom.window.IntersectionObserver = class {
+    constructor(cb) { fire = cb; }
+    observe(el) { observed.push(el); }
+    unobserve(el) { unobserved.push(el); }
+    disconnect() {}
+  };
+  await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  const doc = dom.window.document;
+  check(
+    'RGR-7b1 有 IO：两个 .reveal 都被 observe，初始不亮',
+    observed.length === 2 && !doc.getElementById('r1').classList.contains('is-in'),
+    `got observed=${observed.length}`,
+  );
+  fire([{ isIntersecting: true, target: doc.getElementById('r1') }, { isIntersecting: false, target: doc.getElementById('r2') }], null);
+  check(
+    'RGR-7b2 视口内条目点亮并 unobserve，视口外保持未亮',
+    doc.getElementById('r1').classList.contains('is-in')
+      && unobserved.length === 1 && unobserved[0] === doc.getElementById('r1')
+      && !doc.getElementById('r2').classList.contains('is-in'),
+    `got r1=${doc.getElementById('r1').className} unobserved=${unobserved.length} r2=${doc.getElementById('r2').className}`,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
