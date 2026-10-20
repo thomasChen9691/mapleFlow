@@ -2,8 +2,9 @@
 id: map-reveal-protocol
 title: reveal 协议图（候选 5）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-19
+closed: 2026-10-20
 ---
 
 # reveal 协议图（候选 5）
@@ -11,6 +12,8 @@ created: 2026-10-19
 ## Destination
 
 候选 5「reveal 协议」的决策集定稿：no-js 基线之上的三块客户端动效交互（产品索引筛选、页脚滚动进场、首页 hero mf-rise 进场）统一为一个模块——边界内的 seam 划分与脚本落点、「可测试」的缝（JS 行为测试与产物断言的分工与落点）、筛选交互语义与 is-in 写入方协议、术语/seam 命名/ADR 耐久化。达到「可测试、AI 可导航」的可施工状态即收口。本图只产决策；施工按候选 4 先例，经项目负责人指示后展开。
+
+**状态：已收口（2026-10-20）。** 目的地到达——六张工单全 closed（0021 事实底座、0022 边界与落点、0023 测试缝、0024 语义、0025 协议、0026 收口），无剩余决策。代码与测试已按决议施工（行为 16/16、产品 39/39、SOP 100/100、CI 接线完成）；文档写入（CONTEXT.md 术语、AGENTS 导航、ADR-0007）按 0026 决议执行中。
 
 ## Notes
 
@@ -29,6 +32,7 @@ created: 2026-10-19
 - [可测试的缝：JS 行为测试与产物断言的分工](tickets/0023-reveal-test-seam.md) — 依赖入仓 + CI 权威（package.json/lock + npm ci + node harness 两步）；套件两脚本两 step；行为用手写样本、契约合规由 B 类产物断言守；no-js 基线缺口落 B 类。
 - [筛选交互语义定案](tickets/0024-filter-interaction-semantics.md) — 全部确认现状：同值回 all、aria-pressed 组内互斥、计数「显示 X / Y」、空态双文案、uid 不扩 hash、reduced-motion 不播动画。
 - [is-in 写入方协议与动效降级统一](tickets/0025-is-in-writer-protocol.md) — is-in 一次性终态（IO unobserve + 筛选直写）；--mf-i 语义归协议、数值归 CSS；降级 JS 共享单一判定 + CSS 兜底保留；mf-rise 契约到存在性+降级。
+- [术语、seam 命名与 ADR 收口](tickets/0026-terminology-naming-adr.md) — CONTEXT.md 只加「reveal 协议」主术语（实现词汇不进表）；motion.js 改名 reduced-motion.js；AGENTS 行+坑点+命令三处；ADR-0007 承载决策集，0002/0006 加指针不改正文。**本题关闭 = 目的地到达，地图 closed。**
 
 ## Not yet specified
 
