@@ -8,7 +8,7 @@
 
 - **候选 6 地图已关闭**：`docs/wayfinder/map-theme-fork.md`（status: closed），八工单 0027~0034 全 closed；决策集落 `docs/adr/0008-theme-fork.md`，ADR-0002 加指针行（正文不改）；CONTEXT.md 有「主题层」术语条；AGENTS 有主题目录速查行 + 参数纪律坑点；主题导航在 `themes/maplemod/README.md`。
 - **代码与测试**：`themes/maplemod` 48 文件（vendored 第一方主题，无子模块、无 `.gitmodules`、`.git/modules` 缓存已删）；站点层 `layouts/` 恰 7 文件；主题契约断言 B7-B13 并入 `tests/assert_product_states.py`（48/48，每条经变异检验）；npm 16/16；SOP 100/100；生产构建 exit=0；localhost 零残留。
-- **未推送**：`origin/main..main` = 24 个提交（0029~0034 施工 + 记录）。**CI 未验**——0031 的 CI 改动（删 `submodules`/`fetch-depth`）只能由 push 后的 Deploy run 实证；若红，回滚那两行即可。
+- **已推送并验 CI（本场补记）**：push `1224787..469f610`（27 提交）后 Deploy run **39420742219** 10/10 success（Checkout 在删掉 `submodules`/`fetch-depth` 后正常）→ `pages build and deployment` success；线上抽查 no-js / og:image / #searchbox 均在。**0031 的 CI 验收已关闭。**
 - **已知事实（勿重新推导）**：① 菜单配置 13 条、实际渲染 9 个顶层项（4 个 `parent = "categories"` 子项不渲染，既有行为）；② 五个合并文件（baseof/extend_head/extend_footer/post_meta/opengraph）的合并前历史在**旧站点路径**，`git log --follow` 穿不过合并点；③ 测试构建不带 `--minify` 而 `public/` 是 minified，断言正则须兼容引号两形态；④ 子代理曾持续 429，评审改主代理串行并在 commit 记录。
 
 ## 下一步

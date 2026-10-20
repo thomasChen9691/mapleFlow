@@ -46,3 +46,5 @@ closed: 2026-10-20
 **边界确认**：0031 施工顺序应在 0030 合并之后（post_meta 行改写以合并后的路径为准）；0033 在两者之后统一做命名/导航/上游关系。
 
 **施工订正（2026-10-20 双轴评审后）**：① **越界回退**——AGENTS §1「性质」行曾被顺带改为 maplemod，按「命名归 0033」边界**回退为 PaperMod**（与 README 标题一致，等 0033 统一改）；README 克隆段多写的一行排障注记已删（严格按「整段删排障」）。② 坑点 11 的「`extend_head` 的 class swap 是 ADR-0002 **升级同步件**」措辞改为「ADR-0002 **基线的一部分**」——「升级同步件」与同文件「无同步义务」互斥。③ 验收复跑：本地 5 条全过（构建 0 / 16 / 39 / 100、无子模块操作、无 gitlink、LF、localhost 零残留）。
+
+**CI 实证回填（2026-10-20）**：push `1224787..469f610`（27 提交）后 Deploy run **39420742219** 全绿——Checkout code（已删 `submodules`/`fetch-depth`）→ Setup Hugo → Setup Node → npm ci → Assert reveal → Build Hugo site → Assert product states → Assert SOP pipeline → Deploy，**10/10 success**；`pages build and deployment` 同步 success。线上抽查：首页 `class=no-js`、about 页 `og:image`（ogImage 兜底）、search 页 `#searchbox` 均在。**0031 验收全部关闭。**
