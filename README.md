@@ -1,6 +1,6 @@
-## MapleFlow（Hugo + PaperMod）
+## MapleFlow（Hugo + maplemod）
 
-本项目是使用 Hugo 静态站点生成器和 PaperMod 主题搭建的个人博客，托管在 GitHub Pages 上。
+本项目是使用 Hugo 静态站点生成器和第一方主题 maplemod（fork 自 PaperMod）搭建的个人博客，托管在 GitHub Pages 上。
 
 ---
 

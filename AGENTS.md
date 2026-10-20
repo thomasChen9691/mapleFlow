@@ -5,7 +5,7 @@
 
 ## 1. 项目概览
 
-- **性质**：使用 **Hugo** + **PaperMod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
+- **性质**：使用 **Hugo** + **maplemod** 主题构建的个人技术博客，部署在 **GitHub Pages**。
 - **主题**：`themes/maplemod` 是**仓内第一方主题**（2026-10 自 PaperMod v8.0-55 fork 并修剪；无子模块、无上游同步义务）。
 - **内容方向**：运维开发 / SRE / DevOps 实战 SOP，覆盖 Kubernetes、Docker、CI/CD、AIOps、Prometheus、Grafana、Jenkins、GitLab、Ansible、SonarQube，见 `docs/sop/`。
 
