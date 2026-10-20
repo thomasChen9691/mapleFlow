@@ -38,7 +38,7 @@ hugo server -D        # 访问 http://localhost:1313/
 # 生产构建（必须与 CI 命令完全一致！不能只跑 hugo）
 hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
-# 【本地验证推荐】多一个 --cleanDestinationDir，可清掉草稿孤儿文件（见坑点 6b）
+# 【本地验证推荐】多一个 --cleanDestinationDir，可清掉草稿孤儿文件（见坑点 5b）
 hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
 # 提交（见 §6 规范）
@@ -58,22 +58,15 @@ npm test
    - 菜单 `url` 必须写成 `/about.html`，否则 404。
    - **不要**把独立页面放在 `content/page/` 下（会变成 `/page/about.html` 分区，破坏干净 URL）。
 
-3. **PaperMod 不识别以下配置**（加了完全无效，是「改了没效果」的常见原因，禁止新增）：
-   - `[params.navItems]`（导航栏应由标准 `[[menu.main]]` 控制。注：`[params.reorderNavItems]` 在当前 PaperMod 版本中**同样不被读取**（已 grep 主题全目录 0 命中），保留仅为文档价值，改导航请直接改 `[[menu.main]]` 的 `weight`）
-   - `lightTheme` / `darkTheme`（daisyUI 概念，PaperMod 用 `defaultTheme`）
-   - `headerTitle`
-   - `[params.advanced].customCSS` / `customJS`
-   - `[params.experimental].jsDate`
+3. **hugo.toml 参数纪律**：每个参数必须在 `themes/maplemod` 里有读取点（`grep -rn "<param>" themes/maplemod/layouts`）。**无读取点即死配置——删掉，不要留「文档价值」**（0029 已清 14 个）。新增参数前先证明读取点存在；导航顺序的唯一来源是 `[[menu.main]]` 的 `weight`（header.html 只渲染顶层项，`parent` 子项当前不渲染——既有事实）。
 
 4. **自定义样式放哪**：写入 `assets/css/extended/*.css`，Hugo Pipes 会自动并入主题样式表（已验证 `2D7FF9` 变量并入 `public/assets/css/...`）。不要放 `static/css/` 并用 `customCSS` 引用。
 
-5. **`[params.homeInfoParams]` 只使用 `Title` 与 `Content` 字段**：PaperMod 的 `home_info.html` 不渲染 `ImageUrl`。首页头像请用文章页 `avatar` 参数或直接在 `Content`（HTML）里引图。
-
-6. **Windows 上删除大量文件很慢**：`Remove-Item public -Recurse` 会触发 Defender 全量扫描而超时。
+5. **Windows 上删除大量文件很慢**：`Remove-Item public -Recurse` 会触发 Defender 全量扫描而超时。
    重建时**直接再跑一次 hugo 构建**即可（Hugo 会覆盖变更文件），无需先删 `public`。
-   **例外见 6b：存在孤儿文件时此建议不成立。**
+   **例外见 5b：存在孤儿文件时此建议不成立。**
 
-6b. **草稿孤儿文件会让线上残留 `localhost:1313`（已实测踩坑）**：
+5b. **草稿孤儿文件会让线上残留 `localhost:1313`（已实测踩坑）**：
    流程：本地跑过 `hugo server -D`（含草稿）→ 生成了草稿专属的分类/标签页（如 `categories/随笔/`）
    → 之后跑生产构建（不含草稿）→ Hugo **不会删除**这些已生成的页面，成为孤儿文件。
    后果：`grep -r "localhost:1313" public/` 命中，这些页面带着 localhost 绝对链接被推上线。
@@ -85,15 +78,15 @@ npm test
    验证：`grep -r "localhost:1313" public/` 必须无输出。
    注：CI（GitHub Actions）每次全新 checkout，`public/` 本就为空，不受此问题影响。
 
-7. **图片/资源在 GitHub Pages 子路径下**：站点部署在 `.../mapleFlow/`（非根域）。页面内联 SVG 头像比引用 `static/img/*` 更稳；若引用静态资源，路径需相对正确。
+6. **图片/资源在 GitHub Pages 子路径下**：站点部署在 `.../mapleFlow/`（非根域）。页面内联 SVG 头像比引用 `static/img/*` 更稳；若引用静态资源，路径需相对正确。
 
-8. **`public/` 为构建产物，当前未被 git 跟踪**（`git ls-files | grep '^public/'` → 0 文件）：`git add .` 不会包含它，真正对外的是 `gh-pages`，不必纠结 `main` 上的 `public`。
+7. **`public/` 为构建产物，当前未被 git 跟踪**（`git ls-files | grep '^public/'` → 0 文件）：`git add .` 不会包含它，真正对外的是 `gh-pages`，不必纠结 `main` 上的 `public`。
 
-9. **SOP 文是构建期派生的，不要手写**（wayfinder 工单 0008/0009）：`content/posts/` 下 6 个 `sop-*.md` 已删除，文章由 `content/posts/_content.gotmpl`（seam）从 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记在构建期生成，磁盘上没有第二份 .md。手写同名 .md 会与派生页撞路径（产物不确定），由「无残留」断言守。改 SOP 内容 = 改 `docs/sop/` 笔记；改 web 包装（标题由笔记 H1 承载，日期/分类/标签/描述/导语在注册表）= 改 `data/sop.yaml`。无注册条目的笔记 = 尚未发布的稿件；已注册的草稿 = 条目 `draft: true`（不进生产构建）。契约四类以 errorf 让构建失败：缺必填字段（slug/note/date/categories，tags 可缺省）、死条目（有条目无笔记）、笔记首行无 H1、H1 之后无章节标题行。测试 `python3 tests/assert_sop_pipeline.py`（CI 权威、本地 advisory，改动前先跑）。
+8. **SOP 文是构建期派生的，不要手写**（wayfinder 工单 0008/0009）：`content/posts/` 下 6 个 `sop-*.md` 已删除，文章由 `content/posts/_content.gotmpl`（seam）从 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记在构建期生成，磁盘上没有第二份 .md。手写同名 .md 会与派生页撞路径（产物不确定），由「无残留」断言守。改 SOP 内容 = 改 `docs/sop/` 笔记；改 web 包装（标题由笔记 H1 承载，日期/分类/标签/描述/导语在注册表）= 改 `data/sop.yaml`。无注册条目的笔记 = 尚未发布的稿件；已注册的草稿 = 条目 `draft: true`（不进生产构建）。契约四类以 errorf 让构建失败：缺必填字段（slug/note/date/categories，tags 可缺省）、死条目（有条目无笔记）、笔记首行无 H1、H1 之后无章节标题行。测试 `python3 tests/assert_sop_pipeline.py`（CI 权威、本地 advisory，改动前先跑）。
 
-10. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_product_states.py`。
+9. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_product_states.py`。
 
-11. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_product_states.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 基线的一部分，保持内联。
+10. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_product_states.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 基线的一部分，保持内联。
 
 ## 5. 内容规范
 
@@ -116,6 +109,7 @@ npm test
 |------|------|
 | `hugo.toml` | 主配置：站点信息、菜单 `[[menu.main]]`、`reorderNavItems`、`homeInfoParams`、`socialIcons`、品牌色 |
 | `config.production.toml` | 生产 `baseURL` + `uglyURLs = true`（部署必需） |
+| `themes/maplemod/` | 主题层（呈现与行为基线）：骨架/导航/文章与列表渲染/交互钩子/社交元数据；导航见其 README；无上游同步义务（0033 cut cord）；主题契约测试 B7-B13 见 `tests/assert_product_states.py` |
 | `content/about.md` | 简历/关于页 |
 | `assets/css/extended/custom.css` | 品牌样式（明暗双主题 CSS 变量） |
 | `static/img/avatar.svg` | 占位头像 |
