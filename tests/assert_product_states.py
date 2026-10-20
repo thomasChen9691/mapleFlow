@@ -212,6 +212,58 @@ def assert_search_index(report, dest):
                  "" if not bad else "got: " + "; ".join(str(e.get("tags")) for e in bad))
 
 
+def assert_reveal_artifacts(report, dest):
+    """reveal 协议产物面（工单 0022 决议④ B 类；施工期 provisional，待 0023 追认）。
+
+    引擎源码在 assets/js/mf-reveal/（scroll-in.js / filter.js，经 app.js 入口
+    js.Build 打包），行为断言在 tests/assert_reveal.mjs；本函数只守产物面：
+    基线类、接线、DOM 挂点、降级 CSS 规则。
+    """
+    products_html = (dest / "products.html").read_text(encoding="utf-8")
+    home_html = (dest / "index.html").read_text(encoding="utf-8")
+
+    # B1 no-js 基线（ADR-0002）：<html> 默认带 no-js；head 内联脚本立刻换成 js
+    report.check("B1 html 基线类 no-js 在（产品页）",
+                 re.search(r'<html[^>]*class=["\']?[^"\'>]*no-js', products_html) is not None,
+                 "html tag missing class=no-js")
+    report.check("B1 head swap 内联脚本在（no-js→js）",
+                 "classList.remove('no-js')" in products_html and "classList.add('js')" in products_html,
+                 "inline swap script not found in head")
+
+    # B2 js.Build 接线：页面引用引擎脚本且文件真实落盘
+    m = re.search(r'<script[^>]+src=["\']?([^"\'\s>]*mf-reveal[^"\'\s>]*\.js)', products_html)
+    report.check("B2 产品页引用 reveal 引擎脚本（js.Build 产出）", m is not None,
+                 "no <script src=...mf-reveal...> in products.html")
+    if m:
+        rel = re.sub(r'^(/|mapleFlow/)', '', m.group(1))
+        report.check("B2 引擎脚本文件已落盘", (dest / rel).exists(), f"missing {dest / rel}")
+
+    # B3 DOM 契约挂点：产品行 .reveal、首页 hero mf-rise
+    report.check("B3 产品行带 .reveal 进场类", 'mf-row reveal' in products_html,
+                 "no 'mf-row reveal' in products.html")
+    report.check("B3 首页 hero 带 .mf-rise 进场类", 'mf-rise' in home_html,
+                 "no mf-rise in index.html")
+
+    # B4 筛选数据挂点（协议层读、渲染 seam 写）
+    hooks = ['data-group="kind"', 'data-value="workflow"', 'data-kind=', 'data-price=']
+    missing = [h for h in hooks if h not in products_html]
+    report.check("B4 筛选数据挂点齐（data-group/value/kind/price）", not missing,
+                 f"missing {missing}")
+
+    # B5 筛选按钮词汇集（kind 三值 + price 两值；ADR-0006 封闭词表的执行区）
+    values = re.findall(r'data-value="([^"]+)"', products_html)
+    expect = ["all", "workflow", "document", "question-bank", "free", "paid"]
+    report.check("B5 mf-filter 按钮词汇集 = kind 三值 + price 两值",
+                 all(v in values for v in expect), f"got {values}")
+
+    # B6 no-js 降级 CSS 规则在产物里（基线兜底：无 JS 时内容可见）
+    css_text = "\n".join(p.read_text(encoding="utf-8") for p in dest.rglob("*.css"))
+    report.check("B6 产物 CSS 含 .no-js .reveal 降级规则", ".no-js .reveal" in css_text,
+                 "missing .no-js .reveal rule")
+    report.check("B6 产物 CSS 含 .no-js .mf-rise 降级规则", ".no-js .mf-rise" in css_text,
+                 "missing .no-js .mf-rise rule")
+
+
 def assert_fixture(report):
     dest = TMP / "fixture"
     proc = build(FIXTURE_CONFIG, dest)
@@ -260,6 +312,7 @@ def assert_fixture(report):
                  f"got products_html has mf-filter={has_filters_products}")
     report.check("首页精选区不出筛选控件（filters=false）", not has_filters_home,
                  f"got index.html has mf-filter={has_filters_home}")
+    assert_reveal_artifacts(report, dest)
     assert_search_index(report, dest)
 
 

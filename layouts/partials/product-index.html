@@ -7,14 +7,17 @@
   入参（dict）：
     featured  —— 已移除（过滤归 product-items）
     limit     —— 已移除（截断归 product-items）
-    filters   bool   是否输出筛选控件与交互脚本
-    uid       string DOM id，**必填**（筛选 script 的 getElementById 挂点，
-                   兼深链锚）。同页多次调用必须不同：短代码由 .Ordinal
+    filters   bool   是否输出筛选控件（交互行为由 reveal 协议引擎接管）
+    uid       string DOM id，**必填**（深链锚）。同页多次调用必须不同：短代码由 .Ordinal
                    保证页内唯一；模板调用方人工保唯一（0017 决议：重名
-                   不执法——partial 无页级视野，检测成本与收益悬殊）
+                   不执法——partial 无页级视野，检测成本与收益悬殊）。
+                   **不再是脚本注册键**：筛选引擎遍历 .mf-index roots 自动注册
+                   （0022 决议③）
     items     slice  待渲染产品（由 product-items.html 供给；必填，缺失即构建失败）
   渲染 seam 不做数据契约——契约执法在数据 seam（kind 词汇）与
   产品状态模块（listed/price/buy_url，ADR-0004）。
+  筛选交互脚本不内联：引擎在 assets/js/mf-reveal/filter.js（DOM 契约定义处），
+  由 extend_footer 统一以 js.Build 加载（0022 决议①）。
 */ -}}
 
 {{- if eq .items nil -}}
@@ -83,80 +86,5 @@
 
   <p class="mf-empty" hidden>没有符合筛选条件的资源。</p>
 </div>
-
-{{- if $showFilters }}
-<script>
-(function () {
-  var root = document.getElementById("{{ $uid }}");
-  if (!root) { return; }
-  var list = root.querySelector('.mf-rows');
-  var items = root.querySelectorAll('.mf-row');
-  var btns = root.querySelectorAll('.mf-filter');
-  var count = root.querySelector('.mf-count');
-  var empty = root.querySelector('.mf-empty');
-  var state = { kind: 'all', price: 'all' };
-  var morphTimer;
-
-  function prefersReducedMotion() {
-    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  }
-
-  /* 重播一次性动画：移除 class → 强制回流 → 重新加上。
-     少了中间的 reflow，浏览器会合并成一次样式变更，动画不会重播。 */
-  function replay(el, cls, ms) {
-    if (!el) { return; }
-    el.classList.remove(cls);
-    void el.offsetWidth;
-    el.classList.add(cls);
-    if (ms) {
-      window.clearTimeout(morphTimer);
-      morphTimer = window.setTimeout(function () { el.classList.remove(cls); }, ms);
-    }
-  }
-
-  function apply(animate) {
-    var shown = 0;
-    items.forEach(function (el) {
-      var okKind = state.kind === 'all' || el.dataset.kind === state.kind;
-      var okPrice = state.price === 'all' || el.dataset.price === state.price;
-      var visible = okKind && okPrice;
-      el.classList.toggle('is-hidden', !visible);
-      if (visible) {
-        /* 小分组 stagger：第 9 条起不再累加延迟，长列表会显得迟钝 */
-        el.style.setProperty('--mf-i', Math.min(shown, 8));
-        /* 用户已交互过 —— 直接把条目落到终态。
-           否则未进入过视口的条目仍带 .reveal(opacity:0)，
-           is-morphing 动画结束后会重新变回透明，看起来像"筛完又消失了" */
-        if (animate) { el.classList.add('is-in'); }
-        shown++;
-      }
-    });
-    if (count) { count.textContent = '显示 ' + shown + ' / ' + items.length; }
-    if (empty) { empty.hidden = shown > 0; }
-
-    /* 只在用户点筛选时播放；首屏那次（animate=false）保持静止，
-       否则会和 .reveal 的滚动进场撞在一起 */
-    if (!animate || prefersReducedMotion()) { return; }
-    replay(list, 'is-morphing', 520);
-    replay(count, 'is-bump', 0);
-  }
-
-  btns.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var group = btn.dataset.group;
-      var value = btn.dataset.value;
-      if (state[group] === value) { value = 'all'; }
-      state[group] = value;
-      root.querySelectorAll('.mf-filter[data-group="' + group + '"]').forEach(function (other) {
-        other.setAttribute('aria-pressed', other.dataset.value === value ? 'true' : 'false');
-      });
-      apply(true);
-    });
-  });
-
-  apply(false);
-})();
-</script>
-{{- end }}
 
 {{- end -}}

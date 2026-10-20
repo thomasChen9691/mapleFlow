@@ -1,28 +1,15 @@
 {{- /*
-  动效第 2 拍：滚动进场
-  只点亮 .reveal 元素，动的是 transform / opacity。
-  开启「减弱动效」或浏览器不支持 IntersectionObserver 时，直接呈现最终画面，不做动画。
+  reveal 协议引擎加载点（工单 0022 决议①：分层提取）
+  ============================================================
+  引擎源码在 assets/js/mf-reveal/：
+    · scroll-in.js  滚动进场（.reveal → is-in 的 IO 写入方）
+    · filter.js     产品索引筛选（自动注册 .mf-index roots）
+  本文件只做 js.Build 打包与引用，不承载行为逻辑；
+  DOM 契约的定义处是各引擎文件头 docstring（工单 0022 决议②）。
+  测试：tests/assert_reveal.mjs（行为）+ tests/assert_product_states.py（产物）。
+  注：js.Build 管线与主题自家 head.html 的 fastsearch 加载同款（0.164 生产验证）。
 */ -}}
-<script>
-(function () {
-  var els = document.querySelectorAll('.reveal');
-  if (!els.length) { return; }
-
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce || !('IntersectionObserver' in window)) {
-    els.forEach(function (el) { el.classList.add('is-in'); });
-    return;
-  }
-
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-in');
-        io.unobserve(entry.target);
-      }
-    });
-  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
-
-  els.forEach(function (el) { io.observe(el); });
-})();
-</script>
+{{- with resources.Get "js/mf-reveal/app.js" }}
+  {{- $js := . | js.Build (dict "format" "iife") | resources.Minify | fingerprint }}
+  <script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" crossorigin="anonymous" defer></script>
+{{- end }}
