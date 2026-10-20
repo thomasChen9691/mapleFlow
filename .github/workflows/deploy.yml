@@ -33,17 +33,12 @@ jobs:
         with:
           hugo-version: '0.164.0'
           extended: true
-      - name: Build Hugo site
-        # --cleanDestinationDir：构建前清空 public/。
-        # 不加会导致「旧产物残留」—— Hugo 只覆盖变更文件，已删除文章对应的页面
-        # 会一直留在 public/ 并被推上 gh-pages，造成线上内容与仓库状态脱节
-        # （2026-09-20 审计中发现的 posts/aiop.html 即此类残留）。
-        run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # 与 package.json engines 一致（jsdom 30 要求 >=22.22.2）；不浮动主版本
+          node-version: '22.22.2'
           cache: 'npm'
 
       - name: Install test deps
@@ -54,8 +49,15 @@ jobs:
       - name: Assert reveal behavior
         # reveal 协议行为断言（wayfinder 工单 0023 决议：CI 权威）：
         # jsdom 执行引擎源码，覆盖筛选/aria/计数/空态/减弱动效/IO 降级/多实例。
-        # 失败即阻断部署——行为回归不靠人眼。
-        run: node tests/assert_reveal.mjs
+        # 入口走 package.json 的 test 脚本，本地/CI 同一条命令。
+        run: npm test
+
+      - name: Build Hugo site
+        # --cleanDestinationDir：构建前清空 public/。
+        # 不加会导致「旧产物残留」—— Hugo 只覆盖变更文件，已删除文章对应的页面
+        # 会一直留在 public/ 并被推上 gh-pages，造成线上内容与仓库状态脱节
+        # （2026-09-20 审计中发现的 posts/aiop.html 即此类残留）。
+        run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
       - name: Assert product states
         # 产品状态模块的产物断言（ADR-0004 / wayfinder 工单 0005）：

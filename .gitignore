@@ -79,5 +79,5 @@ openspec/*.lock
 # these are working history kept on disk only.
 internal/
 
-# Node（reveal harness 测试依赖；0023 追认 CI 供给方式前不入仓）
+# Node（reveal harness 依赖；依赖声明与锁文件已入仓，node_modules 不入仓）
 node_modules

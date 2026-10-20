@@ -90,7 +90,7 @@ function clickFilter(dom, group, value) {
     .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
 }
 
-console.log('reveal 行为断言（S1 seam，provisional pending 0023）');
+console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 
 // ---- RGR-1：引擎存在且 import 时自动注册 roots，初始 apply(false) 写计数 ----
 {
