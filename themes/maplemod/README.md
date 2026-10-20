@@ -17,7 +17,8 @@
 | 路径 | 内容 |
 |---|---|
 | `layouts/_default/baseof.html` | 页面骨架；`<html class="no-js">` 渐进增强基线（ADR-0002） |
-| `layouts/_default/{single,list,terms,search,404}.html` | 文章 / 列表 / 分类词表 / 搜索 / 404 |
+| `layouts/_default/{single,list,terms,search}.html` | 文章 / 列表 / 分类词表 / 搜索 |
+| `layouts/404.html` | 404 页 |
 | `layouts/_default/_markup/render-image.html` | 图片渲染钩子 |
 | `layouts/partials/head.html` · `header.html` · `footer.html` | 文档头、导航、页脚 |
 | `layouts/partials/extend_head.html` | no-js→js 的**内联** class swap（保持内联，勿外置） |
