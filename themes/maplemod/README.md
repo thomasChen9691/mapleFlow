@@ -1,106 +1,58 @@
-<h1 align=center>Hugo PaperMod | <a href="https://adityatelange.github.io/hugo-PaperMod/" rel="nofollow">Demo</a></h1>
+# maplemod — mapleFlow 的第一方主题
 
-<h4 align=center>☄️ Fast | ☁️ Fluent | 🌙 Smooth | 📱 Responsive</h4>
-<br>
+本目录是 mapleFlow 站点的**主题层**：呈现与行为基线（骨架、导航、文章与列表渲染、
+交互钩子、社交元数据）。仓内 vendored，无 git 子模块、无上游同步义务。
 
-> Hugo PaperMod is a theme based on [hugo-paper](https://github.com/nanxiaobei/hugo-paper/tree/4330c8b12aa48bfdecbcad6ad66145f679a430b3).<br>
-> The goal of this project is to add more features and customization to the og theme.
+## 来源与许可
 
-**Documentation** can be found here: [**📚 Wiki**](https://github.com/adityatelange/hugo-PaperMod/wiki)
+- fork 自 [adityatelange/hugo-PaperMod](https://github.com/adityatelange/hugo-PaperMod)
+  @ `6c5a8f6`（`v8.0-55`，2026-01-09），2026-10-20 入库并修剪。
+- 许可：MIT，见同目录 `LICENSE`（两行上游版权声明原样保留）。MIT 无强制署名要求，
+  站点页脚不加鸣谢。
+- **已 cut cord**：不建 upstream remote、不跟踪上游。fork 点即上文的 commit 与日期；
+  需要上游历史时自行 clone，仓库内不保存。
 
-**ExampleSite** can be found here: [**exampleSite**](https://github.com/adityatelange/hugo-PaperMod/tree/exampleSite). Demo is built up with [exampleSite](https://github.com/adityatelange/hugo-PaperMod/tree/exampleSite) as source.
+## 目录导览
 
-[![hugo-papermod](https://img.shields.io/badge/Hugo--Themes-@PaperMod-blue)](https://themes.gohugo.io/themes/hugo-papermod/)
-[![Minimum Hugo Version](https://img.shields.io/static/v1?label=min-HUGO-version&message=>=v0.146.0&color=blue&logo=hugo)](https://github.com/gohugoio/hugo/releases/tag/v0.146.0)
-[![Discord](https://img.shields.io/discord/971046860317921340?label=Discord&logo=discord)](https://discord.gg/ahpmTvhVmp)
-[![GitHub](https://img.shields.io/github/license/adityatelange/hugo-PaperMod)](https://github.com/adityatelange/hugo-PaperMod/blob/master/LICENSE)
-![code-size](https://img.shields.io/github/languages/code-size/adityatelange/hugo-PaperMod)
-[![X (formerly Twitter) URL](https://img.shields.io/badge/-Share%20on%20X-gray?style=flat&logo=x)](https://x.com/intent/tweet/?text=Checkout%20Hugo%20PaperMod%20%E2%9C%A8%0AA%20fast,%20clean,%20responsive%20Hugo%20theme.&url=https://github.com/adityatelange/hugo-PaperMod&hashtags=Hugo,PaperMod)
+| 路径 | 内容 |
+|---|---|
+| `layouts/_default/baseof.html` | 页面骨架；`<html class="no-js">` 渐进增强基线（ADR-0002） |
+| `layouts/_default/{single,list,terms,search,404}.html` | 文章 / 列表 / 分类词表 / 搜索 / 404 |
+| `layouts/_default/_markup/render-image.html` | 图片渲染钩子 |
+| `layouts/partials/head.html` · `header.html` · `footer.html` | 文档头、导航、页脚 |
+| `layouts/partials/extend_head.html` | no-js→js 的**内联** class swap（保持内联，勿外置） |
+| `layouts/partials/extend_footer.html` | reveal 协议引擎的 js.Build 加载点（源码在站点 `assets/js/mf-reveal/`） |
+| `layouts/partials/post_meta.html` | 文章元信息；title 属性用显式时区格式（构建机时区不决定字节） |
+| `layouts/partials/{author,anchored_headings,cover}.html` | 作者、标题锚点、封面 |
+| `layouts/partials/templates/{opengraph,twitter_cards,schema_json,_funcs/get-page-images}.html` | 社交与结构化数据（含 ogImage 兜底） |
+| `assets/css/**` · `assets/js/**` | 主题样式与 fastsearch/fuse |
+| `i18n/zh.yaml` | 单语言站点的 6 个在用键（prev/next/read_time/words/code_copy/code_copied） |
 
+## 分层契约
 
----
+- **主题层（本目录）**＝呈现与行为基线；**站点层**（仓库根 `layouts/`，仅 7 个文件：
+  `index.html`、`_default/rss.xml`、`_default/index.json`、`product-state/items/index`、
+  `shortcodes/product-index.html`）＝内容与数据。
+- 判据：**因视觉 / 骨架 / 交互而变 → 改这里；因内容策略 / 数据结构而变 → 改站点层。**
+- 两层**不得存在同相对路径文件**——`tests/assert_product_states.py` 的 B13 断言守着
+  这条线（覆盖层复活即红）。领域定义见根目录 `CONTEXT.md` 的「主题层」。
 
-<p align="center">
-  <kbd><img src="https://user-images.githubusercontent.com/21258296/114303440-bfc0ae80-9aeb-11eb-8cfa-48a4bb385a6d.png" alt="Mockup image" title="Mockup"/></kbd>
-</p>
+## 修剪与合并记录
 
----
+- **修剪（0029）**：删 12 个不可达 partial（breadcrumbs/comments/edit_post/post_canonical/
+  post_nav_links/share_icons/toc/translation_list/home_info/index_profile/social_icons/svg）、
+  6 个零引用短代码、`archives.html`、`robots.txt` 模板、上游 `.github/`、45 个非中文 i18n；
+  保留 assets 全量、`LICENSE`、`theme.toml`、`go.mod`、`images/`。`head.html` 里对
+  `google_analytics.html` 的调用是上游遗留钩子（渲染为空；CI 0.164 实证不报错），保留。
+- **合并（0030）**：5 个原站点覆盖文件已并入本主题——`baseof.html`（no-js 类）、
+  `extend_head.html`（class swap）、`extend_footer.html`（js.Build）、`post_meta.html`
+  （时区格式）、`templates/opengraph.html`（ogImage 兜底）。
+- **历史提示**：这 5 个文件的**合并前历史在旧站点路径**（如
+  `git log -- layouts/partials/post_meta.html`）；`git log --follow` 不穿过合并点
+  （`git mv -f` 在目标已存在时不产生 rename）。要查「为什么这样写」，去旧路径看。
 
-## Features/Mods 💥
+## 测试
 
--   Uses Hugo's asset generator with pipelining, fingerprinting, bundling and minification by default.
--   3 Modes:
-    -   [Regular Mode.](https://github.com/adityatelange/hugo-PaperMod/wiki/Features#regular-mode-default-mode)
-    -   [Home-Info Mode.](https://github.com/adityatelange/hugo-PaperMod/wiki/Features#home-info-mode)
-    -   [Profile Mode.](https://github.com/adityatelange/hugo-PaperMod/wiki/Features#profile-mode)
--   Table of Content Generation (newer implementation).
--   Archive of posts.
--   Social Icons (home-info and profile-mode).
--   Social-Media Share buttons on posts.
--   Menu location indicator.
--   Multilingual support. (with language selector).
--   Taxonomies.
--   Cover image for each post (with Responsive image support).
--   Light/Dark theme (automatic theme switch a/c to browser theme and theme-switch button).
--   SEO Friendly.
--   Multiple Author support.
--   Search Page with Fuse.js
--   Other Posts suggestion below a post
--   Breadcrumb Navigation.
--   Code Block Copy buttons.
--   Hugo's Chroma syntax highlighter.
--   No webpack, nodejs and other dependencies are required to edit the theme.
-
-Read Wiki For More Details => **[PaperMod - Features](https://github.com/adityatelange/hugo-PaperMod/wiki/Features)**
-
----
-
-## Install/Update 📥
-
-Read Wiki For More Details => **[PaperMod - Installation](https://github.com/adityatelange/hugo-PaperMod/wiki/Installation)**
-
----
-
-## FAQs / How To's Guide 🙋
-
-Read Wiki For More Details => **[PaperMod-FAQs](https://github.com/adityatelange/hugo-PaperMod/wiki/FAQs)**
-
----
-
-## Social-Icons/Share-Icons 🖼️
-
-Read Wiki For More Details => **[PaperMod-Icons](https://github.com/adityatelange/hugo-PaperMod/wiki/Icons)**
-
----
-
-## Release Changelog 📃
-
-Release ChangeLog has info about stuff added: **[Releases](https://github.com/adityatelange/hugo-PaperMod/releases)**
-
----
-
-## [Pagespeed Insights (100% ?)](https://pagespeed.web.dev/report?url=https://adityatelange.github.io/hugo-PaperMod/) 👀
-
----
-
-## Support 🫶
-
--   Star 🌟 this repository.
--   Help spread the word about PaperMod by sharing it on social media and recommending it to your friends. 🗣️
--   You can also sponsor 🏅 on [Github Sponsors](https://github.com/sponsors/adityatelange) / [Ko-Fi](https://ko-fi.com/adityatelange).
-
----
-
-## Special Thanks 🌟
-
--   [**Highlight.js**](https://github.com/highlightjs/highlight.js)
--   [**Fuse.js**](https://github.com/krisk/fuse)
--   [**Feather Icons**](https://github.com/feathericons/feather)
--   [**Simple Icons**](https://github.com/simple-icons/simple-icons)
--   **All Contributors and Supporters**
-
----
-
-## Stargazers over time 📈
-
-[![Stargazers over time](https://starchart.cc/adityatelange/hugo-PaperMod.svg?background=%23ffffff00&axis=%23858585&line=%236b63ff)](https://starchart.cc/adityatelange/hugo-PaperMod)
+`python3 tests/assert_product_states.py` 的 B7-B13 守主题契约：全站 no-js 基线、
+post_meta 时区格式、菜单渲染序、RSS 只收 posts、search 页挂点、ogImage 兜底、
+站点/主题单副本不变量。改本目录前先跑它。
