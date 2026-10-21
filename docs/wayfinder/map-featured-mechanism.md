@@ -27,7 +27,11 @@ created: 2026-10-21
 
 ## Decisions so far
 
-- [精选机制事实底座（现状盘点）](tickets/0035-featured-mechanism-facts.md) — 文章侧 featured **零实现**（hugo.toml / archetype / 模板 / 内容全无），首页「精选文章」实为 `first 3 ($pages.ByDate.Reverse)` 即最新 3 篇，且与同页「最近更新」网格同源必然重复；**当前精选位实测为手写 1 篇 + 派生 2 篇混排**（派生文今天就占精选位）；产品侧契约与 4 条断言齐备（featured 缺省 false / limit 截断 / 非 featured 不上首页 / 真实数据 yaml 序）；测试 fixture **只覆盖 dataDir**（hugo.test.toml 单键），文章 fixture 需新增 contentDir 覆盖且会连带清空 `hugo.Data.sop`（派生文 0 篇）；SOP 派生 front matter 唯一生成点 `_content.gotmpl:61-69`（params 仅 categories/tags）；搜索索引不含 featured（候选 8 边界确认）；现有内容 5 手写（含 1 脚手架 draft）+ 6 派生。
+- [精选机制事实底座（现状盘点）](tickets/0035-featured-mechanism-facts.md) — 文章侧 featured **零实现**；首页「精选文章」实为 `first 3 ($pages.ByDate.Reverse)` 即最新 3 篇，与同页「最近更新」网格同源必然重复；**当前精选位实测为手写 1 篇 + 派生 2 篇混排**；产品侧契约与 4 条断言齐备；fixture **只覆盖 dataDir**（文章 fixture 需 contentDir 覆盖，且 fixture 内派生文为 0）；SOP 派生 front matter 唯一生成点 `_content.gotmpl:61-69`（params 仅 categories/tags）；搜索索引不含 featured（候选 8 边界）；内容 5 手写（含 1 脚手架 draft）+ 6 派生。
+- [文章 featured 字段契约](tickets/0036-post-featured-field-contract.md) — 顶层 `featured`（与 products.yaml 同名同义）；未声明 = 非精选；**只认布尔 true**（实测 `where "Params.featured" true` 对 `"true"`/`"false"`/`yes`/`1` 全不匹配；`if .Params.featured` 因 `"false"` 为真值而禁用）；坏值 **errorf**（isset 区分未声明与写错）；archetype 不加字段只加注释；**产品侧一并补同款校验**，跨类统一为「布尔/缺省非精选/只认 true/坏值 errorf」。
+- [首页精选文章区的选择与呈现行为](tickets/0037-home-featured-posts-behavior.md) — 精选 3 篇**从「最近更新」网格剔除**（剔除后为空则整块不渲染）；featured 不足按实显示、**0 篇隐藏不写空态文案**；集内**日期倒序**（不引入 weight）；**固定 3 条**（调用点字面量，不加 hugo.toml 参数）；标题与入口保持。
+- [文章精选的架构落点与 seam 划分](tickets/0038-article-featured-architecture-seam.md) — **单 seam 一次返回 `{featured, rest}` 两片**（同一谓词算补集，杜绝漏/重），**渲染不抽**（编号行 vs 卡片两套形态）；入参**只收 limit**（数据源固定、不留 source 注入位/featured 开关）；谓词与坏值校验只此一处、产品侧对称校验在 product-items；落站点层；docstring 为契约定义处；真实精选清单不锚。
+- [精选机制的测试缝与断言集](tickets/0039-featured-test-seam.md) — **新增独立 fixture 构建**（第三配置文件只设 contentDir，不动现有 48 条的构建环境；接受派生文在 fixture 内为 0）；**必锚四条**：过滤+缺省 / 截断（第 4 篇不上）/ **两片互斥无遗漏** / 空态+坏值 errorf；落点**并入并改名** `assert_site_contracts.py`（0032 命名债触发，同步 CI 与文档 4-5 处）；真实清单不锚；变异检验 + 独立字面量沿用。
 
 ## Not yet specified
 
@@ -36,13 +40,12 @@ created: 2026-10-21
 - **「精选」标识在内容层的呈现**：文章页 / 列表页是否显示精选徽标、卡片是否有视觉区分——语义未决，且紧邻视觉层边界（视觉调值本身 out of scope）。
 - **首页数据条与精选的关系**：「篇技术文章」计数是否区分精选、是否新增「精选 N 篇」类数字。
 - **分类页 / 标签页是否消费精选**：文章列表排序是否 featured 优先，还是精选只作用于首页。
-- **精选条数的可配置性**：固定字面量 3 vs `hugo.toml` 参数（受 AGENTS 参数纪律约束：无读取点即死配置）——待 0037 定行为后判断是否独立成题。
 
 ## Out of scope
 
 - **搜索契约**（`index.json` 投影字段 + fastsearch + kind 门禁）：候选 8（0019/0026/0008 边界注记）。
 - **视觉 / CSS 参数调值**（精选卡片样式、动效时长、降级阈值）：视觉层（候选 5 地图先例）。
-- **产品侧 featured 契约重开**（缺省语义 / limit / 负数 errorf）：ADR-0006 已锁，本图只引用不重开。
+- **产品侧 featured 契约重开**（缺省语义 / limit / 负数 errorf）：ADR-0006 已锁，本图只引用不重开。**例外**：产品侧坏值类型校验是 0006 从未定义的空白，由 0036/0038 决议补齐（补空白 ≠ 重开）。
 - **内容填充**（`data/products.yaml` 的 buy_url/listed、`content/about.md` 真实简历、socialIcons 真实邮箱、删脚手架文章）：卡用户材料，不随图（候选 5/6 先例）。
 - **后端重启时的产品数据源替换**：ADR-0006 已定，届时只动 `product-items.html` 一处。
 - **菜单 `parent` 子项渲染**（4 个 categories 子项配置了不渲染）：独立新需求，不属精选机制。
