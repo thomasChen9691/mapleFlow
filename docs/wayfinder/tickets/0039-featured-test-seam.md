@@ -34,6 +34,8 @@ closed: 2026-10-21
    - ② 截断：fixture 放 4 篇 featured、limit 3 → 第 4 篇不上首页、精选区恰 3 行；
    - ③ **两片互斥无遗漏**：精选 ∪ 网格 = 全量、精选 ∩ 网格 = ∅（0037「剔除」决策唯一的牙口）；
    - ④ 空态 + 坏值：0 篇 featured → 区块不渲染；featured 写成字符串/整数 → 构建失败并钉错误子串（bad-case fixture）。
-3. **落点 = 并入现有脚本并改名**：`tests/assert_product_states.py` → `tests/assert_site_contracts.py`（如名字最终另定，须满足「一脚本管站点契约」语义）。触发条件已到——0032 记账的「第三类职责时改名」现已超额（产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 / 精选）。改名需同步 CI workflow、AGENTS §3/§7、文档引用约 4-5 处，一次 commit 完成。
+3. **落点 = 并入现有脚本并改名**：`tests/assert_product_states.py` → `tests/assert_site_contracts.py`（如名字最终另定，须满足「一脚本管站点契约」语义）。触发条件已到——0032 记账的「第三类职责时改名」现已超额（产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 / 精选）。
+   **改名成本已实测（2026-10-21 复核，修正初判的「4-5 处」）**：活引用 **12 处**——`AGENTS.md` 7（坑点 9/10 + §7 速查 5 行）、`themes/maplemod/README.md` 2、`tests/assert_sop_pipeline.py` 注释 2、`.github/workflows/deploy.yml` 1；另有脚本自身 usage 2 处。**历史引用约 25 处**（6 处 ADR、4 份 handoff、15 处 wayfinder 工单）按「ADR 是历史记录、正文不改」先例**不改**，只在 `AGENTS.md` 加一行旧名指针。
+   **节奏 = 搭施工批次的车**：与断言扩展同 commit，CI 只跑一次；不单独做改名提交（单独改名等于为纯重命名付一次部署与一轮文档失真）。
 4. **真实数据不锚精选清单**（同 0038 第 6 条）：只保留生产构建冒烟。
 5. **纪律沿用**：每条断言变异检验（破坏实现→红→还原）+ 期望值独立字面量（不重算实现）；坏值用例走 `tests/fixtures/bad/` 的「构建必须失败 + 钉错误子串」既有机制。

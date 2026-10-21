@@ -31,7 +31,8 @@ created: 2026-10-21
 - [文章 featured 字段契约](tickets/0036-post-featured-field-contract.md) — 顶层 `featured`（与 products.yaml 同名同义）；未声明 = 非精选；**只认布尔 true**（实测 `where "Params.featured" true` 对 `"true"`/`"false"`/`yes`/`1` 全不匹配；`if .Params.featured` 因 `"false"` 为真值而禁用）；坏值 **errorf**（isset 区分未声明与写错）；archetype 不加字段只加注释；**产品侧一并补同款校验**，跨类统一为「布尔/缺省非精选/只认 true/坏值 errorf」。
 - [首页精选文章区的选择与呈现行为](tickets/0037-home-featured-posts-behavior.md) — 精选 3 篇**从「最近更新」网格剔除**（剔除后为空则整块不渲染）；featured 不足按实显示、**0 篇隐藏不写空态文案**；集内**日期倒序**（不引入 weight）；**固定 3 条**（调用点字面量，不加 hugo.toml 参数）；标题与入口保持。
 - [文章精选的架构落点与 seam 划分](tickets/0038-article-featured-architecture-seam.md) — **单 seam 一次返回 `{featured, rest}` 两片**（同一谓词算补集，杜绝漏/重），**渲染不抽**（编号行 vs 卡片两套形态）；入参**只收 limit**（数据源固定、不留 source 注入位/featured 开关）；谓词与坏值校验只此一处、产品侧对称校验在 product-items；落站点层；docstring 为契约定义处；真实精选清单不锚。
-- [精选机制的测试缝与断言集](tickets/0039-featured-test-seam.md) — **新增独立 fixture 构建**（第三配置文件只设 contentDir，不动现有 48 条的构建环境；接受派生文在 fixture 内为 0）；**必锚四条**：过滤+缺省 / 截断（第 4 篇不上）/ **两片互斥无遗漏** / 空态+坏值 errorf；落点**并入并改名** `assert_site_contracts.py`（0032 命名债触发，同步 CI 与文档 4-5 处）；真实清单不锚；变异检验 + 独立字面量沿用。
+- [精选机制的测试缝与断言集](tickets/0039-featured-test-seam.md) — **新增独立 fixture 构建**（第三配置文件只设 contentDir，不动现有 48 条的构建环境；接受派生文在 fixture 内为 0）；**必锚四条**：过滤+缺省 / 截断（第 4 篇不上）/ **两片互斥无遗漏** / 空态+坏值 errorf；落点**并入并改名** `assert_site_contracts.py`（0032 命名债触发）；改名成本实测 **12 处活引用 + 约 25 处历史引用**（历史不改，AGENTS 加旧名指针），**搭施工批次的车**不单独提交；真实清单不锚；变异检验 + 独立字面量沿用。
+- [SOP 派生文是否参与精选](tickets/0040-sop-derived-featured.md) — **参与**（否则精选池只剩 4 篇手写、退化为「手写全集」）；注册表加可选 `featured` + `_content.gotmpl` **条件传键**（实测盲传 nil 会让 `isset` 为真、触发 0036 的坏值 errorf 误报）；**契约四类 → 五类**（三处同步）；首标 3 篇手写：`sop-ops-tools-index` / `k8s-common-commands` / `aiops-state-and-tools`；派生文路径由 `assert_sop_pipeline.py` 的 fixture 透传断言覆盖（不靠改内容凑测试）；golden 不受影响（已核）。
 
 ## Not yet specified
 
