@@ -47,7 +47,8 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 # reveal 协议行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
 npm test
 
-# 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 / 文章精选）
+# 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 / 文章精选 /
+#               搜索索引投影 / 搜索交付面与 fastsearch 守门，共七类）
 # 原名 tests/assert_product_states.py——2026-10 职责扩张后改名；ADR 与历史 handoff
 # 里的旧名指的就是本脚本。
 python3 tests/assert_site_contracts.py
@@ -89,12 +90,14 @@ python3 tests/assert_site_contracts.py
 
 8. **SOP 文是构建期派生的，不要手写**（wayfinder 工单 0008/0009）：`content/posts/` 下 6 个 `sop-*.md` 已删除，文章由 `content/posts/_content.gotmpl`（seam）从 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记在构建期生成，磁盘上没有第二份 .md。手写同名 .md 会与派生页撞路径（产物不确定），由「无残留」断言守。改 SOP 内容 = 改 `docs/sop/` 笔记；改 web 包装（标题由笔记 H1 承载，日期/分类/标签/描述/导语在注册表）= 改 `data/sop.yaml`。无注册条目的笔记 = 尚未发布的稿件；已注册的草稿 = 条目 `draft: true`（不进生产构建）。契约五类以 errorf 让构建失败：缺必填字段（slug/note/date/categories，tags 可缺省）、死条目（有条目无笔记）、笔记首行无 H1、H1 之后无章节标题行、`featured` 存在但非布尔（2026-10 精选机制；缺省即非精选）。测试 `python3 tests/assert_sop_pipeline.py`（CI 权威、本地 advisory，改动前先跑）。
 
-9. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）、**featured 必须是布尔（非 bool 即 errorf，2026-10 跨类统一）**都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者归候选 8，后者见 ADR-0004）。改本链先跑 `python3 tests/assert_site_contracts.py`。
+9. **产品索引接口纪律：双 seam，不要绕（ADR-0006；候选 4 全决议）**：`layouts/partials/product-items.html`（数据准备）是指渲染链**唯一读 `hugo.Data.products` 的宿主**——featured 过滤、limit 截断（缺省/0=全量，负数 errorf）、交付形态词汇契约（`workflow`/`document`/`question-bank` 封闭集，词表外 kind 即 errorf，消息前缀「产品索引数据：」）、**featured 必须是布尔（非 bool 即 errorf，2026-10 跨类统一）**都只此一处；`layouts/partials/product-index.html`（纯渲染）零全局读，`items`/`uid` 必填（缺失即构建失败），空态文案归它。调用方（短代码、首页 `layouts/index.html` 精选区）不得自行 `where`/`first`/直读 `site.Data.products` 渲染列表。同页多实例 uid 必须不同：短代码由 `.Ordinal` 保唯一，模板调用方传字面量（重名不执法，partial 无页级视野）。搜索索引（`layouts/_default/index.json`）与首页计数条不随本链（前者有独立契约，见坑点 13 与 ADR-0010；后者见 ADR-0004）。改本链先跑 `python3 tests/assert_site_contracts.py`。
 
 10. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_site_contracts.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 基线的一部分，保持内联。
 
 11. **文章精选纪律：单 seam 三片，不要绕（ADR-0009；候选 7 全决议）**：`layouts/partials/post-items.html`（数据准备）是首页精选链**唯一**读 `site.RegularPages` 并做 featured 判定 / 截断 / 补集处；入参只收 `limit`（负数 errorf），一次返回 `{featured, rest, all}`，**渲染不抽**（精选编号行 / 网格卡片两套形态，强行统一会引入模式参数）。三条硬约束：① **补集必须对「实际显示的精选」求**（`complement $featured $pages`）——用 `where "Params.featured" "!=" true` 会把被 limit 截断的文章从首页彻底抹掉（静默丢内容）；② featured **只认布尔 `true`**，非布尔即 errorf（`if .Params.featured` 禁止：字符串 `"false"` 是真值）；③ 精选区与网格在各自集合为空时**整块不渲染**。改本链先跑 `python3 tests/assert_site_contracts.py`。
 12. **测试 fixture 的时间陷阱**：Hugo 默认**不发布未来日期的内容**——fixture 文章写成未来日期会整篇消失，表现为「区块不渲染」的假绿（2026-10-22 踩过）。fixture 日期一律用过去的确定日；判定区块是否渲染要锚 DOM class（如 `class=mf-posts` / `entry-link`），不要用文案子串（首页数据条有「最近更新」等同名标签）。
+
+13. **搜索契约纪律：两个定义处，三处同步（ADR-0010；候选 8 全决议）**：投影契约的定义处是 `layouts/_default/index.json` 文件头 docstring（**六字段冻结**——featured / kind 不投影，0044 负向决策；产品 name/summary 缺失即 errorf，前缀「搜索索引数据：」）；检索契约的定义处是 `themes/maplemod/assets/js/fastsearch.js` 文件头 docstring（**现状快照**：fuseOpts 参数位已删，默认值 threshold 0.4 / distance 100 / ignoreLocation true / keys 四字段就是契约）。三条硬约束：① **改投影字段 = 三处同步**（投影 docstring / fastsearch keys / 差集断言）——差集恰为 tags/categories，多一个字段就红；② **fastsearch.js 禁项目级 assets 覆盖复活**——单副本守门断言会红（2026-10 翻车实录：项目级 `assets/js/fastsearch.js` 曾是活文件、主题层副本是死的，`resources.Get` 项目级优先）；③ fixture 造搜索相关页面时日期用过去日（坑点 12）。kind 门禁归产品索引链（索引零暴露，见坑点 9 与 0045 定案）。测试 `python3 tests/assert_site_contracts.py`（投影 / 交付面 / 守门）。
 
 ## 5. 内容规范
 
@@ -129,6 +132,8 @@ python3 tests/assert_site_contracts.py
 | `layouts/partials/post-items.html` | 文章精选·数据准备 seam：首页精选链**唯一**读 `site.RegularPages` 并做 featured 判定/截断/补集处。入参 `limit`（精选条数，负数 errorf）；一次返回 `{featured, rest, all}` 三片，`rest` 对**实际显示的精选**求补集（被截断的 featured 必须回落到网格）；featured 只认布尔 true、非 bool 即 errorf。候选 7 决议；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `assets/js/mf-reveal/` | reveal 协议引擎（**契约定义处**）：app.js 入口 / filter.js 筛选 / scroll-in.js 滚动进场 / reduced-motion.js 降级判定。ADR-0007；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |
+| `layouts/_default/index.json` | 搜索索引·投影契约（**唯一定义处**）：六字段冻结 + 三类排除 + 产品投影；产品 name/summary 缺失即 errorf；与 fastsearch 的 keys 对齐由断言执法。ADR-0010；测试 `tests/assert_site_contracts.py`，改动前先跑 |
+| `themes/maplemod/assets/js/fastsearch.js` | 搜索协议·检索契约（**唯一定义处**，现状快照）：挂点 / `.focus` / li 结构 / 键盘语义 / XHR 容错；fuseOpts 参数位已删、默认值是契约；禁项目级 assets 覆盖复活（单副本守门断言）。ADR-0010；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（ADR-0005；契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |
 | `data/sop.yaml` | SOP 发布注册表：slug/note/date/categories 必填，tags 可缺省，`draft: true` = 已注册的草稿，`featured` 可选（缺省即非精选、非布尔即构建失败） |
 | `docs/sop/README.md` | 源笔记索引（与注册表双向漂移断言守护；`MAPLEFLOW_BLOG_SOP.md` 不发布） |

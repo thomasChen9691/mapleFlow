@@ -29,3 +29,5 @@
 - jsdom 成为仓库唯一 npm 依赖，锁文件固定版本；CI 增加 Node 步骤（约 +15–25s），失败即阻断部署。
 - 主题升级时 `extend_head` 仍是同步件；`extend_footer` 已改为引擎引用，升级面缩小。
 - 搜索 JS（fastsearch）与 `index.json` 投影不属本 ADR，归候选 8（搜索契约）。
+
+**2026-10-22 指针**：本 ADR Consequences 末条「搜索 JS（fastsearch）与 index.json 投影归候选 8」已由 **ADR-0010** 定案——fastsearch 独立为「搜索协议」现状快照契约（docstring 落 `themes/maplemod/assets/js/fastsearch.js` 文件头），**不并入本协议**；投影侧契约见同一 ADR。本 ADR 正文不改（历史记录）。

@@ -2,8 +2,9 @@
 id: map-search-contract
 title: 搜索契约图（候选 8）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-22
+closed: 2026-10-22
 ---
 
 # 搜索契约图（候选 8）
@@ -31,16 +32,16 @@ created: 2026-10-22
 - [搜索模块现状事实底座（盘点）](tickets/0042-search-module-facts.md) — index.json 六字段且 **summary/content 同源**（content 不含正文）、三类排除、产品条目直读 products 不过 kind 门禁、投影层零 errorf；fastsearch 仅 search 页加载、**fuseOpts 未配置**（nil 走默认，:29-43 为潜伏死路径）、XHR 失败仅 console.log 属静默失效；现有断言只覆盖产品 tag（fixture）与三挂点（真实构建），**fastsearch 行为测试为零**；缺口 10 条；SOP fixture 缺 intro 致 `%!s()` 静默进索引（投影无校验活例证）。
 - [搜索契约的模块边界与 seam 形状](tickets/0043-search-module-boundary-seam.md) — **单文件自足**（index.json 一文件承载投影 + jsonify + errorf，对照 `_content.gotmpl` 先例，不拆双 seam——薄渲染 seam 在 JSON 单一形态下是空壳）；**三层文档契约**（CONTEXT.md 术语条 / index.json 文件头 docstring 五块为唯一定义处 / 测试字面量，不建 spec seam）；**模块只圈站点层投影**，fastsearch 归 0046（协议化则并列互指不合并命名）、search 页面留 B11，交付面与 fastsearch 接口条款写进 docstring；**投影守自消费字段**（产品 name/summary 缺失即 errorf，前缀「搜索索引数据：」，不重验产品链已有门禁）；keys 对齐与文章侧投影/排除规则断言落 `assert_site_contracts.py`（套件最终形态归 0047）。同场施工已完成（TDD 红绿 + 变异检验）。
 - [索引投影字段契约](tickets/0044-index-projection-field-contract.md) — **字段集冻结六项：featured / kind 均不投影**（无消费方；kind 顺带简化 0045——索引对 kind 零暴露）；**summary/content 同源确认为有意设计**（P2-6 瘦身初衷），truncate 200/320 为调值仅文档不断言；**产品条目形态全加断言**（title=name / permalink 锚点 / content 拼接），落既有 fixture 构建。同场施工已完成（表征绿 + 三处变异红）。
-- [fastsearch 的协议归属与 DOM 契约](tickets/0046-fastsearch-protocol-dom-contract.md) — **独立「搜索协议」现状快照契约**（docstring 落 fastsearch.js 文件头，与 reveal 三层同构；不并入 reveal、不跨层合并）；**快照全量收录**（挂点/.focus/li 结构/键盘语义/XHR 容错，静默失效标注已知限制）；**删 fuseOpts 参数位**（默认值升格为契约，调参走代码+契约+评审）；**容错只记录不修**。同场施工已完成（行为保持型重构 + docstring 落位）。
+- [fastsearch 的协议归属与 DOM 契约](tickets/0046-fastsearch-protocol-dom-contract.md) — **独立「搜索协议」现状快照契约**（docstring 落 fastsearch.js 文件头，与 reveal 三层同构；不并入 reveal、不跨层合并）；**快照全量收录**（挂点/.focus/li 结构/键盘语义/XHR 容错，静默失效标注已知限制）；**删 fuseOpts 参数位**（默认值升格为契约，调参走代码+契约+评审）；**容错只记录不修**。同场施工已完成（行为保持型重构 + docstring 落位 + 施工期翻出项目级覆盖层：合并入主题层、删副本、加单副本守门断言）。
+- [kind 门禁在索引投影中的归属](tickets/0045-kind-gate-ownership.md) — **隐式兜底定案**：门禁归产品索引链，索引不消费 kind（0044）故零暴露、零执法；坏 kind 由产品页恒渲染触发 errorf，兜底的牙是 assert_real 产品页全量断言；0019 边界注释改写为结论记录。
+- [搜索契约的测试缝](tickets/0047-search-test-seam.md) — **不立 jsdom 行为套件**（fastsearch 是无导出经典脚本，harness 成本 ~100 行且测的是遗留快照；重写时新引擎抽 ESM、测试与新契约一起 TDD）；**改补产物断言**（search 页引用 search.*.js + 构件落盘 + fetch 同目录 index.json，锚 fixture 构建）；**套件不改名**（头注释五类→七类，CI 与 npm test 零改动）。
+- [收口：术语、导航与 ADR 耐久化](tickets/0048-closure-terminology-adr.md) — **一词条两指针**（不新立「搜索协议」术语；0046「并列互指」表述勘误）；**单份 ADR-0010 五组决策** + 给 0006/0007/0009 加指针；**AGENTS.md** §7 两行 + 坑点 13「搜索契约纪律」；handoff 同场落。**本题关闭 = 候选 8 目的地到达。**
 
 ## Not yet specified
 
 <!-- 雾区：在目的地内、但还无法精确表述的问题。随 frontier 推进毕业为工单。 -->
 
-- **搜索结果呈现层的契约深度**：结果列表是否展示摘要 / 标签 / 命中高亮，计数与空态文案是否归契约——现状快照已契定死「只渲染标题 + 链接」（0046 决议②）；本条仅在未来重写 fastsearch 时展开为新工单。
-- **fastsearch 的引擎形态**：若判定需要重写，其文件结构（是否效仿 mf-reveal 的 `assets/js` 模块 + `js.Build` 管线、与 `fuse.basic.min.js` / `license.js` 的依存关系）成为新工单；若保持上游不动，此条消散。0043 已定「两模块不合并命名」，此条仅在推翻该前提时重开。fuseOpts 参数位已删（0046 决议③），重写时默认值契约随移。
-- **索引加载失败的容错 UX**：XHR / JSON.parse 失败当前仅 console.log（静默失效类，已列为 fastsearch docstring 已知限制）——用户可见的容错文案与行为，待 0047 行为测试缝或重写时一并处理。
-- **搜索入口形态**：菜单链接 + accesskey=/ 之外是否要快捷键唤起 / 首页常驻搜索框——新功能方向，0046 协议归属已明（独立协议），是否落在地图内仍待用户提出。
+（本图收口时雾区清空——四条雾区均挂在「重写 fastsearch」或「新功能」上，超出「现状治理」的目的地，已移入 Out of scope。）
 
 ## Out of scope
 
@@ -50,3 +51,5 @@ created: 2026-10-22
 - **内容填充**（`data/products.yaml` 的 buy_url/listed、`content/about.md` 真实简历、socialIcons 真实邮箱、删脚手架文章）：卡用户材料，不随图。
 - **菜单 `parent` 子项渲染**（4 个 categories 子项配置了不渲染）：独立新需求。
 - **后端重启时的产品数据源替换**：ADR-0006 已定，届时只动 `product-items.html` 一处。
+- **重写 fastsearch 时才有的面**（结果列表深化：摘要/标签/命中高亮；引擎形态：ESM 模块化与 fuse/license 依存；索引加载失败的容错 UX）：本图目的是现状治理，这三条雾区随收口移出——重写若发生，是下一张图的事，届时以本图的快照契约为输入。
+- **搜索入口形态**（快捷键唤起 / 首页常驻搜索框）：新功能方向，用户未提出，不属本图。

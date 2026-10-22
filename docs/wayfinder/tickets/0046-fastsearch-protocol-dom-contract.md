@@ -29,7 +29,7 @@ fastsearch.js（主题层 vendored 上游 PaperMod 代码：无 docstring、无�
 
 2026-10-22 · grilling（用户为决策者），四问落定：
 
-1. **协议归属：独立「搜索协议」模块，现状快照式契约**——docstring 落 `themes/maplemod/assets/js/fastsearch.js` 文件头，与 ADR-0007 三层模式同构；**不并入 reveal**（reveal 语义是动效交互，搜索是检索交互，并入即重开 0007 的模块定义）、**不与投影合并命名**（0043 已决跨层不合并；两模块在 CONTEXT.md 并列互指）。
+1. **协议归属：独立「搜索协议」模块，现状快照式契约**——docstring 落 `themes/maplemod/assets/js/fastsearch.js` 文件头，与 ADR-0007 三层模式同构；**不并入 reveal**（reveal 语义是动效交互，搜索是检索交互，并入即重开 0007 的模块定义）、**不与投影合并命名**（0043 已决跨层不合并；CONTEXT.md 侧一词条两指针互指——0048 决议①对决议①「并列互指」表述的勘误落于此）。
 2. **快照全量收录**：三挂点（searchbox/searchInput/searchResults）、`.focus` 类（search.css `#searchResults .focus` 消费）、`li > header + a` 覆盖结构（`#searchResults a` 绝对定位点击热区）、键盘语义（Escape 重置 / ↑↓ 导航 / → 点击）、XHR 路径与失败行为。后两块显式标注「vendored 上游快照」与「已知限制」。B11 保留为挂点的唯一机械断言（注释改指向 docstring）；jsdom 行为测试归 0047。
 3. **删 fuseOpts 参数位**：head.html 去 `js.Build` 的 params 传递；fastsearch.js 删 `@params` import 与 fuseOpts 分支（含 search 的 limit 分支）；默认值（threshold 0.4 / distance 100 / ignoreLocation true / keys 四字段）升格为 docstring 契约。调参 = 改代码 + 改契约 + 评审，不再留无人执行的配置分支。
 4. **容错行为记录不动代码**：XHR / JSON.parse 失败 = 静默失效类**已知限制**（待重写或加容错时处理）；no-js = 客户端搜索固有不可用（ADR-0002 基线只保证内容可读）；reduced-motion = 无运动面（唯一动效是 `li:active` 0.1s 按压反馈，非进场动画）。

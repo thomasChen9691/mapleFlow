@@ -68,9 +68,11 @@
 {{- end -}}
 {{- with site.GetPage "page" "products" -}}
   {{- $productsPermalink := .RelPermalink -}}
-  {{- /* 覆盖边界（0019 决议）：此处直读 site.Data.products，不经 product-items 的
-         kind 词汇门禁。门禁的实际覆盖靠「产品页恒渲染全量 → product-items 恒被调用」
-         这一隐式依赖兜底；索引投影是否重复校验/如何校验，随候选 8「搜索契约」定案。 */ -}}
+  {{- /* kind 门禁归属（0019 悬置，工单 0045 定案）：此处直读 site.Data.products，
+         不经 product-items 的 kind 词汇门禁——门禁归产品索引链（ADR-0006），
+         索引不消费 kind（0044：不投影），故无需重复校验。坏 kind 由「产品页恒渲染
+         全量 → product-items 恒被调用」触发 errorf，与索引是否存在无关；该隐式
+         兜底的牙是 assert_real 的产品页全量断言（tests/assert_site_contracts.py）。 */ -}}
   {{- range site.Data.products -}}
     {{- /* 投影守自己消费的字段（工单 0043 决议①）：name/summary 是投影的
            必填项——product-state 的 name 有渲染用缺省值，但投影不收缺省，

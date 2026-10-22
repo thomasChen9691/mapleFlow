@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖五类职责：
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖七类职责：
 产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B13（ADR-0008）
-· reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）。
+· reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
+（候选 8 工单 0043/0044 决议，ADR-0010）· 搜索交付面与 fastsearch 守门（候选 8
+工单 0046/0047 决议，ADR-0010）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -376,7 +378,7 @@ def assert_reveal_artifacts(report, dest):
     report.check("B2 产品页引用 reveal 引擎脚本（js.Build 产出）", m is not None,
                  "no <script src=...mf-reveal...> in products.html")
     if m:
-        rel = re.sub(r'^(/|mapleFlow/)', '', m.group(1))
+        rel = re.sub(r'^/(mapleFlow/)?', '', m.group(1))
         report.check("B2 引擎脚本文件已落盘", (dest / rel).exists(), f"missing {dest / rel}")
 
     # B3 DOM 契约挂点：产品行 .reveal、首页 hero mf-rise（含三档延迟类）
@@ -458,6 +460,7 @@ def assert_fixture(report):
     assert_reveal_artifacts(report, dest)
     assert_search_index(report, dest)
     assert_search_projection(report, dest)
+    assert_search_artifacts(report, dest)
 
 
 def assert_post_featured(report):
@@ -569,6 +572,36 @@ def assert_search_fixture(report):
                  and alpha.get("categories") == ["投影"]
                  and beta is not None and beta.get("tags") == ["投影", "Beta"],
                  f"got alpha={alpha and alpha.get('tags')}, beta={beta and beta.get('tags')}")
+
+
+def assert_search_artifacts(report, dest):
+    """搜索交付面（工单 0047 决议①：产物断言代替 jsdom 行为套件）。
+
+    0043 docstring ④ 交付面条款的牙——「outputs JSON / search 页引用 search.js /
+    fetch 同目录 index.json」三者任一坏掉，搜索静默失效（无报错、无结果）：
+      · search.html 引用构建产物 search.*.js 且文件落盘（脚本接线，对位 B2）；
+      · 构件里 XHR fetch 路径为同目录 "index.json"、无 "../index.json"
+        （子路径部署 /mapleFlow/ 下 ../ 会逃逸到域名根 404；0046 施工期把
+        项目级覆盖合并入主题层时同批修正，head.html preload 同步）。
+    锚 fixture 构建（--quick 也跑）；构件经 head.html 的 resources.Minify，
+    路径串用容忍引号的正则匹配。
+    """
+    search_html = (dest / "search.html").read_text(encoding="utf-8")
+    m = re.search(r'<script[^>]+src=["\']?([^"\'\s>]*search[^"\'\s>]*\.js)', search_html)
+    report.check("search 页引用 search.js 构件（脚本接线）", m is not None,
+                 "no <script src=...search*.js> in search.html")
+    if not m:
+        return
+    rel = re.sub(r'^/(mapleFlow/)?', '', m.group(1))
+    js_path = dest / rel
+    report.check(f"search.js 构件落盘（{rel}）", js_path.is_file(), "built file missing")
+    if not js_path.is_file():
+        return
+    js = js_path.read_text(encoding="utf-8")
+    report.check('构件 fetch 路径为同目录 "index.json"',
+                 re.search(r"""open\(['"]GET['"]\s*,\s*['"]index\.json['"]""", js) is not None
+                 and "../index.json" not in js,
+                 "fetch path drifted (expected same-dir index.json, no ../)")
 
 
 def assert_empty_state(report):

@@ -28,7 +28,8 @@
  *         post-entry / entry-header 类名无外部消费方，仅本模板自用。
  *
  * 检索契约（0046 决议③：调参 = 改代码 + 改契约 + 评审，不再有配置分支）：
- *   Fuse 默认参数 distance 100 / threshold 0.4 / ignoreLocation true；
+ *   Fuse options 为代码显式设定（fuseOpts 分支删除后即默认值）：
+ *   distance 100 / threshold 0.4 / ignoreLocation true；
  *   keys = [title, permalink, summary, content]——与投影六字段的差集恰为
  *   tags/categories（扩展检索预留），对齐由 tests/assert_site_contracts.py 的
  *   assert_search_projection 执法（改投影字段须同步 keys）。
