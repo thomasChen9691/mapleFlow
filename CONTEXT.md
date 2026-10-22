@@ -71,7 +71,7 @@ _Avoid_: 资源列表、商品索引、产品目录、索引页
 ## 站内搜索
 
 **搜索索引 (Search Index)**：
-站内搜索的数据源：构建期由投影契约生成的 JSON 记录集（文章 + 产品两类），经 search 页的 fastsearch 检索消费。投影字段、排除规则与消费方接口的定义处是 `layouts/_default/index.json` 文件头 docstring；调用方不得另建投影或绕过该契约。
+站内搜索的数据源：构建期由投影契约生成的 JSON 记录集（文章 + 产品两类），经 search 页的 fastsearch 检索消费。投影字段、排除规则与消费方接口的定义处是 `layouts/_default/index.json` 文件头 docstring；调用方不得另建投影或绕过该契约。检索交互契约（挂点 / 键盘 / 容错）的定义处是 `themes/maplemod/assets/js/fastsearch.js` 文件头 docstring——两侧并列互指、不合并命名（0043/0046 决议）。
 _Avoid_: 搜索数据库、索引文件、search.json（文件名不作术语）
 
 ## 客户端交互

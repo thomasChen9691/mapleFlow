@@ -15,6 +15,10 @@
                  （既有设计事实；任一侧的变换改变都会改变另一侧）
      tags        .Params.tags | default slice
      categories  .Params.categories | default slice
+     字段集冻结为六项（0044 决议）：featured / kind 不投影——无消费方
+     （fastsearch keys 不含、结果 UI 不显示）；精选归首页编排（ADR-0009），
+     kind 门禁归产品索引链。truncate 200/320 为调值：仅文档不断言。
+     summary/content 同源为有意设计（瘦身索引体积，P2-6 初衷），非疏漏。
 
   ② 排除规则——三类页面不进索引（缺一不可搜索）：
      .Params.searchHidden 为真 / .Layout "archives" / .Layout "search"
@@ -28,8 +32,11 @@
      与产品状态模块的不对称：product-state 的 name 有渲染用缺省值
      "(未命名产品)"，本投影不收缺省——缺 name/summary 即构建失败（见 ⑤）。
 
-  ④ 接口条款——与 themes/maplemod/assets/js/fastsearch.js 的约定：
-     · fetch 路径 "../index.json"（相对 /search.html → 站根）；
+  ④ 接口条款——与 themes/maplemod/assets/js/fastsearch.js 的约定
+     （该文件即检索交互契约的定义处；2026-10-22 项目级覆盖已合并入主题层，
+      单副本由 assert_search_projection 守门）：
+     · fetch 路径 "index.json"（同目录相对——站点在子路径 /mapleFlow/ 下，
+       上游的 "../index.json" 会逃逸到域名根而 404；head.html preload 同步同目录）；
      · 默认 keys = [title, permalink, summary, content]，即投影六字段
        去掉 tags / categories（扩展检索预留）；
      · 交付面：hugo.toml [outputs] home 含 "JSON"；head.html 仅

@@ -140,6 +140,17 @@ CALLER_MISSING_UID_EXPECT = "产品索引：uid 必填"
 SEARCH_INDEX_FIELDS = {"title", "permalink", "summary", "content", "tags", "categories"}
 SEARCH_FASTSEARCH_KEYS = ["title", "permalink", "summary", "content"]
 SEARCH_EXTRA_FIELDS = {"tags", "categories"}
+# 产品条目形态期望值（0044 决议③：投影 docstring ③ 的牙）：fixture 五产品的
+# (name, summary, scale) 独立字面量——与 tests/fixtures/data/products.yaml 逐字
+# 对应（summary 均为「已上架 + 付费」式带空格加号），改 fixture 数据须同步改这里。
+# permalink 为根相对形态（.RelPermalink 无域名）。
+FIXTURE_PRODUCT_SHAPE = {
+    "fx-unlisted-plain": ("夹具·未上架免费（非精选）", "featured: false 对照行——必须不上首页，但在产品页可见。", "1 页"),
+    "fx-listed-paid": ("夹具·已上架付费", "已上架 + 付费 → 可点「购买」+ data-price=paid。", "1 个模板"),
+    "fx-listed-free": ("夹具·已上架免费", "已上架 + 免费 → 可点「免费获取」+ data-price=free。", "1 页"),
+    "fx-unlisted-paid": ("夹具·未上架付费", "未上架 + 付费 → 禁用「即将上架」+ data-price=paid（与价格无关）。", "1 题"),
+    "fx-unlisted-free": ("夹具·未上架免费", "未上架 + 免费 → 禁用「即将上架」+ data-price=free（免费同样可以即将上架）。", "1 页"),
+}
 
 # 主题层契约（0032 决议）的独立字面量：post_meta 的 title 属性必须是显式时区格式，
 # 不是 Go 的 time.Time.String()（后者由构建机时区决定输出字节）。
@@ -302,6 +313,8 @@ def assert_search_projection(report, dest):
       ① 构建产物每条记录恰为投影六字段（契约定义处：index.json docstring 字段表）；
       ② fastsearch.js 默认 options 块的 keys 为四字段字面量——读主题层源码，
          接口条款横跨两层，断言语境在站点层套件（与 B7-B13 读主题文件同例）；
+         该文件是单副本活文件（项目级 assets 覆盖已于 0046 施工期合并删除，
+         复活守门见函数末尾）；
       ③ 差集恰为 {tags, categories}（扩展检索预留）——接口条款本身。
     变异检验：改投影字段集 / 改 fastsearch keys，两条各红过才收。
     """
@@ -318,6 +331,26 @@ def assert_search_projection(report, dest):
     report.check("投影字段 - fastsearch keys = {tags, categories}（扩展检索预留）",
                  SEARCH_INDEX_FIELDS - set(keys) == SEARCH_EXTRA_FIELDS,
                  f"got {SEARCH_INDEX_FIELDS - set(keys)}")
+    # 产品条目形态（0044 决议③）：title=name / permalink 锚点 / content 三字段拼接。
+    # 期望值为 fixture 数据的独立字面量（不从实现重算）。
+    fx = {e["permalink"].rsplit("#", 1)[-1]: e for e in index
+          if "products.html#" in (e.get("permalink") or "")}
+    bad_product = []
+    for pid, (name, summary, scale) in FIXTURE_PRODUCT_SHAPE.items():
+        e = fx.get(pid, {})
+        if not (e.get("title") == name
+                and e.get("permalink") == "/products.html#" + pid
+                and e.get("content") == f"{name} {summary} {scale}"):
+            bad_product.append(pid)
+    report.check("产品条目形态（title=name / permalink 锚点 / content 拼接）",
+                 not bad_product, f"不符: {bad_product}")
+    # 单副本守门（0046 施工期发现）：fastsearch.js 曾有项目级覆盖（assets/js/
+    # 覆盖 themes/maplemod/assets/js/，子模块时代的遗产），覆盖与本文件读的主题
+    # 路径会静默漂移（0043 施工期的 B3 一度读的是死文件）。合并已入主题层，
+    # 项目级副本复活即本断言红。
+    report.check("fastsearch.js 单副本（无项目级 assets 覆盖复活）",
+                 not (REPO / "assets" / "js" / "fastsearch.js").exists(),
+                 "assets/js/fastsearch.js 复活：覆盖层=两份真相，B3 读的可能是死文件")
 
 
 def assert_reveal_artifacts(report, dest):
@@ -713,7 +746,8 @@ def assert_theme_contract(report, dest):
     report.check(f"首页 RSS {len(items)} 条 item 全部为 posts", bool(items) and all("/posts/" in link for link in items),
                  f"非 posts 条目: {[l for l in items if '/posts/' not in l][:3]}")
 
-    # B11: search 页 DOM 三挂点（fastsearch 的挂点契约；坏了搜索静默失效）。
+    # B11: search 页 DOM 三挂点（挂点契约的定义处：fastsearch.js 文件头
+    # docstring「搜索协议」——0046 决议②；坏了搜索静默失效）。
     search_path = dest / "search.html"
     search_html = search_path.read_text(encoding="utf-8") if search_path.exists() else ""
     missing = [anchor for anchor in ("searchbox", "searchInput", "searchResults")

@@ -19,3 +19,5 @@ created: 2026-10-22
 4. **CI 守门**：deploy.yml 的 `Assert site contracts` 步与新断言的关系；`npm test` 步骤已在（候选 5 时加入）——行为套件若新建，入口是否仍是单条 `npm test`。
 
 纪律沿用：每条断言变异检验（破坏实现 → 红 → 还原）；期望值独立字面量（非同义反复）；真实精选 / 产品清单类内容不锚（内容由项目负责人掌控——但字段契约与结构必须锚）。
+
+**0044/0046 已决输入**（已随同场施工落地的部分，本工单只定剩余形状）：① 产品条目形态断言（title/permalink/content）已加在 `assert_search_projection`，挂既有 dataDir fixture 构建；② fastsearch 的契约定义处已就位（`fastsearch.js` 文件头 docstring，现状快照含键盘语义与 XHR 容错）；③ jsdom 行为测试（是否新建 `assert_search.mjs`、`npm test` 入口调整、样本 DOM 手写镜像）仍是本工单的待决面；④ 套件合流 / 命名（`assert_site_contracts.py` 是否因职责再扩张而改名）亦归本工单。

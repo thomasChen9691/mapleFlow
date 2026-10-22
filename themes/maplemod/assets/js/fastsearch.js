@@ -1,4 +1,52 @@
-import * as params from '@params';
+/**
+ * fastsearch.js —— 站内搜索检索引擎（搜索协议·行为层；工单 0046 决议①②）
+ * ============================================================
+ * 【检索交互契约的定义处。与 index.json 的投影契约（layouts/_default/index.json
+ *   文件头 docstring）分立两个模块：投影管「索引里有什么」，本文件管「检索怎么跑」。
+ *   两模块不合并命名（0043 决议④）；reveal 协议管动效交互（ADR-0007），与本协议并列。】
+ *
+ * 加载（themes/maplemod/layouts/partials/head.html，仅 .Layout == "search" 时）：
+ *   与 fuse.basic.min.js、license.js concat 为 assets/js/search.js 后 fingerprint；
+ *   js.Build 无 params——fuseOpts 参数位已删（0046 决议③：无消费方的预留位不留）。
+ *
+ * DOM 契约（现状快照：本文件是 vendored 上游 PaperMod 代码的第一方化留存，
+ *   快照式记录当前行为、非设计目标；重写时本契约随移）：
+ *   读  #searchbox > #searchInput    搜索输入（autofocus / maxlength=64 / aria-label=search）
+ *       #searchResults               结果列表（aria-label=search results）
+ *   写  #searchResults.innerHTML     <li class="post-entry"><header class="entry-header">
+ *                                    {title}&nbsp;»</header><a href="{permalink}"
+ *                                    aria-label="{title}"></a></li>——只渲染标题+链接，
+ *                                    不显摘要、不显精选（与 0044「UI 无消费方」同理）
+ *       .focus                       键盘导航当前项（结果项导航时加在 li 上——search.css
+ *                                    #searchResults .focus 消费，唯一 CSS 耦合类；
+ *                                    焦点回输入框时加在 #searchbox 上，无 CSS 消费方）
+ *   键盘（document.onkeydown 全局监听）：Escape 恒可重置（清空输入与结果、焦点回
+ *        输入框——位于结果门之前，无结果 / 焦点在框外时也响应）；输入框获焦时先清理
+ *        既有 .focus；ArrowDown/ArrowUp/ArrowRight 受「结果可用且焦点在搜索框内」门控
+ *        （ArrowRight = 点击当前项）。
+ *   点击热区：#searchResults a 绝对定位铺满 li（search.css 消费）；li 的
+ *         post-entry / entry-header 类名无外部消费方，仅本模板自用。
+ *
+ * 检索契约（0046 决议③：调参 = 改代码 + 改契约 + 评审，不再有配置分支）：
+ *   Fuse 默认参数 distance 100 / threshold 0.4 / ignoreLocation true；
+ *   keys = [title, permalink, summary, content]——与投影六字段的差集恰为
+ *   tags/categories（扩展检索预留），对齐由 tests/assert_site_contracts.py 的
+ *   assert_search_projection 执法（改投影字段须同步 keys）。
+ *   索引来源：XHR GET "index.json"（同目录相对——站点在子路径 /mapleFlow/ 下，
+ *   上游的 ../index.json 会逃逸到域名根而 404，已实测；head.html 的 preload 同步同目录）。
+ *
+ * 已知限制（快照记录，不承诺修复——0046 决议④）：
+ *   · XHR 失败仅 console.log、JSON.parse 无 try/catch：索引损坏时搜索静默失效
+ *     （无结果、无用户可见报错）——容错 UX 待重写或工单 0047 行为测试缝时处理；
+ *   · no-js 下搜索页只剩空壳：客户端搜索的固有属性（ADR-0002 基线只保证内容可读）；
+ *   · reduced-motion：无运动面可降级（唯一动效是 search.css 的 li:active 0.1s
+ *     按压反馈，非进场动画）。
+ *
+ * 测试：B11 三挂点产物断言（tests/assert_site_contracts.py）；jsdom 行为测试归
+ *   工单 0047（未立）。历史：2026-10-22 前存在项目级 assets/js/fastsearch.js 覆盖
+ *   （子模块时代为改 XHR 路径而建），已合并入本文件并删除——单副本由
+ *   assert_search_projection 的守门断言执法。
+ */
 
 let fuse; // holds our search engine
 let resList = document.getElementById('searchResults');
@@ -26,21 +74,6 @@ window.onload = function () {
                             'content'
                         ]
                     };
-                    if (params.fuseOpts) {
-                        options = {
-                            isCaseSensitive: params.fuseOpts.iscasesensitive ?? false,
-                            includeScore: params.fuseOpts.includescore ?? false,
-                            includeMatches: params.fuseOpts.includematches ?? false,
-                            minMatchCharLength: params.fuseOpts.minmatchcharlength ?? 1,
-                            shouldSort: params.fuseOpts.shouldsort ?? true,
-                            findAllMatches: params.fuseOpts.findallmatches ?? false,
-                            keys: params.fuseOpts.keys ?? ['title', 'permalink', 'summary', 'content'],
-                            location: params.fuseOpts.location ?? 0,
-                            threshold: params.fuseOpts.threshold ?? 0.4,
-                            distance: params.fuseOpts.distance ?? 100,
-                            ignoreLocation: params.fuseOpts.ignorelocation ?? true
-                        }
-                    }
                     fuse = new Fuse(data, options); // build the index from the json file
                 }
             } else {
@@ -48,7 +81,8 @@ window.onload = function () {
             }
         }
     };
-    xhr.open('GET', "../index.json");
+    // 同目录相对 "index.json"（子路径部署下 ../ 会逃逸到域名根——契约详见文件头 docstring）。
+    xhr.open('GET', "index.json");
     xhr.send();
 }
 
@@ -77,12 +111,7 @@ sInput.onkeyup = function (e) {
     // run a search query (for "term") every time a letter is typed
     // in the search box
     if (fuse) {
-        let results;
-        if (params.fuseOpts) {
-            results = fuse.search(this.value.trim(), {limit: params.fuseOpts.limit}); // the actual query being run using fuse.js along with options
-        } else {
-            results = fuse.search(this.value.trim()); // the actual query being run using fuse.js
-        }
+        let results = fuse.search(this.value.trim()); // the actual query being run using fuse.js
         if (results.length !== 0) {
             // build our html if result exists
             let resultSet = ''; // our results bucket

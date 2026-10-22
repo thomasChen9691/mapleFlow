@@ -18,7 +18,7 @@ closed: 2026-10-22
 
 1. **index.json 投影的 seam 形状**：收窄为「数据准备 seam + 消费方」双 seam 形态（对照 ADR-0006 product-items / product-index 先例：数据准备唯一读数据源并执法契约，消费方零全局依赖），还是保持单文件投影 + 文件头 docstring 契约（对照 ADR-0005 `_content.gotmpl` 先例）？判据维度：投影的消费点数量（fastsearch 一个？）、契约复杂度、坏值执法需求（0044 的输入）。
 2. **契约定义处的分层**：是否沿用 ADR-0007 的三层文档契约模式——CONTEXT.md 术语条（概念层）/ 投影文件头 docstring（契约定义处）/ 测试期望值字面量？若建独立 docstring seam，文件落站点层哪一目录。
-3. **跨层模块的相容性**：投影（站点层）与 fastsearch（主题层 vendored 上游）是否同属一个被命名的协议模块；模块命名（「搜索契约」/「搜索协议」/ 其他）与 ADR-0008 分层判据如何相容（跨层先例：reveal 引擎在主题层 `assets/js/mf-reveal/`、消费方在站点层 `product-index.html`）。
+3. **跨层模块的相容性**：投影（站点层）与 fastsearch（主题层 vendored 上游）是否同属一个被命名的协议模块；模块命名（「搜索契约」/「搜索协议」/ 其他）与 ADR-0008 分层判据如何相容（**2026-10-22 勘误**：排图期此处写的「跨层先例：reveal 引擎在主题层 `assets/js/mf-reveal/`、消费方在站点层 `product-index.html`」不成立——reveal 引擎实际在站点层 `assets/js/mf-reveal/`，并非跨层模块；本题是本项目第一个跨层契约组合，结论「不合并命名」不受影响）。
 4. **搜索页（`search.md` + `search.html`）是否入模块**：它今天归主题层呈现 + 站点层内容各一半，B11 断言已守挂点；模块边界是否含页面本身，还是只含「投影 + 检索协议」。
 
 背景（事实）：ADR-0006 双 seam 先例与其 Considered Options（数据准备外移 / 内驻只正语义均被拒）；ADR-0007 三层文档契约；ADR-0008 分层判据与「两层不得有同相对路径文件」；工单 0019 Resolution 3 的边界注释（投影直读 products 不过 kind 门禁）是本图的直接输入。
