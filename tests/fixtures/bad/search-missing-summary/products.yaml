@@ -1,0 +1,15 @@
+# 契约坏用例：产品缺 summary 字段——搜索索引投影必填（工单 0043 决议①，
+# 与 search-missing-name 对称：name/summary 是投影消费的两个产品字段，
+# 今日全部门禁都不覆盖）。listed / price / buy_url / kind / name 均合法。
+# 期望：构建失败，错误信息来自搜索索引投影
+#       （含「搜索索引数据：」前缀与条目 id）。
+- id: fx-search-missing-summary
+  name: 夹具·缺摘要
+  kind: document
+  version: ""
+  scale: 1 页
+  updated: 2026-10-15
+  price: 39
+  listed: true
+  buy_url: "https://example.com/fx-search-missing-summary"
+  featured: false

@@ -1,13 +1,49 @@
 {{- /*
-  P2-6 / P2-7：覆盖主题的 _default/index.json（项目级优先于 themes/PaperMod）。
-  目的：
-    ① 瘦身：content 字段不再塞整篇正文，改用截断后的摘要，单条体积可控；
-    ② 纳入产品：把 site.Data.products 也并入索引，permalink 指向产品页锚点
-       （/products.html#<id>，锚点由 layouts/partials/product-index.html 的 <li id> 提供）。
+  搜索索引投影（站点层；候选 8「搜索契约」图，工单 0043 决议）
+  ============================================================
+  本文件是「搜索索引」投影契约的唯一定义处——三层文档契约：
+  CONTEXT.md 概念层 / 本 docstring 契约层 / 测试期望值字面量
+  （与 ADR-0007 reveal 协议同构）。改投影 = 改本文件 + 同步断言；
+  消费方（fastsearch）的接口见 ④。历史：P2-6/P2-7 覆盖主题同名模板，
+  「瘦身摘要 + 纳入产品」两条初衷已并入下文契约，不再单列。
 
-  字段名与 assets/js/fastsearch.js 的 keys 约定保持一致：
-    title / permalink / summary / content —— 额外补 tags / categories 供扩展检索。
-  保留主题的过滤语义：跳过 searchHidden、archives、search 三类页面。
+  ① 字段表——每条记录恰为六字段：
+     title       .Title
+     permalink   .Permalink
+     summary     .Summary | plainify | htmlUnescape | chomp，再 truncate 200
+     content     同一 $summary 再 truncate 320——与 summary 同源、不含正文
+                 （既有设计事实；任一侧的变换改变都会改变另一侧）
+     tags        .Params.tags | default slice
+     categories  .Params.categories | default slice
+
+  ② 排除规则——三类页面不进索引（缺一不可搜索）：
+     .Params.searchHidden 为真 / .Layout "archives" / .Layout "search"
+
+  ③ 产品投影——直读 site.Data.products，不过产品索引门禁
+     （kind 门禁归属见工单 0045；原 0019 边界注释见下方 with 块内）：
+     title = .name；permalink = <产品页 RelPermalink>#<.id>；
+     summary = .summary；
+     content = printf "%s %s %s" .name .summary (.scale | default "")；
+     tags / categories 硬编码 ["产品"]（术语：「产品」；「资源」为禁用词）。
+     与产品状态模块的不对称：product-state 的 name 有渲染用缺省值
+     "(未命名产品)"，本投影不收缺省——缺 name/summary 即构建失败（见 ⑤）。
+
+  ④ 接口条款——与 themes/maplemod/assets/js/fastsearch.js 的约定：
+     · fetch 路径 "../index.json"（相对 /search.html → 站根）；
+     · 默认 keys = [title, permalink, summary, content]，即投影六字段
+       去掉 tags / categories（扩展检索预留）；
+     · 交付面：hugo.toml [outputs] home 含 "JSON"；head.html 仅
+       .Layout == "search" 时 preload 本文件；三者任一坏掉，搜索静默
+       失效（无报错、无结果）；
+     · keys 与投影字段的对齐由 tests/assert_site_contracts.py 的
+       assert_search_projection 执法——改投影字段须同步 keys。
+
+  ⑤ 契约执法——投影守自己消费的字段（0043 决议①）：
+     · 产品缺 name    → errorf「搜索索引数据：%q 缺少 name 字段（投影必填，无缺省）」
+     · 产品缺 summary → errorf「搜索索引数据：%q 缺少 summary 字段（投影必填，无缺省）」
+     · listed / price / buy_url / kind 不在此处重验（产品链已有门禁）；
+     · 页面 / 派生侧不加投影层执法（如 SOP 注册表缺 intro 的 %!s()
+       污染归发布管线契约，ADR-0005）。
 */ -}}
 {{- $index := slice -}}
 {{- range site.RegularPages -}}
@@ -29,6 +65,11 @@
          kind 词汇门禁。门禁的实际覆盖靠「产品页恒渲染全量 → product-items 恒被调用」
          这一隐式依赖兜底；索引投影是否重复校验/如何校验，随候选 8「搜索契约」定案。 */ -}}
   {{- range site.Data.products -}}
+    {{- /* 投影守自己消费的字段（工单 0043 决议①）：name/summary 是投影的
+           必填项——product-state 的 name 有渲染用缺省值，但投影不收缺省，
+           缺字段即构建失败（消息前缀「搜索索引数据：」，钉子串见测试）。 */ -}}
+    {{- if not .name -}}{{ errorf "搜索索引数据：%q 缺少 name 字段（投影必填，无缺省）" .id }}{{- end -}}
+    {{- if not .summary -}}{{ errorf "搜索索引数据：%q 缺少 summary 字段（投影必填，无缺省）" .id }}{{- end -}}
     {{- $index = $index | append (dict
         "title" .name
         "permalink" (printf "%s#%s" $productsPermalink .id)

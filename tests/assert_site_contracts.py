@@ -115,6 +115,11 @@ BAD_CASE_EXPECT = {
     "unknown-kind": '产品索引数据："fx-unknown-kind" 的 kind="poster"',
     "missing-kind": '产品索引数据："fx-missing-kind" 的 kind="<缺失>"',
     "featured-not-bool": '产品索引数据："fx-featured-not-bool" 的 featured 必须是布尔值',
+    # 搜索索引投影契约（工单 0043 决议①：投影守自消费字段）。
+    # 钉子串取 errorf 消息的前缀子串（前缀 + 条目 id + 字段名；消息后缀
+    # 「（投影必填，无缺省）」不钉）——与产品侧钉子串的子串约定同款。
+    "search-missing-name": '搜索索引数据："fx-search-missing-name" 缺少 name',
+    "search-missing-summary": '搜索索引数据："fx-search-missing-summary" 缺少 summary',
 }
 
 # 调用方级契约（0015 决议：limit 负数即 errorf，不允许静默全量）。
@@ -128,6 +133,13 @@ CALLER_MISSING_ITEMS_EXPECT = "产品索引：items 必填"
 
 # uid 必填（工单 0017 决议：显式必填，删 default "mf-idx" 死缺省）。
 CALLER_MISSING_UID_EXPECT = "产品索引：uid 必填"
+
+# 搜索索引投影契约（工单 0043 决议③④）：每条记录恰为投影六字段；
+# fastsearch 默认 keys 是其子集，差集恰为扩展检索字段——对齐由静态断言
+# 执法，这是投影 docstring 接口条款（跨站点层投影 × 主题层消费方）唯一的牙。
+SEARCH_INDEX_FIELDS = {"title", "permalink", "summary", "content", "tags", "categories"}
+SEARCH_FASTSEARCH_KEYS = ["title", "permalink", "summary", "content"]
+SEARCH_EXTRA_FIELDS = {"tags", "categories"}
 
 # 主题层契约（0032 决议）的独立字面量：post_meta 的 title 属性必须是显式时区格式，
 # 不是 Go 的 time.Time.String()（后者由构建机时区决定输出字节）。
@@ -283,6 +295,31 @@ def assert_search_index(report, dest):
                  "" if not bad else "got: " + "; ".join(str(e.get("tags")) for e in bad))
 
 
+def assert_search_projection(report, dest):
+    """搜索索引投影的接口条款（工单 0043 决议④⑤）：条目字段集 + fastsearch keys 对齐。
+
+    两条独立字面量 + 一条关系断言：
+      ① 构建产物每条记录恰为投影六字段（契约定义处：index.json docstring 字段表）；
+      ② fastsearch.js 默认 options 块的 keys 为四字段字面量——读主题层源码，
+         接口条款横跨两层，断言语境在站点层套件（与 B7-B13 读主题文件同例）；
+      ③ 差集恰为 {tags, categories}（扩展检索预留）——接口条款本身。
+    变异检验：改投影字段集 / 改 fastsearch keys，两条各红过才收。
+    """
+    index = json.loads((dest / "index.json").read_text(encoding="utf-8"))
+    bad_shape = [e.get("permalink") for e in index if set(e) != SEARCH_INDEX_FIELDS]
+    report.check(f"索引 {len(index)} 条记录均为投影六字段", not bad_shape,
+                 f"字段集不符: {bad_shape[:3]}")
+    js = (REPO / "themes" / "maplemod" / "assets" / "js" / "fastsearch.js").read_text(encoding="utf-8")
+    m = re.search(r"let options = \{(.*?)\n\s*\};", js, re.S)
+    km = re.search(r"keys:\s*\[([^\]]*)\]", m.group(1), re.S) if m else None
+    keys = re.findall(r"'([^']+)'", km.group(1)) if km else []
+    report.check("fastsearch 默认 keys = [title, permalink, summary, content]",
+                 keys == SEARCH_FASTSEARCH_KEYS, f"got {keys}")
+    report.check("投影字段 - fastsearch keys = {tags, categories}（扩展检索预留）",
+                 SEARCH_INDEX_FIELDS - set(keys) == SEARCH_EXTRA_FIELDS,
+                 f"got {SEARCH_INDEX_FIELDS - set(keys)}")
+
+
 def assert_reveal_artifacts(report, dest):
     """reveal 协议产物面（工单 0022 决议④ B 类；施工期 provisional，待 0023 追认）。
 
@@ -387,6 +424,7 @@ def assert_fixture(report):
                  f"got index.html has mf-filter={has_filters_home}")
     assert_reveal_artifacts(report, dest)
     assert_search_index(report, dest)
+    assert_search_projection(report, dest)
 
 
 def assert_post_featured(report):
@@ -459,6 +497,45 @@ def assert_post_grid_empty(report):
                  parse_home_featured_slugs(html) == ["all-feat-b", "all-feat-a"]
                  and "mf-posts" not in html and parse_home_grid_slugs(html) == [],
                  "grid/featured state unexpected")
+
+
+def assert_search_fixture(report):
+    """文章侧投影形态与三类排除规则（工单 0043 决议⑤；0044 字段契约的落面）。
+
+    fixture：tests/fixtures/content-search——2 篇正常文章（alpha 短正文 /
+    beta 含 markdown）+ searchHidden / archives layout / search layout 三页。
+    复用 hugo.test.posts.toml + --contentDir 既有机制（0039 的 none/all/bad
+    变体同款），不新增构建配置；fixture 日期一律过去日（坑点 12：Hugo 不发布
+    未来内容）。期望值为独立字面量（fixture 正文是手写事实，不从实现重算）。
+    前提记录：fixture 无 products 页（site.GetPage "page" "products" 不成立），
+    故索引只应含文章条目——若将来给 fixture 加 products 页，「仅含 2 篇」
+    断言须同步改，否则会以「got N 条」误导排除规则的排障方向。
+    """
+    dest = TMP / "search-fixture"
+    proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", "tests/fixtures/content-search"])
+    report.check("搜索投影 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    index = json.loads((dest / "index.json").read_text(encoding="utf-8"))
+    urls = {e["permalink"] for e in index}
+    excluded = [u for u in ("fx-hidden", "fx-archives", "fx-search-page") if any(u in p for p in urls)]
+    report.check("三类排除全生效（searchHidden / archives / search layout 不进索引）",
+                 len(index) == 2 and not excluded, f"got {len(index)} 条, 漏排除: {excluded}")
+    alpha = next((e for e in index if "fx-proj-alpha" in (e.get("permalink") or "")), None)
+    report.check("alpha：summary == content == 正文（同源变换的直写字面量）",
+                 alpha is not None and alpha.get("summary") == "Alpha 投影摘要正文，含要点一与要点二。"
+                 and alpha.get("content") == alpha.get("summary"),
+                 f"got {alpha}")
+    beta = next((e for e in index if "fx-proj-beta" in (e.get("permalink") or "")), None)
+    report.check("beta：plainify 剥离 markdown 后的摘要（独立字面量）",
+                 beta is not None and beta.get("summary") == "Beta 粗体 与 链接 摘要，验证 plainify 剥离。",
+                 f"got {beta}")
+    report.check("fixture 文章的 tags/categories 原样投影",
+                 alpha is not None and alpha.get("tags") == ["投影", "Alpha"]
+                 and alpha.get("categories") == ["投影"]
+                 and beta is not None and beta.get("tags") == ["投影", "Beta"],
+                 f"got alpha={alpha and alpha.get('tags')}, beta={beta and beta.get('tags')}")
 
 
 def assert_empty_state(report):
@@ -685,6 +762,7 @@ def main():
     assert_post_featured_bad(report)
     assert_post_featured_bad_int(report)
     assert_post_grid_empty(report)
+    assert_search_fixture(report)
     assert_empty_state(report)
     assert_bad_cases(report)
     assert_bad_caller_limit(report)
