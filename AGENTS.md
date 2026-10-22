@@ -93,6 +93,9 @@ python3 tests/assert_site_contracts.py
 
 10. **reveal 协议契约纪律（ADR-0007）**：DOM 契约（class / data-* / aria / CSS 变量）的**定义处是 `assets/js/mf-reveal/` 各引擎文件头 docstring**，不在 CONTEXT.md 术语表（术语只放概念）。改契约 = 改 docstring + 同步断言，先跑 `npm test`（行为）与 `python3 tests/assert_site_contracts.py`（产物）。引擎经 `extend_footer` 的 js.Build 加载，不要改回内联 script；`extend_head` 的 class swap 是 ADR-0002 基线的一部分，保持内联。
 
+11. **文章精选纪律：单 seam 三片，不要绕（ADR-0009；候选 7 全决议）**：`layouts/partials/post-items.html`（数据准备）是首页精选链**唯一**读 `site.RegularPages` 并做 featured 判定 / 截断 / 补集处；入参只收 `limit`（负数 errorf），一次返回 `{featured, rest, all}`，**渲染不抽**（精选编号行 / 网格卡片两套形态，强行统一会引入模式参数）。三条硬约束：① **补集必须对「实际显示的精选」求**（`complement $featured $pages`）——用 `where "Params.featured" "!=" true` 会把被 limit 截断的文章从首页彻底抹掉（静默丢内容）；② featured **只认布尔 `true`**，非布尔即 errorf（`if .Params.featured` 禁止：字符串 `"false"` 是真值）；③ 精选区与网格在各自集合为空时**整块不渲染**。改本链先跑 `python3 tests/assert_site_contracts.py`。
+12. **测试 fixture 的时间陷阱**：Hugo 默认**不发布未来日期的内容**——fixture 文章写成未来日期会整篇消失，表现为「区块不渲染」的假绿（2026-10-22 踩过）。fixture 日期一律用过去的确定日；判定区块是否渲染要锚 DOM class（如 `class=mf-posts` / `entry-link`），不要用文案子串（首页数据条有「最近更新」等同名标签）。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。

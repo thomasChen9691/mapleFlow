@@ -2,8 +2,9 @@
 id: map-featured-mechanism
 title: 精选机制图（候选 7）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-21
+closed: 2026-10-22
 ---
 
 # 精选机制图（候选 7）
@@ -33,6 +34,8 @@ created: 2026-10-21
 - [文章精选的架构落点与 seam 划分](tickets/0038-article-featured-architecture-seam.md) — **单 seam 一次返回 `{featured, rest}` 两片**（同一谓词算补集，杜绝漏/重），**渲染不抽**（编号行 vs 卡片两套形态）；入参**只收 limit**（数据源固定、不留 source 注入位/featured 开关）；谓词与坏值校验只此一处、产品侧对称校验在 product-items；落站点层；docstring 为契约定义处；真实精选清单不锚。
 - [精选机制的测试缝与断言集](tickets/0039-featured-test-seam.md) — **新增独立 fixture 构建**（第三配置文件只设 contentDir，不动现有 48 条的构建环境；接受派生文在 fixture 内为 0）；**必锚四条**：过滤+缺省 / 截断（第 4 篇不上）/ **两片互斥无遗漏** / 空态+坏值 errorf；落点**并入并改名** `assert_site_contracts.py`（0032 命名债触发）；改名成本实测 **12 处活引用 + 约 25 处历史引用**（历史不改，AGENTS 加旧名指针），**搭施工批次的车**不单独提交；真实清单不锚；变异检验 + 独立字面量沿用。
 - [SOP 派生文是否参与精选](tickets/0040-sop-derived-featured.md) — **参与**（否则精选池只剩 4 篇手写、退化为「手写全集」）；注册表加可选 `featured` + `_content.gotmpl` **条件传键**（实测盲传 nil 会让 `isset` 为真、触发 0036 的坏值 errorf 误报）；**契约四类 → 五类**（三处同步）；首标 3 篇手写：`sop-ops-tools-index` / `k8s-common-commands` / `aiops-state-and-tools`；派生文路径由 `assert_sop_pipeline.py` 的 fixture 透传断言覆盖（不靠改内容凑测试）；golden 不受影响（已核）。
+
+- [收口：术语、导航与 ADR 耐久化](tickets/0041-closure-terminology-adr.md) — **新开 ADR-0009** 承载五组决策（字段契约 / 首页行为 / seam 形状 / 测试缝 / 派生文归属）；**ADR-0006 加指针行**（其 featured 语义被跨类统一扩展）；ADR-0005 指针已在施工期以补记落；**新增 AGENTS 坑点 11（文章精选纪律）+ 坑点 12（fixture 时间陷阱）**；术语不新增「精选池」类概念（既有「精选」条已在施工期补齐语义）；同场写 handoff + 地图 closed。**本题关闭 = 目的地到达。**
 
 ## Not yet specified
 

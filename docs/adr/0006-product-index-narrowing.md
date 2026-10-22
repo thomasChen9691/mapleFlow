@@ -2,6 +2,8 @@
 
 **状态**：已批准（2026-10-19）。决策过程见 wayfinder 地图「product-index 接口收窄图（候选 4）」（docs/wayfinder/map-product-index-narrowing.md，六工单全 closed）与工单 0015~0020 决议；本 ADR 是决策的耐久化记录——AGENTS.md §8.1 的阅读路由（CONTEXT.md + docs/adr/）不含 wayfinder 目录，决策必须活在 docs/adr/。产品状态模块本身见 ADR-0004（本 ADR 只收窄其下游的索引接口）。
 
+**2026-10-22 指针**：本 ADR 的 `featured` 语义已被 ADR-0009（精选机制）扩展为**跨类统一**——`featured` 只认布尔 `true`、非布尔即 errorf（产品侧原未定义坏值行为，ADR-0009 决策 1 补齐）；文章侧的字段契约、首页行为、seam 形状与测试缝均见 ADR-0009。本 ADR 正文不改（ADR 是历史记录）。
+
 ## 决策
 
 1. **双 seam 拆分**：
