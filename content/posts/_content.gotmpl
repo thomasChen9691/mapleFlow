@@ -19,6 +19,7 @@
        ③ 笔记首行无 H1 → 构建失败（标题唯一源）
        ④ 笔记 H1 之后无章节标题行 → 构建失败（正文变换的锚点；
           0010 质询裁为正式契约：注册即承诺可发布，空壳笔记是坏承诺）
+       ⑤ featured 存在但非布尔 → 构建失败（工单 0040 决议；缺省即非精选）
 
        目录契约（0009 决议）：注册表驱动——无条目的笔记 = 尚未发布的稿件，
        容许自然存在；已注册的草稿 = 条目 draft: true（不进生产构建，-D 出现）。
@@ -58,6 +59,16 @@
 {{- $restNoPara := replaceRE "\\A\\n[^\\n]*\\n\\n" "" $rest 1 -}}
 {{- $body := printf "%s\n\n%s" (trim $head "\n") (trim $restNoPara "\n") -}}
 {{- $content := printf "%s\n\n---\n\n%s" $entry.intro $body -}}
+{{- /* featured 可选（工单 0040 决议）：只认布尔；字段存在但非 bool 即 errorf。
+       必须**条件传键**——dict 里塞 nil 会让 isset 为真，下游的「非 bool 即失败」
+       会对每条未标条目误报（实测）。 */ -}}
+{{- $params := dict "categories" $entry.categories "tags" $entry.tags -}}
+{{- if isset $entry "featured" -}}
+  {{- if ne (printf "%T" $entry.featured) "bool" -}}
+    {{- errorf "SOP 发布管线：条目 %s 的 featured 必须是布尔值（got %T=%v）" $entry.slug $entry.featured $entry.featured -}}
+  {{- end -}}
+  {{- $params = merge $params (dict "featured" $entry.featured) -}}
+{{- end -}}
 {{- $.AddPage (dict
       "path" $entry.slug
       "title" $title
@@ -65,6 +76,6 @@
       "draft" $entry.draft
       "dates" (dict "date" ($entry.date | time.AsTime))
       "content" (dict "mediaType" "text/markdown" "value" $content)
-      "params" (dict "categories" $entry.categories "tags" $entry.tags)
+      "params" $params
     ) -}}
 {{- end -}}

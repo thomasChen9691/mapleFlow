@@ -9,7 +9,7 @@
  *
  * seam 约定（工单 0022 决议④ + 0023 决议，正式 seam）：
  *   A 类 9 项行为全部落本文件；样本 HTML 手写、镜像引擎 docstring 的 DOM 契约；
- *   渲染 seam 是否偏离契约由 B 类产物断言（tests/assert_product_states.py）守。
+ *   渲染 seam 是否偏离契约由 B 类产物断言（tests/assert_site_contracts.py）守。
  *   依赖由 package.json 声明（jsdom devDependency），CI 以 npm ci + 本文件为
  *   权威守门（0023 决议①），本地跑同一命令即可复现。
  *

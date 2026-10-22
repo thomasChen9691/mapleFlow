@@ -1,0 +1,6 @@
+# 文章精选 fixture 的构建配置（工单 0039 决议：独立构建，只覆盖 contentDir）。
+# uglyURLs / timeZone / pagination / menu 等继承 hugo.toml；dataDir 仍指向
+# tests/fixtures/data（含 SOP 注册表镜像，但本目录无 _content.gotmpl 适配器，
+# 故派生文为 0——精选断言只消费手写 fixture 文章）。
+# 对 ADR-0001 的加法：生产构建命令一字不动。
+contentDir = "tests/fixtures/content-posts"

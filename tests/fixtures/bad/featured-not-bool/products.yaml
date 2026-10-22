@@ -1,0 +1,15 @@
+# 契约坏用例：featured 写成字符串 "true"（YAML 里加引号）。
+# 其余字段全部合法，单独暴露「featured 必须是布尔」的跨类一致性契约
+# （工单 0036 决议：文章侧与产品侧同名同义，坏值构建失败而非静默排除）。
+# 期望：构建失败，错误信息含「产品索引数据：」与条目 id。
+- id: fx-featured-not-bool
+  name: 夹具·featured 非布尔
+  kind: document
+  summary: featured 写成字符串，必须构建失败。
+  version: ""
+  scale: 1 份
+  updated: 2026-10-21
+  price: 0
+  listed: false
+  buy_url: ""
+  featured: "true"

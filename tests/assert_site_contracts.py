@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""产品状态模块与产品索引接口的产物断言（ADR-0004；wayfinder 工单 0002/0005 定案；
-候选 4 施工：工单 0015/0016 决议 + 评审加固）。
+"""站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖五类职责：
+产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B13（ADR-0008）
+· reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
     与 index.html（「可下载产品」计数、首页精选区 featured 分栏）
+  · 文章精选 seam —— 独立 fixture 构建（tests/hugo.test.posts.toml，只覆盖
+    contentDir）：首页精选区的 3 条 featured、与「最近更新」网格互斥且并集全量、
+    0 篇 featured 时精选区整块不渲染、featured 非布尔即构建失败
   · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
-    逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）
-    与产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
+    逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）、
+    产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
   · 调用方 seam —— 经真实调用链（短代码 / 直接调 partial）触发的契约失败
   · 空态 seam —— 产品数据整体缺席时渲染「暂无资源」而非崩溃或静默空页
   · 真实数据 seam —— 生产配置构建的 products.html / index.html，线上回归守门
@@ -17,8 +22,8 @@
     （候选 6 工单 0032 决议；B7-B13，逐条变异检验）
 
 用法：
-  python3 tests/assert_product_states.py          # 全套
-  python3 tests/assert_product_states.py --quick  # 跳过真实数据构建（本地快速迭代）
+  python3 tests/assert_site_contracts.py          # 全套
+  python3 tests/assert_site_contracts.py --quick  # 跳过真实数据构建（本地快速迭代）
 
 Hugo 版本纪律：模块必须保持 0.164 语义（单变量 + 根级单条 return）。本机 hugo
 可能为 0.167 而 CI 钉 0.164——0.164 风格代码两端一致，但 0.166+ 的条件多
@@ -84,6 +89,21 @@ REAL_LISTED_COUNT = 0      # 迁移后全部未上架（占位），可下载产
 # 只剩真实数据这一层回归保护——3 条 featured（yaml 序），limit=3 不截断但保过滤。
 REAL_HOME_FEATURED_IDS = ["n8n-dify-workflows", "sre-learning-docs", "sre-interview-bank"]
 
+# 文章精选 fixture（工单 0039 决议：独立构建，contentDir 覆盖；不动既有 fixture 环境）。
+# 6 篇：4 篇 featured（limit=3 截断 1 篇）+ 1 篇未声明 + 1 篇显式 false。
+# 最新一篇（02-10）故意不标 featured——用于区分「按日期取前 3」（旧行为）与「真精选」。
+POSTS_FIXTURE_CONFIG = "hugo.toml,tests/hugo.test.posts.toml"
+POSTS_FIXTURE_FEATURED = ["fx-post-feat-d", "fx-post-feat-c", "fx-post-feat-b"]
+POSTS_FIXTURE_TRUNCATED = "fx-post-feat-a"
+POSTS_FIXTURE_REST = ["fx-post-newest", "fx-post-false", "fx-post-feat-a"]
+POSTS_FIXTURE_ALL = sorted(["fx-post-feat-a", "fx-post-feat-b", "fx-post-feat-c",
+                            "fx-post-feat-d", "fx-post-false", "fx-post-newest"])
+POSTS_EMPTY_CONTENT = "tests/fixtures/content-posts-none"  # 两篇均未标 featured
+POSTS_ALL_FEATURED_CONTENT = "tests/fixtures/content-posts-all"  # 两篇都标 featured
+POSTS_BAD_CONTENT = "tests/fixtures/content-posts-bad"     # featured 写成字符串
+POSTS_BAD_INT_CONTENT = "tests/fixtures/content-posts-bad-int"  # featured 写成整数
+POSTS_BAD_FEATURED_EXPECT = "文章精选数据："
+
 # 契约坏用例的逐条期望子串（0018 事实底座：旧判定只匹配模块统一前缀，偏弱；
 # 此表按用例钉归属，与 SOP 脚本的逐用例子串登记同型）。缺省沿用产品状态模块前缀。
 # 0016 决议：产品索引数据门禁的消息必须含产品 id 与坏 kind——断言子串照钉。
@@ -94,6 +114,7 @@ BAD_CASE_EXPECT = {
     "unlisted-with-url": "产品状态：",
     "unknown-kind": '产品索引数据："fx-unknown-kind" 的 kind="poster"',
     "missing-kind": '产品索引数据："fx-missing-kind" 的 kind="<缺失>"',
+    "featured-not-bool": '产品索引数据："fx-featured-not-bool" 的 featured 必须是布尔值',
 }
 
 # 调用方级契约（0015 决议：limit 负数即 errorf，不允许静默全量）。
@@ -191,6 +212,32 @@ def parse_rows(path):
     parser = ProductRowParser()
     parser.feed(path.read_text(encoding="utf-8"))
     return parser.rows
+
+
+def _post_slug(href):
+    """把文章链接归一成 slug（fixture 断言用；uglyURLs 下形如 /posts/<slug>.html）。"""
+    m = re.search(r"/posts/([^/#?]+)\.html", href)
+    return m.group(1) if m else href
+
+
+def parse_home_featured_slugs(html):
+    """首页「精选文章」区的 slug 序。
+
+    按标题锚定区块，不取「第一个 mf-rows」——产品精选区同用该 class，
+    0 篇 featured 时第一个 mf-rows 就是产品区（会把空态断言变成假红）。
+    """
+    anchor = re.search(r"精选文章", html)
+    if not anchor:
+        return []
+    block = re.search(r'<ol class=["\']?mf-rows["\']?>(.*?)</ol>', html[anchor.start():], re.S)
+    if not block:
+        return []
+    return [_post_slug(h) for h in re.findall(r'mf-row-title"><a href=["\']?([^"\'> ]+)', block.group(1))]
+
+
+def parse_home_grid_slugs(html):
+    """首页「最近更新」卡片网格的 slug 序（entry-link 是整卡点击层）。"""
+    return [_post_slug(h) for h in re.findall(r'class="entry-link"[^>]*href="([^"]+)"', html)]
 
 
 def parse_spec_count(html, label_contains):
@@ -340,6 +387,78 @@ def assert_fixture(report):
                  f"got index.html has mf-filter={has_filters_home}")
     assert_reveal_artifacts(report, dest)
     assert_search_index(report, dest)
+
+
+def assert_post_featured(report):
+    """文章精选（工单 0036-0039 决议）：fixture 独立构建，断言首页精选区与网格两片。
+
+    期望值为独立字面量（fixture 的 slug 与日期是手写事实），不从实现重算。
+    """
+    dest = TMP / "posts-fixture"
+    proc = build(POSTS_FIXTURE_CONFIG, dest)
+    report.check("精选 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    html = (dest / "index.html").read_text(encoding="utf-8")
+    featured = parse_home_featured_slugs(html)
+    report.check("精选区 = 3 条 featured 按日期倒序（limit 截断生效）",
+                 featured == POSTS_FIXTURE_FEATURED, f"got {featured}")
+    report.check(f"第 4 条 featured 被截断不上精选区（{POSTS_FIXTURE_TRUNCATED}）",
+                 POSTS_FIXTURE_TRUNCATED not in featured, f"got {featured}")
+    grid = parse_home_grid_slugs(html)
+    report.check("最近更新网格 = 未入选文章（剔除精选，按日期倒序）",
+                 grid == POSTS_FIXTURE_REST, f"got {grid}")
+    overlap = sorted(set(featured) & set(grid))
+    report.check("精选与网格互斥（同页不重复展示）", not overlap, f"overlap {overlap}")
+    union = sorted(set(featured) | set(grid))
+    report.check(f"精选 ∪ 网格 = 全量 {len(POSTS_FIXTURE_ALL)} 篇（无遗漏）",
+                 union == POSTS_FIXTURE_ALL, f"got {union}")
+
+
+def assert_post_featured_empty(report):
+    """0 篇 featured 时精选区整块不渲染（0037 决议：不写空态文案）。"""
+    dest = TMP / "posts-fixture-none"
+    proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", POSTS_EMPTY_CONTENT])
+    report.check("无 featured fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    html = (dest / "index.html").read_text(encoding="utf-8")
+    report.check("0 篇 featured → 精选区整块不渲染（无标题、无空态文案）",
+                 "精选文章" not in html and parse_home_featured_slugs(html) == [],
+                 "区块仍渲染（标题在或行非空）")
+
+
+def assert_post_featured_bad(report):
+    """featured 写成非布尔 → 构建失败（0036 决议：静默排除属静默失效类）。"""
+    proc = build(POSTS_FIXTURE_CONFIG, TMP / "posts-fixture-bad",
+                 ["--contentDir", POSTS_BAD_CONTENT])
+    report_build_failure(report, "文章精选[featured 非布尔·字符串]", proc, POSTS_BAD_FEATURED_EXPECT)
+
+
+def assert_post_featured_bad_int(report):
+    """同上，整数坏值单开一例（0039 必锚④点名「字符串/整数」两类）。"""
+    proc = build(POSTS_FIXTURE_CONFIG, TMP / "posts-fixture-bad-int",
+                 ["--contentDir", POSTS_BAD_INT_CONTENT])
+    report_build_failure(report, "文章精选[featured 非布尔·整数]", proc, POSTS_BAD_FEATURED_EXPECT)
+
+
+def assert_post_grid_empty(report):
+    """全部文章均入选时，「最近更新」网格整块不渲染（0037 决议第 1 条边界）。"""
+    dest = TMP / "posts-fixture-all"
+    proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", POSTS_ALL_FEATURED_CONTENT])
+    report.check("全 featured fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    html = (dest / "index.html").read_text(encoding="utf-8")
+    # 注意：不能用「最近更新」文案子串判定——数据条的同名标签（月度更新）恒在。
+    # 判定锚点是网格容器 class=mf-posts 与卡片点击层 entry-link。
+    report.check("全部入选 → 精选区渲染 2 行、网格整块不渲染",
+                 parse_home_featured_slugs(html) == ["all-feat-b", "all-feat-a"]
+                 and "mf-posts" not in html and parse_home_grid_slugs(html) == [],
+                 "grid/featured state unexpected")
 
 
 def assert_empty_state(report):
@@ -561,6 +680,11 @@ def main():
     report = Report()
     assert_single_copy(report)
     assert_fixture(report)
+    assert_post_featured(report)
+    assert_post_featured_empty(report)
+    assert_post_featured_bad(report)
+    assert_post_featured_bad_int(report)
+    assert_post_grid_empty(report)
     assert_empty_state(report)
     assert_bad_cases(report)
     assert_bad_caller_limit(report)

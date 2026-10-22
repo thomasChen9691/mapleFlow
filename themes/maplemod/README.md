@@ -35,7 +35,7 @@
   `index.html`、`_default/rss.xml`、`_default/index.json`、`product-state/items/index`、
   `shortcodes/product-index.html`）＝内容与数据。
 - 判据：**因视觉 / 骨架 / 交互而变 → 改这里；因内容策略 / 数据结构而变 → 改站点层。**
-- 两层**不得存在同相对路径文件**——`tests/assert_product_states.py` 的 B13 断言守着
+- 两层**不得存在同相对路径文件**——`tests/assert_site_contracts.py` 的 B13 断言守着
   这条线（覆盖层复活即红）。领域定义见根目录 `CONTEXT.md` 的「主题层」。
 
 ## 修剪与合并记录
@@ -54,6 +54,6 @@
 
 ## 测试
 
-`python3 tests/assert_product_states.py` 的 B7-B13 守主题契约：全站 no-js 基线、
+`python3 tests/assert_site_contracts.py` 的 B7-B13 守主题契约：全站 no-js 基线、
 post_meta 时区格式、菜单渲染序、RSS 只收 posts、search 页挂点、ogImage 兜底、
 站点/主题单副本不变量。改本目录前先跑它。

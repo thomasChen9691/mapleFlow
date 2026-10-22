@@ -1,0 +1,51 @@
+{{- /*
+  post-items（partial）—— 文章精选的**数据准备 seam**
+  ============================================================
+  工单 0038 决议：文章侧的数据准备只此一处。本 partial 是首页精选渲染链中
+  **唯一**读 site.RegularPages 并做 featured 判定/截断/补集的地方；
+  渲染形态（编号行 vs 卡片网格）不归本文件，由调用方各自保留。
+
+  入参（dict）：
+    limit  int   精选片最多取 N 篇（缺省或 0 = 全部；负数 → errorf）
+
+  输出（dict）：
+    featured  slice  已标精选的文章，按日期倒序，limit 截断后
+    rest      slice  其余文章，按日期倒序；与 featured 互斥、并集为全量
+                     （首页「最近更新」网格分页建在这一片上，剔除才生效）
+    all       slice  全量可发布文章，按日期倒序（计数用，不参与分页）
+
+  契约（工单 0036 决议；构建期 errorf，不给缺省兜底）：
+    · featured 只认布尔 true。字段存在但类型非 bool → errorf
+      （实测：where "Params.featured" true 对字符串 "true"/"false"、yes、1
+       全不匹配——静默排除属静默失效类，故显式执法；而 if .Params.featured
+       会把字符串 "false" 当真值，禁止使用。）
+    · limit 为负数 → errorf（产品侧 0015 决议同款；负数静默全量属静默失效）
+
+  调用方（不自行 where/first 推导）：
+    · layouts/index.html（首页精选文章区 + 最近更新网格）
+*/ -}}
+{{- $limit := .limit | default 0 -}}
+{{- $pages := where site.RegularPages "Type" "posts" -}}
+{{- if not $pages }}{{ $pages = site.RegularPages }}{{ end -}}
+{{- $pages = $pages.ByDate.Reverse -}}
+
+{{- range $pages -}}
+  {{- if isset .Params "featured" -}}
+    {{- if ne (printf "%T" .Params.featured) "bool" -}}
+      {{- errorf "文章精选数据：%s 的 featured 必须是布尔值（got %T=%v）" .RelPermalink .Params.featured .Params.featured -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if lt (int $limit) 0 -}}
+  {{- errorf "文章精选数据：limit 不能为负数（got %d）" (int $limit) -}}
+{{- end -}}
+
+{{- $featured := where $pages "Params.featured" true -}}
+{{- if gt (int $limit) 0 -}}
+  {{- $featured = $featured | first (int $limit) -}}
+{{- end -}}
+{{- /* 补集对「实际显示的精选」求，不是对全部 featured 求：被 limit 截断的
+       featured 文章必须回落到网格，否则它在首页彻底消失（静默丢内容）。 */ -}}
+{{- $rest := complement $featured $pages -}}
+{{- return (dict "featured" $featured "rest" $rest "all" $pages) -}}

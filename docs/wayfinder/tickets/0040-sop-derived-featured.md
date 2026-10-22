@@ -34,3 +34,5 @@ SOP 派生文（6 篇，由 `data/sop.yaml` 注册表 + `docs/sop/` 源笔记构
 5. **补覆盖（防止「能力预留但零使用零测试」）**：注册表路径在 `tests/assert_sop_pipeline.py` 加一条 fixture 透传断言——fixture 条目带 `featured: true` → 派生页 `params.featured` 为 bool `true`；不靠改真实内容去凑测试。
 6. **golden 不受影响**（已核 `assert_sop_pipeline.py:310-320`）：golden 只比对 `<article>` HTML、title、description、date，`params.featured` 不进这些产物。
 7. **下游**：0039 的 fixture 不需要造派生文；0041 收口时 ADR-0009 须记「SOP 契约四类 → 五类」。
+
+**施工补记（2026-10-22 落地）**：透传测试改为覆盖 `contentDir`（`tests/fixtures/featured/content` 内含适配器副本），不再依赖真实文章的日期排序——原实现下 fixture 条目能否进精选区取决于真实内容，属「真实清单不锚」的翻版。适配器副本与真实 seam 的漂移由一条逐字节比对断言守门（副本 = 基建，必须防漂移）。

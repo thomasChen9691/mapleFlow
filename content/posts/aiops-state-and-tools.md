@@ -2,6 +2,7 @@
 title = 'AIOps：技术现状与常用工具实践'
 date = '2026-01-27T00:00:00+08:00'
 draft = false
+featured = true
 categories = ['aiops']
 tags = ['AIOps', '可观测性', '智能运维', '监控', '日志']
 description = '梳理 AIOps 的核心能力、典型工具与落地实践，从概念走向智能运维。'

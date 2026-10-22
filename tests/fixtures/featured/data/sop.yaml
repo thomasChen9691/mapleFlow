@@ -1,0 +1,11 @@
+# 行为 fixture：注册表 featured 透传（工单 0040 决议）——
+# featured: true 的派生文进首页精选区；未标的进不了。
+- slug: sop-featured-entry
+  note: FEAT.md
+  date: 2026-04-01T00:00:00+08:00
+  categories: [运维]
+  featured: true
+- slug: sop-plain-entry
+  note: PLAIN.md
+  date: 2026-04-02T00:00:00+08:00
+  categories: [运维]

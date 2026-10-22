@@ -31,7 +31,7 @@ _Avoid_: 私密、隐藏、未发布
 _Avoid_: 同步脚本、发布系统
 
 **注册表**：
-data/sop.yaml，SOP 文的发布声明：slug/note/date/categories 必填，tags 可缺节，draft: true 表草稿。条目与笔记的配对由构建期契约（errorf）执法，不给缺省值。
+data/sop.yaml，SOP 文的发布声明：slug/note/date/categories 必填，tags 可缺节，draft: true 表草稿，featured 可选（缺省即非精选，非布尔即构建失败）。条目与笔记的配对由构建期契约（errorf）执法，不给缺省值。
 _Avoid_: 配置文件、清单
 
 ## 产品
@@ -77,7 +77,7 @@ _Avoid_: 动效系统、动画库、reveal 组件
 ## 挑选机制
 
 **精选 (Featured)**：
-由 featured 标记驱动的内容挑选机制，适用于文章与产品两类内容；未被标记的内容不参与精选。
+由 featured 标记驱动的内容挑选机制，适用于文章与产品两类内容；未被标记的内容不参与精选。**未声明即非精选；标记必须是布尔 `true`（坏值即构建失败）**。文章侧首页「精选文章」区与「最近更新」网格互斥：入选文章从网格剔除，被条数截断的精选回落到网格。
 _Avoid_: 推荐、置顶、热门
 
 ## 站点架构

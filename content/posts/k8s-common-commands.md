@@ -2,6 +2,7 @@
 title = 'Kubernetes 常见命令与日常用法'
 date = '2026-01-26T23:45:00+08:00'
 draft = false
+featured = true
 categories = ['k8s']
 tags = ['Kubernetes', '容器编排', '运维']
 description = 'kubectl 常用命令速查：集群、工作负载、配置与排错的日常运维。'

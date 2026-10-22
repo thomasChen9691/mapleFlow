@@ -56,11 +56,11 @@ jobs:
         # （2026-09-20 审计中发现的 posts/aiop.html 即此类残留）。
         run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
-      - name: Assert product states
-        # 产品状态模块的产物断言（ADR-0004 / wayfinder 工单 0005）：
+      - name: Assert site contracts
+        # 站点契约的产物断言（产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 / 文章精选）。
         # fixture 全分支 + 真实数据线上回归 + 契约坏用例。失败即阻断部署——
         # 不让失实的「可下载产品」数字上线（2026-10 首页 5-vs-0 事故的守门）。
-        run: python3 tests/assert_product_states.py
+        run: python3 tests/assert_site_contracts.py
 
       - name: Assert SOP pipeline
         # SOP 发布管线的产物断言（wayfinder 工单 0008/0009 决议）：

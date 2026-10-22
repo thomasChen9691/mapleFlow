@@ -33,6 +33,13 @@
   {{- if not (in (slice "workflow" "document" "question-bank") $p.kind) -}}
     {{- errorf "产品索引数据：%q 的 kind=%q 不在交付形态封闭词表（workflow/document/question-bank）内" $id $kind -}}
   {{- end -}}
+  {{- /* featured 只认布尔（工单 0036 决议：与文章侧同名同义；坏值构建失败，
+         where 严格匹配对字符串/整数会静默排除，属静默失效类）。 */ -}}
+  {{- if isset $p "featured" -}}
+    {{- if ne (printf "%T" $p.featured) "bool" -}}
+      {{- errorf "产品索引数据：%q 的 featured 必须是布尔值（got %T=%v）" $id $p.featured $p.featured -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
 
 {{- if $featured }}{{ $items = where $items "featured" true }}{{ end -}}

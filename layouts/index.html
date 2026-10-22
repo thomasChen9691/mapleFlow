@@ -6,9 +6,11 @@
 
 {{- define "main" }}
 
-{{- $pages := where site.RegularPages "Type" "posts" -}}
-{{- if not $pages }}{{ $pages = site.RegularPages }}{{ end -}}
-{{- $paginator := .Paginate $pages -}}
+{{- $postSets := partial "post-items.html" (dict "limit" 3) -}}
+{{- $pages := $postSets.all -}}
+{{- $featuredPosts := $postSets.featured -}}
+{{- /* 网格分页建在补集上：精选 3 篇从「最近更新」剔除，避免同页重复 */ -}}
+{{- $paginator := .Paginate $postSets.rest -}}
 {{- $postsPage := site.GetPage "section" "posts" -}}
 {{- $productsPage := site.GetPage "page" "products" -}}
 {{- $aboutPage := site.GetPage "page" "about" -}}
@@ -69,7 +71,8 @@
   </div>
 </section>
 
-{{- /* ---------- 精选文章 ---------- */ -}}
+{{- /* ---------- 精选文章（0 篇 featured 时整块不渲染，不写空态文案） ---------- */ -}}
+{{- if $featuredPosts }}
 <section class="mf-section">
   <div class="mf-section-head">
     <h2>精选文章</h2>
@@ -78,7 +81,7 @@
     {{- end }}
   </div>
   <ol class="mf-rows">
-    {{- range $i, $p := first 3 ($pages.ByDate.Reverse) }}
+    {{- range $i, $p := $featuredPosts }}
     <li class="mf-row reveal">
       <div class="mf-row-num">{{ printf "%02d" (add $i 1) }}</div>
       <div class="mf-row-main">
@@ -98,6 +101,7 @@
     {{- end }}
   </ol>
 </section>
+{{- end }}
 
 {{- /* ---------- 精选资源（与产品页共用同一份数据与渲染） ---------- */ -}}
 <section class="mf-section">
@@ -113,7 +117,8 @@
 
 {{- end }}{{/* end 仅第 1 页显示 */}}
 
-{{- /* ---------- 文章列表（每页都显示） ---------- */ -}}
+{{- /* ---------- 文章列表（每页都显示；补集为空时整块不渲染） ---------- */ -}}
+{{- if $postSets.rest }}
 <section class="mf-section">
   <div class="mf-section-head">
     <h2>{{ if eq $paginator.PageNumber 1 }}最近更新{{ else }}文章{{ end }}</h2>
@@ -137,6 +142,7 @@
     {{- end }}
   </div>
 </section>
+{{- end }}{{/* end 补集非空 */}}
 
 {{- if gt $paginator.TotalPages 1 }}
 <footer class="page-footer">

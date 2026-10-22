@@ -33,7 +33,7 @@ categories/tags、description 顶层）。本机 hugo 可能为 0.167 而 CI 钉
 为迁移前线上页面的直捕（出处见 tests/fixtures/sop-golden/README.md）。
 均非对适配器逻辑的重算，防同义反复测试。
 
-tests/tmp 为本脚本独占（启动即清空）；与 assert_product_states.py 共享
+tests/tmp 为本脚本独占（启动即清空）；与 assert_site_contracts.py 共享
 该目录，两脚本须顺序运行（CI 即顺序），勿并发。
 """
 
@@ -56,6 +56,7 @@ TMP = REPO / "tests" / "tmp"
 REGISTRY = REPO / "data" / "sop.yaml"
 BAD_ROOT = REPO / "tests" / "fixtures" / "bad"
 DRAFT_ROOT = REPO / "tests" / "fixtures" / "draft"
+FEATURED_ROOT = REPO / "tests" / "fixtures" / "featured"
 NOTES_DIR = REPO / "docs" / "sop"  # 镜像 hugo.toml 的 params.sopNotesDir 缺省值
 REAL_CONFIG = "hugo.toml,config.production.toml"
 PIPELINE_MARKER = "SOP 发布管线"
@@ -86,7 +87,7 @@ BAD_CASE_EXPECT = {
 def parse_registry(path):
     """解析 data/sop.yaml 的扁平 schema：list of {key: scalar | [inline list]}。
 
-    只用 stdlib——CI 的 python3 不保证有 PyYAML，与 assert_product_states.py
+    只用 stdlib——CI 的 python3 不保证有 PyYAML，与 assert_site_contracts.py
     的零依赖纪律一致。schema 由本项目控制：值为标量或行内列表，不含 '#'、
     无多行块值；含冒号的值仅限时间串（partition 取首个冒号）。
     """
@@ -377,6 +378,47 @@ def assert_readme(report):
                  any("MAPLEFLOW_BLOG_SOP" in line and "不发布" in line for line in readme.splitlines()))
 
 
+def assert_featured_passthrough(report):
+    """注册表 featured 透传（工单 0040 决议）：featured: true 的派生文进首页精选区。
+
+    观察点是**消费方**（首页精选区），不是内部 params——契约的价值在行为。
+    未标 featured 的派生文不得进精选区（缺省即非精选）。
+
+    fixture 同时覆盖 contentDir（tests/fixtures/featured/content，内含适配器
+    副本）——否则首页精选区混入真实文章的 featured，本用例能否通过取决于
+    真实内容的日期排序（0039-4「真实清单不锚」的翻版）。
+    适配器副本与真实 seam 的漂移由下方「副本一致」断言守门。
+    """
+    seam = REPO / "content" / "posts" / "_content.gotmpl"
+    copy = FEATURED_ROOT / "content" / "posts" / "_content.gotmpl"
+    report.check("fixture 适配器副本与真实 seam 逐字节一致（防漂移）",
+                 copy.is_file() and copy.read_bytes() == seam.read_bytes(),
+                 "副本漂移：请重新 cp content/posts/_content.gotmpl 到 fixture")
+    cfg = TMP / "featured.toml"
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    cfg.write_text(
+        'dataDir = "%s/data"\ncontentDir = "%s/content"\nrefLinksErrorLevel = "WARNING"\n'
+        '[params]\nsopNotesDir = "%s/notes"\n'
+        % (FEATURED_ROOT.relative_to(REPO).as_posix(),
+           FEATURED_ROOT.relative_to(REPO).as_posix(),
+           FEATURED_ROOT.relative_to(REPO).as_posix()),
+        encoding="utf-8")
+    dest = TMP / "featured"
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO).as_posix(), dest)
+    report.check("featured 透传 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-300:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    html = (dest / "index.html").read_text(encoding="utf-8")
+    # 本套件按 CI 生产命令构建（--minify），属性无引号：class=mf-rows 形态。
+    block = re.search(r'<ol class=["\']?mf-rows["\']?>(.*?)</ol>', html, re.S)
+    slugs = re.findall(r'href=["\']?[^"\' >]*posts/([^"\' >]+)\.html', block.group(1)) if block else []
+    report.check("注册表 featured: true → 派生文进首页精选区",
+                 "sop-featured-entry" in slugs, f"got {slugs}")
+    report.check("未标 featured 的派生文不进精选区（缺省即非精选）",
+                 "sop-plain-entry" not in slugs, f"got {slugs}")
+
+
 def assert_ref_links(report):
     """索引文章的 ref 解析到冻结 URL，且目标页面真实构建（0009 连带裁定）。"""
     page = TMP / "real" / "posts" / "sop-ops-tools-index.html"
@@ -435,6 +477,7 @@ def main():
         assert_search_index(report)
     assert_bad_cases(report)
     assert_draft(report)
+    assert_featured_passthrough(report)
     assert_ci_wiring(report)
 
     width = max(len(name) for _, name, _ in report.items)
