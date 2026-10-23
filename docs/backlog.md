@@ -119,7 +119,9 @@ WARN deprecated: .Site.Data                  … Use hugo.Data instead          
 - ② 首页数据条是否区分精选（「N 篇技术文章」是否另加「精选 N 篇」）；
 - ③ 分类页 / 标签页是否消费精选（排序是否 featured 优先）。
 - **性质**：① 紧邻视觉层（视觉调值本身 out of scope）；②③ 是编排策略。三者都要先定目的地再动工。
-- **排图（2026-10-23）**：地图 `docs/wayfinder/map-featured-fog-zones.md` 已开，工单 0055-0059 已建；事实底座工单 0055 已决（`research/0055-featured-fog-facts.md`，缺口 8 条）；frontier = 0056（徽标）/ 0057（数据条）/ 0058（分类页）三张 grilling 工单待认领，0059（收口） blocked。按工单纪律一次会话解决一张。
+- **排图（2026-10-23）**：地图 `docs/wayfinder/map-featured-fog-zones.md` 已开，工单 0055-0060 已建；事实底座工单 0055 已决（`research/0055-featured-fog-facts.md`，缺口 8 条）。
+- **质询（2026-10-23，项目负责人七问全决）**：**0056 做**——精选标识进三面（文章页 / 列表卡片 / 首页网格，精选行不加），契约 = 主题层新 partial `featured-badge.html`（docstring 定义处、三处调用、复刻 post_meta 先例），fixture 三面全锚 + 变异检验、真实不锚；**0057 不做**（负向：数据条维持站点总量口径，抽象层不分层 / 信息冗余 / 断言经济学）；**0058 不做**（负向：分类/标签/posts 维持日期倒序）+ seam 边界 docstring 收紧（落地归 0059）。
+- **当前 frontier**：0059（收口：术语/导航/ADR 耐久化 + 0058 转入的 docstring 收紧）/ 0060（meta 层是否投影精选，0056 毕业后新开）。施工（partial + 三处调用 + 断言）待项目负责人指示后展开。
 
 ### 14. [已完成] 「后端重启」口径待澄清（ADR-0003 与 ADR-0006 冲突）——已加指针行
 

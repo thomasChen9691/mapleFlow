@@ -16,6 +16,7 @@ created: 2026-10-23
 
 - **边界（开图时与项目负责人钉死，2026-10-23）**：本图 = `docs/backlog.md` 第 13 项 = ADR-0009 Consequences 边界条留的三条雾区（① 徽标内容层呈现 ② 首页数据条区分精选 ③ 分类/标签页消费精选）；**不重开 ADR-0009 已锁五组决策**（字段契约 / 首页精选行为 / seam 形状 / 测试缝 / 派生文归属——那是本图的输入，不是重开对象）；产品侧 featured 契约不重开（ADR-0006 已锁）；搜索索引不投影 featured 已由 ADR-0010 定案（不属本图）；不替换/不改精选实现本身；**视觉 / CSS 调值 out of scope**（本图只定语义契约与 DOM 契约，样式值归视觉层）；不随图做内容填充（buy_url/listed、about.md、socialIcons）。
 - **工单纪律（项目负责人开图时明确）**：每张工单是**待决策问题**、不是施工任务；一次会话最多解决一张（research 除外）；地图是索引不是仓库，决策只存在于工单。
+- **0060（meta 投影）的范围说明**：0056 定案（精选标识进文章页）后毕业的新观察点——meta 层投影问由「不可表述」变为可精确表述，属本图范围内（destination 三面的直接后果，非范围外新需求）；未认领，frontier 工单。
 - 闭卷 ADR：0002（no-js 渐进增强基线）、0004（**首页数据条独立于产品索引链**的先例——计数口径归站点层 index.html，模板不自行推导产品状态）、0005（SOP 发布管线——精选池含派生文）、0006（产品侧 featured 已锁）、0008（**分层判据：分类/标签页与文章页渲染在主题层 `list.html`/`single.html`——站点层覆盖还是主题层直改，是 0058/0056 的真问题；两层不得存在同相对路径文件**）、0009（本图主输入）、0010（投影六字段冻结、featured 不投影已定）。
 - Hugo 0.164 语义编写（CI 钉版）：0.166+ 的条件多 return 写法本地过、CI 红，禁止。
 - 测试总原则：Hugo 无模板单测，静态产物只能 build-then-assert；fixture 基建单份（三套构建：dataDir fixture / contentDir fixture / 真实数据——**ADR-0009 决策 4 为精选新增的 contentDir fixture 是现成基础，不新开第四套**）；变异检验 + 独立字面量期望值；fixture 日期一律过去日（Hugo 不发布未来内容 → 假绿，坑点 12）。
@@ -29,15 +30,20 @@ created: 2026-10-23
 
 <!-- 索引：每个已决工单一行 gist + 链接；决策详情只存在于工单，此处不重述。 -->
 
-- [三条雾区现状事实底座（盘点）](tickets/0055-featured-fog-facts.md) — 数据条四项**只有「可下载产品」有断言**（「篇技术文章」= post-items 的 all 片含派生文、分类数、最近更新三项无牙）；`/posts/`、分类页、标签页**同走主题层 `list.html`**（union→Paginate，无显式排序、站内无 weight 字段故实际=日期倒序），列表/term 页**零专属断言**；徽标先例现成——`single.html` 与 `list.html` 均有 Draft `entry-hint` 徽标（DOM+CSS 齐备但无测试引用）；`post-items.html` docstring 只登记唯一调用方（index.html）、**无硬边界守卫**；fixture 齐备（4 featured + false + newest + bad/bad-int 两坏例）但 SOP 侧坏值无 fixture、真实 SOP 条目零精选。缺口 8 条（详见工单 Resolution）。**frontier = 0056 / 0057 / 0058（均 blocked_by 0055，已解锁、未认领）。**
+- [三条雾区现状事实底座（盘点）](tickets/0055-featured-fog-facts.md) — 数据条四项**只有「可下载产品」有断言**（「篇技术文章」= post-items 的 all 片含派生文、分类数、最近更新三项无牙）；`/posts/`、分类页、标签页**同走主题层 `list.html`**（union→Paginate，无显式排序、站内无 weight 字段故实际=日期倒序），列表/term 页**零专属断言**；徽标先例现成——`single.html` 与 `list.html` 均有 Draft `entry-hint` 徽标（DOM+CSS 齐备但无测试引用）；`post-items.html` docstring 只登记唯一调用方（index.html）、**无硬边界守卫**；fixture 齐备（4 featured + false + newest + bad/bad-int 两坏例）但 SOP 侧坏值无 fixture、真实 SOP 条目零精选。缺口 8 条（详见工单 Resolution）。
+- [精选标识进入内容层：三面 + 主题层 partial + fixture 三面锚定](tickets/0056-content-layer-badge.md) — **做，三面**：文章页（single）+ 列表卡片（分类/标签/posts）+ 首页网格卡片；**精选行不加**（区块标题已表达）。契约 = **主题层新 partial `featured-badge.html`**（docstring 定义处，复刻 post_meta 调用先例、零新分层先例），三处调用、单一标记实现；坏值执法继承 `post-items.html:32-38` 全局 errorf（非布尔 featured 首页构建即炸），徽标谓词 `eq .Params.featured true` 无需新执法点；测试 = **fixture 三面全锚**（single / term+posts 列表 / 首页网格——截断回落的 feat-a 是天然样本），真实不锚（ADR-0009 原则），变异检验强制。视觉值 out of scope。**本票毕业新工单 0060**（meta 投影问）。frontier = 0057。
+- [首页数据条不区分精选（负向）](tickets/0057-home-databar-featured.md) — **不做**：数据条维持站点总量口径。抽象层不分层（总量 vs 编排）、信息冗余（all 片已含精选且精选区就在下方）、断言经济学（三项已无牙，不给第四个冗余数字纳税）。重开触发 = featured 规模远超 3 条且网格无法完整表达。frontier = 0058。
+- [分类/标签页不消费精选（负向）+ seam 边界收紧](tickets/0058-taxonomy-featured-consumption.md) — **不做，三页统一**：分类/标签/posts 维持日期倒序——term 页意图是「找新文章」、置顶挤压曝光、断言面从零建且期望值耦合 Hugo 默认排序链。边界守门 = **post-items docstring 收紧硬边界措辞**（落地归 0059，与坑点 11 同步句同批）+ 否掉产物断言（锁 Hugo 排序链现状、误红风险）。**frontier = 0059（收口）/ 0060（meta 投影，未认领）。**
 
 ## Not yet specified
 
 <!-- 雾区：在目的地内、但还无法精确表述的问题。随 frontier 推进毕业为工单。 -->
 
-- **结构化数据 / 社交元数据是否反映精选状态**（`themes/maplemod/layouts/partials/templates/schema_json.html` / `opengraph.html`）：取决于徽标面（0056）的决议形状——若文章页出现精选语义，meta 层要不要同步是不可回避的下一问，但此刻连「同步什么」都无法表述。触发条件 = 0056 定案。
-- **RSS 输出是否受分类页排序决议影响**（`layouts/_default/rss.xml`）：若 0058 定「分类/标签页 featured 优先」，订阅流要不要跟随是编排外的新面；若 0058 定「否」，本条自然消解。触发条件 = 0058 定案。
-- **数据条计数的语义从属关系**：若 0057 定「加精选 N 篇」，「篇技术文章」是否改为不含精选的并列口径、还是维持全集口径——该问题依附 0057 的决议形态存在，暂不可精确表述。触发条件 = 0057 定案。
+（排图时的三条雾区观察点已全部处理：一条毕业为工单，两条随负向决议消解。）
+
+- **已毕业为工单**：「结构化数据 / 社交元数据是否反映精选状态」（`schema_json.html` / `opengraph.html`）——0056 决议一（文章页出现精选语义）触发，该问已可精确表述，落为 [0060](tickets/0060-meta-layer-featured-projection.md)（未认领，frontier）；ADR-0010「无消费方不投影」负向先例为其输入。
+- **已消解**（0058 决议一负向）：「RSS 输出是否受分类页排序决议影响」——term 页不 featured 优先，RSS 无跟随对象；订阅流维持现状。
+- **已消解**（0057 负向）：「数据条计数的语义从属关系」——数据条口径不动，「篇技术文章」维持全集口径，无从属问题存在。
 
 ## Out of scope
 
