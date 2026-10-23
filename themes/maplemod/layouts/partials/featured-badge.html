@@ -17,7 +17,8 @@
 
   契约：
     · 标记 = <span class="mf-featured" title="精选">精选</span>
-    · 视觉样式（颜色/字号/图标）归视觉层，本文件不定（ADR-0012 边界）
+    · 视觉样式（颜色/字号/间距）落在 assets/css/extended/custom.css 的
+      .mf-featured 规则（视觉层；改样式不动本文件——ADR-0012 边界）
   测试：tests/assert_site_contracts.py 的 assert_featured_badge
   （fixture 三面全锚 + 真实构建不锚 + 逐面变异检验）。
 */ -}}

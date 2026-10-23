@@ -647,6 +647,11 @@ def assert_featured_badge(report):
     report.check("首页精选行不带徽标（区块标题已表达）",
                  block is not None and not BADGE_SPAN_RE.search(block.group(1)),
                  "精选行出现徽标" if block else "找不到精选行区块")
+    # ⑤ 视觉层落地牙：契约 class 必须在产物 CSS 里有规则（ADR-0012：视觉值归视觉层，
+    #    但 class=mf-featured 无样式 = 裸文本「精选」，是未完成态而非设计选择）
+    css_text = "\n".join(p.read_text(encoding="utf-8") for p in dest.rglob("*.css"))
+    report.check("产物 CSS 含 .mf-featured 精选标识规则（视觉层落地）",
+                 ".mf-featured" in css_text, "missing .mf-featured rule in built CSS")
 
 
 def assert_search_fixture(report):

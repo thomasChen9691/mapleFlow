@@ -590,6 +590,30 @@ span.mf-cta[aria-disabled="true"] {
 :root[data-theme="dark"] .mf-cta.mf-cta-ghost { color: var(--content) !important; }
 :root[data-theme="dark"] a.mf-cta.mf-cta-ghost:hover { color: var(--primary) !important; }
 
+/* ---------- 11b. 精选标识（ADR-0012：DOM 契约在 featured-badge.html，本节只负视觉值） ----------
+   落在文章页标题 / 列表卡片标题 / 首页网格卡片标题旁。选型理由：
+   · 橙色软底丸——归「点睛」家族（与题库标记同色系但不同上下文：题库在产品卡、
+     精选在文章标题，不共面不混淆）；不用蓝（蓝是本站的交互色，静态标记抢语义）
+   · 等宽 + .68rem + 字距 .08em——与 mf-kind 丸标同一刻度，小而不弱
+   · 双主题全走令牌（accent / accent-soft），无硬编码色
+   · vertical-align: middle——贴标题基线居中；margin-left 与标题文字呼吸
+   改视觉值只动本节；改 class / 谓词 / 呈现面 = 改 featured-badge.html 契约（另开会话）
+*/
+.mf-featured {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  padding: .1rem .42rem;
+  margin-left: .5rem;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 /* ---------- 12. 产品页筛选控件 ---------- */
 .mf-filters {
   display: flex;
