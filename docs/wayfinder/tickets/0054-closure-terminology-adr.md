@@ -35,3 +35,11 @@ closed: 2026-10-23
 5. **收口批清单（施工待指示）**：① ADR-0011；② CONTEXT.md 两笔；③ AGENTS.md 三笔；④ deploy.yml 两处注释漂移（0053 移交：「七类…B7-B13」→ 八类 + B14；「jsdom 只为 assert_reveal.mjs 服务」→ 双套件）；⑤ handoff `docs/handoffs/2026-10-23-search-entry.md`；⑥ backlog 第 12 项标 **[已完成]**；⑦ 地图 `status: closed`。**雾区三条（移动端 / aria / 浮层空间）按 (i) 处理**：原样保留并加注记「随本图收口挂起；触发条件 = 将来重开对应形态，由新图继承」——诚实保存，不进 backlog（连精确问题都还不是），不宣布 out of scope（触屏流量可能出现）。
 
 **节奏说明**：本会话一次解决四张工单（0053 grilling 一问 + 0054 grilling 五问，分票确认），由项目负责人指令显式要求（「对工单0053/0054跑 grilling…不要中断会话」）——属负责人对 wayfinder README「一次会话一工单」节奏的显式覆盖；分票 grilling 顺序如实记录。
+
+**施工期补记（2026-10-23，项目负责人指示施工；双轴 code-review 后回写）**：
+
+- **七项清单全部落地**：ADR-0011（四组，Considered Options 按 ADR-0010 先例改一条一选项式样）；指针三笔（0010 ×2 / 0007 / 0008 轻笔，先前正文零改）；CONTEXT.md 新条 + 轻触；AGENTS.md 三笔；deploy.yml；handoff；backlog 第 12 项 [已完成]；地图 closed + 雾区 (i) 注记。
+- **spec 外第三笔（备案）**：deploy.yml 除决议⑤指定的两处注释外，另将步骤名 `Assert reveal behavior` 改为 `Assert behavior suites` 并扩写其注释——该步骤经 package.json 的 test 脚本实跑双套件，原名与事实不符，属同一「注释/命名漂移」类；handoff 已如实记「三处」。
+- **评审修复五处**（双轴 2 硬违规 + 3 存疑全修）：① 坑点 14 误落 §8 工程纪律列表末尾——已搬迁至 §4 坑点区、坑点 13 之后（编号连续性恢复，「另见坑点 13」同节可指）；② backlog 进度行失实尾（仍留清理批的推送/测试数与模糊交接指针）——已重写为当前实况（三批未推、87/29/104、双 handoff 指针分立）；③ CONTEXT.md「检索仍归『搜索索引』链路」补「（fastsearch）」消歧；④ ADR-0011 Considered Options 改一条一选项；⑤ 地图 0054 gist 行补落地注记；另修 §7 `themes/maplemod/` 行 B7-B13 → B7-B14（同源枚举漂移，spec 外、同批顺手）。
+- **雾区措辞说明**：决议⑤ (i) 的「原样保留」落实为「实质保留 + 触发条件显式化」——三条各补一句触发条件（触屏流量 / 浮层形态重开），删去排图期已失效的指向语（如「待 0053 之后的批次」）；条目本身未删、未进 backlog、未宣布 out of scope，与 (i) 的判定一致。
+- 全套复验：assert_site_contracts 87 GREEN / npm test 29 GREEN / assert_sop_pipeline 104 GREEN / 生产构建零 WARN、无 localhost:1313；deploy.yml 仅注释与步骤名改动、步骤结构经逐行核对完好。

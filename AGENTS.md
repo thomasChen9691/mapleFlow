@@ -45,7 +45,8 @@ hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.to
 # 提交（见 §6 规范）
 python3 auto_push.py                       # 自动 add/commit/push 到 main
 
-# reveal 协议行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
+# reveal 协议与搜索入口行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
+# 双套件：assert_reveal.mjs（16 条）+ assert_search.mjs（13 条，候选 12）
 npm test
 
 # 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 / 文章精选 /
@@ -100,6 +101,8 @@ python3 tests/assert_site_contracts.py
 
 13. **搜索契约纪律：两个定义处，三处同步（ADR-0010；候选 8 全决议）**：投影契约的定义处是 `layouts/_default/index.json` 文件头 docstring（**六字段冻结**——featured / kind 不投影，0044 负向决策；产品 name/summary 缺失即 errorf，前缀「搜索索引数据：」）；检索契约的定义处是 `themes/maplemod/assets/js/fastsearch.js` 文件头 docstring（**现状快照**：fuseOpts 参数位已删，默认值 threshold 0.4 / distance 100 / ignoreLocation true / keys 四字段就是契约）。三条硬约束：① **改投影字段 = 三处同步**（投影 docstring / fastsearch keys / 差集断言）——差集恰为 tags/categories，多一个字段就红；② **fastsearch.js 禁项目级 assets 覆盖复活**——单副本守门断言会红（2026-10 翻车实录：项目级 `assets/js/fastsearch.js` 曾是活文件、主题层副本是死的，`resources.Get` 项目级优先）；③ fixture 造搜索相关页面时日期用过去日（坑点 12）。kind 门禁归产品索引链（索引零暴露，见坑点 9 与 0045 定案）。测试 `python3 tests/assert_site_contracts.py`（投影 / 交付面 / 守门）。
 
+14. **搜索入口纪律（ADR-0011；候选 12 全决议）**：全站 `/` 快捷键入口（`assets/js/mf-search-entry*.js`，站点层）与 fastsearch（主题层，仅 search 页）是**两个搜索相关 JS 面、加载条件不同，勿混勿并**。四条硬约束：① **入口只路由**（跳转 / 聚焦），检索归 fastsearch——「第二个消费方」由加载面双向断言守门（fastsearch 构件不得出现在非 search 页，一出现就红，那是 ADR-0010 重评触发条件的观测牙）；② **`js.Build` params 是 ESM import（`import * as params from '@params'`）不是全局对象**——旧 fastsearch 的裸 `params` 写法在现行 Hugo 下是死路径，别模仿；URL 经 params 注入、自动带 `/mapleFlow/` 子路径，写死根路径会逃逸域名根 404；③ **测试所有权分层**：新代码（入口引擎）常驻 jsdom 行为测试；legacy 引擎（fastsearch）只加弱产物断言 + 记录在案的一次性验证——不为 legacy 内部机制（XHR / onload / 模块级捕获）给 CI 征税；④ 改引擎契约 = 改 `mf-search-entry-engine.js` docstring + 同步 `tests/assert_search.mjs`；改 fastsearch 契约另见坑点 13。改本链先跑 `npm test` 与 `python3 tests/assert_site_contracts.py`。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
@@ -121,7 +124,7 @@ python3 tests/assert_site_contracts.py
 |------|------|
 | `hugo.toml` | 主配置：站点信息、菜单 `[[menu.main]]`、`homeInfoParams`、`socialIcons`、品牌色 |
 | `config.production.toml` | 生产 `baseURL` + `uglyURLs = true`（部署必需） |
-| `themes/maplemod/` | 主题层（呈现与行为基线）：骨架/导航/文章与列表渲染/交互钩子/社交元数据；导航见其 README；无上游同步义务（0033 cut cord）；主题契约测试 B7-B13 见 `tests/assert_site_contracts.py` |
+| `themes/maplemod/` | 主题层（呈现与行为基线）：骨架/导航/文章与列表渲染/交互钩子/社交元数据；导航见其 README；无上游同步义务（0033 cut cord）；主题契约测试 B7-B14 见 `tests/assert_site_contracts.py` |
 | `content/about.md` | 简历/关于页 |
 | `assets/css/extended/custom.css` | 品牌样式（明暗双主题 CSS 变量） |
 | `static/img/avatar.svg` | 占位头像 |
@@ -133,6 +136,7 @@ python3 tests/assert_site_contracts.py
 | `layouts/partials/post-items.html` | 文章精选·数据准备 seam：首页精选链**唯一**读 `site.RegularPages` 并做 featured 判定/截断/补集处。入参 `limit`（精选条数，负数 errorf）；一次返回 `{featured, rest, all}` 三片，`rest` 对**实际显示的精选**求补集（被截断的 featured 必须回落到网格）；featured 只认布尔 true、非 bool 即 errorf。候选 7 决议；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `assets/js/mf-reveal/` | reveal 协议引擎（**契约定义处**）：app.js 入口 / filter.js 筛选 / scroll-in.js 滚动进场 / reduced-motion.js 降级判定。ADR-0007；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |
+| `assets/js/mf-search-entry-engine.js` | 搜索入口引擎（**契约定义处**，站点层）：全站 `/` 快捷键——跳转 search 页 / 页内聚焦 / 焦点与修饰键门控 / 无 searchUrl 静默降级；纯函数 seam（registerSearchEntry），零 Hugo 依赖；与 fastsearch.js 契约并列互指。经 `assets/js/mf-search-entry.js`（入口，import `@params`）由 extend_footer 双 js.Build 全站恒加载。候选 12 / ADR-0011；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |
 | `layouts/_default/index.json` | 搜索索引·投影契约（**唯一定义处**）：六字段冻结 + 三类排除 + 产品投影；产品 name/summary 缺失即 errorf；与 fastsearch 的 keys 对齐由断言执法。ADR-0010；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `themes/maplemod/assets/js/fastsearch.js` | 搜索协议·检索契约（**唯一定义处**，现状快照）：挂点 / `.focus` / li 结构 / 键盘语义 / XHR 容错；fuseOpts 参数位已删、默认值是契约；禁项目级 assets 覆盖复活（单副本守门断言）。ADR-0010；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（ADR-0005；契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |

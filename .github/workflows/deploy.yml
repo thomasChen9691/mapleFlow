@@ -39,13 +39,15 @@ jobs:
           cache: 'npm'
 
       - name: Install test deps
-        # jsdom 只为 tests/assert_reveal.mjs 服务；Hugo 站点本体不依赖 npm。
+        # jsdom 为 tests/assert_reveal.mjs 与 tests/assert_search.mjs 双套件服务；
+        # Hugo 站点本体不依赖 npm。
         # --ignore-scripts：不执行依赖的安装脚本。
         run: npm ci --ignore-scripts
 
-      - name: Assert reveal behavior
-        # reveal 协议行为断言（wayfinder 工单 0023 决议：CI 权威）：
-        # jsdom 执行引擎源码，覆盖筛选/aria/计数/空态/减弱动效/IO 降级/多实例。
+      - name: Assert behavior suites
+        # reveal 协议 + 搜索入口行为断言（wayfinder 工单 0023 / 0050 决议：CI 权威）：
+        # jsdom 执行引擎源码，覆盖筛选/aria/计数/空态/减弱动效/IO 降级/多实例（reveal）
+        # 与 / 键跳转/门控/页内聚焦/params 降级（搜索入口）。
         # 入口走 package.json 的 test 脚本，本地/CI 同一条命令。
         run: npm test
 
@@ -57,8 +59,8 @@ jobs:
         run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
       - name: Assert site contracts
-        # 站点契约的产物断言（七类：产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 /
-        # 文章精选 / 搜索索引投影 / 搜索交付面与 fastsearch 守门）。
+        # 站点契约的产物断言（八类：产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 /
+        # 文章精选 / 搜索索引投影 / 搜索交付面与 fastsearch 守门 / 搜索入口构件与加载面）。
         # fixture 全分支 + 真实数据线上回归 + 契约坏用例。失败即阻断部署——
         # 不让失实的「可下载产品」数字上线（2026-10 首页 5-vs-0 事故的守门）。
         run: python3 tests/assert_site_contracts.py
