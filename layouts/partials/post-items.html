@@ -21,6 +21,12 @@
        会把字符串 "false" 当真值，禁止使用。）
     · limit 为负数 → errorf（产品侧 0015 决议同款；负数静默全量属静默失效）
 
+  边界：本 partial **只服务首页精选链**（ADR-0012 决策 4 负向锁边）——
+  其他页面 / 模板不得调用本 partial 做 featured 判定或取数；内容层的
+  精选呈现（文章页 / 列表卡片 / 首页网格徽标）归
+  themes/maplemod/layouts/partials/featured-badge.html（谓词同源、
+  契约各自独立，ADR-0012 决策 2）。
+
   调用方（不自行 where/first 推导）：
     · layouts/index.html（首页精选文章区 + 最近更新网格）
 */ -}}
