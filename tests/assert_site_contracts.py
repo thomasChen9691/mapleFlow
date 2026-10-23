@@ -635,6 +635,16 @@ def assert_search_artifacts(report, dest):
                  re.search(r"""open\(['"]GET['"]\s*,\s*['"]index\.json['"]""", js) is not None
                  and "../index.json" not in js,
                  "fetch path drifted (expected same-dir index.json, no ../)")
+    # 0051 决议④：呈现层加深的弱产物断言——构件内含 item.summary 渲染引用，
+    # 守「契约宣称的渲染确实在构件里」（契约-代码漂移牙口；变异检验：删渲染
+    # 代码即红）。正则覆盖 item.summary 与 item["summary"] 两种属性访问写法
+    # （堵「换括号写法绕逃」的边缘口子——弱断言的边界：仍不守渲染结果正确）。
+    # 「渲染结果正确」在「不重写引擎」约束下无低成本自动牙（fixture 的 search
+    # 页是静态空 ul，渲染只发生在浏览器运行时），记为已知限制入 fastsearch.js
+    # docstring 与工单 0053 记录。
+    report.check('构件含摘要渲染引用（item.summary；0051 呈现层加深）',
+                 re.search(r'item\.summary|item\[[\'"]summary[\'"]\]', js) is not None,
+                 "summary rendering reference missing in bundle")
 
 
 def assert_search_entry_artifacts(report, dest):

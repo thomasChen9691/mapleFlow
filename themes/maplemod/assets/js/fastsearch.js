@@ -1,5 +1,6 @@
 /**
- * fastsearch.js —— 站内搜索检索引擎（搜索协议·行为层；工单 0046 决议①②）
+ * fastsearch.js —— 站内搜索检索引擎（搜索协议·行为层；工单 0046 决议①②；
+ * 呈现层摘要加深与入口互指分别见候选 12 工单 0051/0052 决议）
  * ============================================================
  * 【检索交互契约的定义处。与 index.json 的投影契约（layouts/_default/index.json
  *   文件头 docstring）分立两个模块：投影管「索引里有什么」，本文件管「检索怎么跑」。
@@ -9,14 +10,26 @@
  *   与 fuse.basic.min.js、license.js concat 为 assets/js/search.js 后 fingerprint；
  *   js.Build 无 params——fuseOpts 参数位已删（0046 决议③：无消费方的预留位不留）。
  *
+ * 指针（候选 12 工单 0052 决议②）：全站 `/` 快捷键入口是并列模块——
+ *   assets/js/mf-search-entry.js + mf-search-entry-engine.js（经 extend_footer
+ *   全站恒加载，契约定义处在其文件头 docstring）。入口只负责跳转/聚焦到本页，
+ *   检索仍归本协议；本协议仅 .Layout == "search" 页加载（head.html 条件），
+ *   入口构件全站每页在——两个搜索相关 JS 面、加载条件不同，勿混。
+ *
  * DOM 契约（现状快照：本文件是 vendored 上游 PaperMod 代码的第一方化留存，
  *   快照式记录当前行为、非设计目标；重写时本契约随移）：
  *   读  #searchbox > #searchInput    搜索输入（autofocus / maxlength=64 / aria-label=search）
  *       #searchResults               结果列表（aria-label=search results）
  *   写  #searchResults.innerHTML     <li class="post-entry"><header class="entry-header">
- *                                    {title}&nbsp;»</header><a href="{permalink}"
- *                                    aria-label="{title}"></a></li>——只渲染标题+链接，
- *                                    不显摘要、不显精选（与 0044「UI 无消费方」同理）
+ *                                    {title}&nbsp;»</header><div class="entry-summary">
+ *                                    {summary}</div><a href="{permalink}"
+ *                                    aria-label="{title}"></a></li>——标题+摘要+链接
+ *                                    （0051 决议②：摘要是场景乙「正文命中时纯标题
+ *                                    无法区分哪篇真含」的低成本半解；不显标签——
+ *                                    categories 全站同值、tags 与 summary 信息重叠；
+ *                                    不做命中高亮——不动 fuse matches，ADR-0010
+ *                                    「只改渲染层」边界；不显精选不变——索引不投影
+ *                                    featured，0044）
  *       .focus                       键盘导航当前项（结果项导航时加在 li 上——search.css
  *                                    #searchResults .focus 消费，唯一 CSS 耦合类；
  *                                    焦点回输入框时加在 #searchbox 上，无 CSS 消费方）
@@ -39,14 +52,17 @@
  * 已知限制（快照记录，不承诺修复——0046 决议④）：
  *   · XHR 失败仅 console.log、JSON.parse 无 try/catch：索引损坏时搜索静默失效
  *     （无结果、无用户可见报错）——容错 UX 待重写或工单 0047 行为测试缝时处理；
+ *   · 呈现层「渲染结果正确」无自动断言：引擎为无导出经典脚本，不立 jsdom 套件
+ *     （ADR-0010 决策 5）；弱产物断言只守「构件含 item.summary 渲染引用」（契约-
+ *     代码不漂移），浏览器运行时的实际渲染由人工验证覆盖（0051 决议④）；
  *   · no-js 下搜索页只剩空壳：客户端搜索的固有属性（ADR-0002 基线只保证内容可读）；
  *   · reduced-motion：无运动面可降级（唯一动效是 search.css 的 li:active 0.1s
  *     按压反馈，非进场动画）。
  *
- * 测试：B11 三挂点产物断言（tests/assert_site_contracts.py）；jsdom 行为测试归
- *   工单 0047（未立）。历史：2026-10-22 前存在项目级 assets/js/fastsearch.js 覆盖
- *   （子模块时代为改 XHR 路径而建），已合并入本文件并删除——单副本由
- *   assert_search_projection 的守门断言执法。
+ * 测试：B11 三挂点 + 摘要渲染引用等产物断言（tests/assert_site_contracts.py）；
+ *   jsdom 行为测试未立（ADR-0010 决策 5；0047 决议同旨）。历史：2026-10-22 前
+ *   存在项目级 assets/js/fastsearch.js 覆盖（子模块时代为改 XHR 路径而建），
+ *   已合并入本文件并删除——单副本由 assert_search_projection 的守门断言执法。
  */
 
 let fuse; // holds our search engine
@@ -119,6 +135,7 @@ sInput.onkeyup = function (e) {
 
             for (let item in results) {
                 resultSet += `<li class="post-entry"><header class="entry-header">${results[item].item.title}&nbsp;»</header>` +
+                    `<div class="entry-summary">${results[item].item.summary}</div>` +
                     `<a href="${results[item].item.permalink}" aria-label="${results[item].item.title}"></a></li>`
             }
 

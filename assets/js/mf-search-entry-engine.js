@@ -6,7 +6,10 @@
  * search 页（fastsearch 的领地）——本引擎与 fastsearch、index.json 零耦合，
  * 故不构成 ADR-0010 的「第二个消费方」，不触发重评（决议⑦）。
  *
- * DOM / 键盘契约（本 docstring 是唯一定义处，与 fastsearch.js 快照契约并列互指）：
+ * DOM / 键盘契约（本 docstring 是唯一定义处；与 themes/maplemod/assets/js/
+ *   fastsearch.js 文件头「搜索协议」快照契约并列互指、不合并——本引擎只负责
+ *   跳转/聚焦到 search 页，检索（含 0051 起的摘要渲染）归该协议；加载面对比：
+ *   本引擎全站恒加载，fastsearch 仅 .Layout == "search" 页）：
  *   · 键位 `/`：无修饰键。按着 Ctrl / Meta / Alt 时不拦截（让位浏览器快捷键）。
  *   · 焦点门控：焦点在 input / textarea / select / contenteditable 时不拦截
  *     （`/` 是合法输入字符；search 页搜索框内输入即靠此放行）。

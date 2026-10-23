@@ -3,11 +3,13 @@ id: "0051"
 title: 结果呈现层深化：摘要 / 标签的取舍与契约
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: [0050]
-assignee:
+assignee: agent
 map: map-search-entry.md
 created: 2026-10-23
+claimed: 2026-10-23
+closed: 2026-10-23
 ---
 
 ## Question
@@ -21,3 +23,23 @@ created: 2026-10-23
 **推荐**：先验需求真实性——若你或目标读者会觉得「只看标题不够」（例：搜 `kubectl` 出来 5 篇标题相近的命令文），加摘要（投影内字段、成本最低）；高亮建议明确否决（动 fuse 结果消费，违背「只改渲染层」的边界）；标签价值低（结果少时是噪音）。若需求不真实，显式维持现状也是收口。一次一问，先给推荐答案。
 
 **已决输入**：ADR-0010 决策 2（六字段冻结、summary/content 同源为有意设计）、0047（测试缝先例）、0049 事实（keys 四字段与投影字段的差集）。
+
+## Resolution
+
+2026-10-23 · grilling（HITL，用户为决策者；三问落定，六条记录经用户最终确认共识）。事实前提：`research/0049` 第 6 项（keys 四字段 vs 投影六字段差集、li 现渲染字段）、0050 决议（轻形态 → 落点唯一）。答案六条：
+
+1. **需求**：场景乙（fuse 命中发生在正文而非标题时，纯标题结果无法区分哪篇真含所求）是真实缺陷、强度中等——本站核心场景（查具体命令/配置片段）正落在此；按低成本半解处理。
+2. **加深项**：只加**摘要**——渲染 `item.summary`（200 截断字段，fuse 结果在 `results[i].item`，一层取值），置于标题行下方一行。**不加标签**：categories 全站同值（实测 17 条全「运维」）、tags 信息与 summary 重叠（「可视化」「告警」等 tag 在 summary 中均出现），区分价值被抵消。**不高亮**：需消费 fuse matches 区间，违背 ADR-0010「只改渲染层」边界，明确出局。
+3. **契约**：fastsearch.js docstring 的 li 结构条款由「只渲染标题+链接，不显摘要、不显精选」改写为「标题+链接+摘要」——原句是 0044「UI 无消费方」论证的产物，消费方已出现，不改即契约-代码漂移（code-review 双轴抓过的「文档记着已删机制」同类）。空态/无结果态不变。
+4. **测试（B：弱产物断言 + 已知限制入档）**：`assert_search_artifacts` 同款加一条——构件内含 `item.summary` 渲染引用，守「契约宣称的渲染确实在构件里」（变异检验有牙：删渲染代码即红）。「渲染结果正确」在「不重写引擎」约束下无低成本自动牙（fixture search 页是静态空 ul，渲染只发生在浏览器运行时），记为已知限制入 docstring 与 0053 记录；人工验证（本地构建起 server 实搜一次）记入施工记录，不伪装成测试。
+5. **CSS 零改动**：摘要行走默认文档流即可用（`a` 绝对定位热区随 li 增高自动覆盖）；字号/行数/截断样式归视觉批（地图 Out of scope 已划）。
+6. **落点唯一**：search 页结果列表（轻形态下无第二落点，0050 已决）。
+
+施工待项目负责人指示展开（TDD 红绿：断言先红 → 渲染实现 → 绿；docstring 同步改写；变异检验；收尾 code-review 后单独 commit——同 0050 节奏）。
+
+**施工期补记（2026-10-23，项目负责人指示施工；双轴 code-review 后回写）**：
+
+- **落地**：fastsearch.js 渲染行增加 `<div class="entry-summary">${results[item].item.summary}</div>`（标题行下）；docstring li 条款按决议③改写；`assert_search_artifacts` 增加弱产物断言（正则覆盖 `item.summary` 与 `item["summary"]` 两种写法——双轴评审指出单写法可被括号记法绕逃，已堵）。
+- **变异检验**：删摘要渲染行 → 断言红（已验）；还原 → 绿。
+- **决议④的人工验证已执行（不伪装成测试）**：一次性 jsdom 脚本驱真实构建产物（fixture 的 search.html + minified search.*.js 构件 + 真实 index.json，stub XHR）跑完整链路（onload → XHR → fuse → keyup），5/5 通过：li 渲染、标题命中、`.entry-summary` 存在且内容为索引 summary 原文片段（「拉模式」）、链接仍在。脚本未提交（/tmp 一次性），结论记录于此。
+- **已知限制入档**（决议④）：「渲染结果正确」无提交测试覆盖——上述 jsdom 脚本是一次性验证而非守门；弱断言只守契约-代码不漂移。已写入 fastsearch.js docstring 已知限制段。
