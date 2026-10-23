@@ -57,14 +57,16 @@ jobs:
         run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
 
       - name: Assert site contracts
-        # 站点契约的产物断言（产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 / 文章精选）。
+        # 站点契约的产物断言（七类：产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 /
+        # 文章精选 / 搜索索引投影 / 搜索交付面与 fastsearch 守门）。
         # fixture 全分支 + 真实数据线上回归 + 契约坏用例。失败即阻断部署——
         # 不让失实的「可下载产品」数字上线（2026-10 首页 5-vs-0 事故的守门）。
         run: python3 tests/assert_site_contracts.py
 
       - name: Assert SOP pipeline
         # SOP 发布管线的产物断言（wayfinder 工单 0008/0009 决议）：
-        # 6 篇派生文章的迁移保真（golden 逐字节比对）+ 契约坏用例构建失败
+        # 6 篇派生文章的迁移保真（golden token 序列比对，容忍 CI/本机渲染器版本差异）
+        # + 契约坏用例构建失败
         # + draft 语义 + README↔注册表漂移 + ref 解析 + 搜索投影。
         # 失败即阻断部署——源笔记与线上页面的沉默分叉从此不可能发生。
         run: python3 tests/assert_sop_pipeline.py
