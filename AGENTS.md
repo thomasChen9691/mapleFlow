@@ -65,7 +65,7 @@ python3 tests/assert_site_contracts.py
    - 菜单 `url` 必须写成 `/about.html`，否则 404。
    - **不要**把独立页面放在 `content/page/` 下（会变成 `/page/about.html` 分区，破坏干净 URL）。
 
-3. **hugo.toml 参数纪律**：每个参数必须在 `themes/maplemod` 里有读取点（`grep -rn "<param>" themes/maplemod/layouts`）。**无读取点即死配置——删掉，不要留「文档价值」**（0029 已清 14 个）。新增参数前先证明读取点存在；导航顺序的唯一来源是 `[[menu.main]]` 的 `weight`（header.html 只渲染顶层项，`parent` 子项当前不渲染——既有事实）。
+3. **hugo.toml 参数纪律**：每个参数必须在 `themes/maplemod` 里有读取点（`grep -rn "<param>" themes/maplemod/layouts`）。**无读取点即死配置——删掉，不要留「文档价值」**（0029 已清 14 个）。新增参数前先证明读取点存在；导航顺序的唯一来源是 `[[menu.main]]` 的 `weight`（header.html 只渲染顶层项，而 Hugo 的 `site.Menus.main` **本就不含 `parent` 子项**——子项配置零读取点，2026-10-23 已删 4 条）。
 
 4. **自定义样式放哪**：写入 `assets/css/extended/*.css`，Hugo Pipes 会自动并入主题样式表（已验证 `2D7FF9` 变量并入 `public/assets/css/...`）。不要放 `static/css/` 并用 `customCSS` 引用。
 
@@ -119,7 +119,7 @@ python3 tests/assert_site_contracts.py
 
 | 文件 | 作用 |
 |------|------|
-| `hugo.toml` | 主配置：站点信息、菜单 `[[menu.main]]`、`reorderNavItems`、`homeInfoParams`、`socialIcons`、品牌色 |
+| `hugo.toml` | 主配置：站点信息、菜单 `[[menu.main]]`、`homeInfoParams`、`socialIcons`、品牌色 |
 | `config.production.toml` | 生产 `baseURL` + `uglyURLs = true`（部署必需） |
 | `themes/maplemod/` | 主题层（呈现与行为基线）：骨架/导航/文章与列表渲染/交互钩子/社交元数据；导航见其 README；无上游同步义务（0033 cut cord）；主题契约测试 B7-B13 见 `tests/assert_site_contracts.py` |
 | `content/about.md` | 简历/关于页 |

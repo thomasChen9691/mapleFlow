@@ -141,34 +141,6 @@ url = "/categories/"
 weight = 3
 
 [[menu.main]]
-identifier = "ops"
-name = "运维"
-url = "/categories/运维/"
-parent = "categories"
-weight = 30
-
-[[menu.main]]
-identifier = "k8s"
-name = "K8s"
-url = "/categories/k8s/"
-parent = "categories"
-weight = 31
-
-[[menu.main]]
-identifier = "docker"
-name = "Docker"
-url = "/categories/docker/"
-parent = "categories"
-weight = 32
-
-[[menu.main]]
-identifier = "aiops"
-name = "AIOps"
-url = "/categories/aiops/"
-parent = "categories"
-weight = 33
-
-[[menu.main]]
 identifier = "tags"
 name = "标签"
 url = "/tags/"

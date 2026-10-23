@@ -188,9 +188,9 @@ FIXTURE_PRODUCT_SHAPE = {
 # 不是 Go 的 time.Time.String()（后者由构建机时区决定输出字节）。
 POST_META_TITLE_RE = re.compile(r"title='\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4}'")
 
-# 菜单渲染契约（0032 决议 B9）：hugo.toml 有 13 条 menu.main，但 header.html 只渲染
-# 顶层项——4 个 categories 子项（parent=categories）当前不渲染，属既有事实。
-# 期望值 = 实际渲染的 9 项，按 weight 序；内部链接必须符合 uglyURLs 形态（.html 或 /）。
+# 菜单渲染契约（0032 决议 B9）：hugo.toml 的 9 条 menu.main 全部是顶层项——2026-10-23
+# 删除了 4 条不渲染的 parent=categories 死配置（Hugo 的 site.Menus.main 本就不含子项，
+# 故子项配置零读取点）。期望值 = 实际渲染的 9 项，按 weight 序；内部链接符合 uglyURLs 形态。
 MENU_RENDERED_KEYS = [
     "/", "/posts/", "/categories/", "/tags/", "/about.html", "/search.html",
     "/products.html", "https://github.com/thomasChen9691", "mailto:test@example.com",
