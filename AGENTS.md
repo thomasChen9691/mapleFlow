@@ -26,7 +26,8 @@
 # 安装 Hugo（extended 版，必需）
 # Windows:  winget install Hugo.Hugo.Extended
 # macOS:    brew install hugo
-# 验证:     hugo version   （需 0.154.5+）
+# 验证:     hugo version   （CI 钉 0.164.0；本机版本不同不会让断言变红，
+#                            但证明不了 CI 会绿——测试启动会打 WARN，见 ADR-0004）
 
 # 本地开发预览（含草稿）—— 只用 hugo.toml，不要带生产配置！
 hugo server -D        # 访问 http://localhost:1313/

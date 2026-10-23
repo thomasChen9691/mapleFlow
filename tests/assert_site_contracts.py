@@ -29,7 +29,8 @@ ADR 与历史 handoff 里的旧名即本脚本）。覆盖七类职责：
 
 Hugo 版本纪律：模块必须保持 0.164 语义（单变量 + 根级单条 return）。本机 hugo
 可能为 0.167 而 CI 钉 0.164——0.164 风格代码两端一致，但 0.166+ 的条件多
-return 写法本地过、CI 红。本脚本只消费构建产物，与 Hugo 版本无关。
+return 写法本地过、CI 红。**断言只消费构建产物；版本比对是 preflight WARN**
+（不进断言计数、不影响退出码），钉版真源是 `.github/workflows/deploy.yml`。
 
 期望值均为独立字面量（决策规则的直写），不是对实现的重算——防止同义反复测试。
 """
@@ -45,9 +46,38 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TMP = REPO / "tests" / "tmp"
+CI_WORKFLOW = REPO / ".github" / "workflows" / "deploy.yml"
 
 FIXTURE_CONFIG = "hugo.toml,tests/hugo.test.toml"
 REAL_CONFIG = "hugo.toml,config.production.toml"
+
+
+def preflight_hugo_version():
+    """Hugo 版本 skew 的 advisory 提醒——**不进断言计数、不影响退出码**。
+
+    钉版真源是 deploy.yml 的 hugo-version（不在本文件写第二份）。不一致时只 WARN：
+    本机服从 CI 是纪律，但「本机版本不同」不等于「本机产物错」——断言仍然有效，
+    只是它证明不了 CI 会绿。依据 ADR-0004：0.166+ 的条件多 return 写法本地过、CI 红。
+    """
+    try:
+        found = re.search(r"hugo-version:\s*'([^']+)'", CI_WORKFLOW.read_text(encoding="utf-8"))
+    except OSError:
+        return
+    if not found:
+        return
+    pinned = found.group(1)
+    try:
+        out = subprocess.run(["hugo", "version"], capture_output=True, text=True, timeout=20).stdout
+    except (OSError, subprocess.SubprocessError):
+        print(f"[WARN] 读不到本机 hugo 版本；CI 钉版 {pinned}。跳过版本比对。\n")
+        return
+    local = re.search(r"v(\d+\.\d+\.\d+)", out)
+    if not local:
+        print(f"[WARN] 本机 hugo 版本串不可解析；CI 钉版 {pinned}。跳过版本比对。\n")
+        return
+    if local.group(1) != pinned:
+        print(f"[WARN] 本机 hugo {local.group(1)} != CI 钉版 {pinned}（deploy.yml）")
+        print("       0.166+ 的部分写法本地过、CI 红（ADR-0004）；提交前以 CI 钉版为准。\n")
 
 # ---- 期望值：决策规则的字面量，独立于实现 ----
 # 控件语义（ADR-0004 形状 B）：已上架+免费→可点「免费获取」；已上架+付费→可点「购买」；
@@ -817,6 +847,8 @@ def main():
     if shutil.which("hugo") is None:
         print("ERROR: hugo 不在 PATH（CI 由 peaceiris/actions-hugo 提供）")
         return 2
+
+    preflight_hugo_version()
 
     shutil.rmtree(TMP, ignore_errors=True)
     TMP.mkdir(parents=True, exist_ok=True)
