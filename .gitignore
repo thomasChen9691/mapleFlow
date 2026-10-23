@@ -58,6 +58,7 @@ resources/
 
 # Local agent / scratch state (do not commit)
 .workbuddy/
+.workbuddy-ai/
 .codebuddy/
 tmp/
 
