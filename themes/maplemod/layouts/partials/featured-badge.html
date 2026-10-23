@@ -1,0 +1,24 @@
+{{- /*
+  featured-badge（partial）—— 精选标识（徽标）的唯一实现与契约定义处
+  ============================================================
+  ADR-0012 决策 2（工单 0056 决议）：精选标识进入内容层三面——文章页
+  （single.html）、列表卡片（list.html：分类/标签/posts）、首页网格卡片
+  （index.html）。**首页精选行不加**（区块标题「精选文章」已表达）。
+
+  谓词：eq .Params.featured true——只认布尔 true（未声明/字符串/整数
+  均不渲染）。坏值执法不归本文件：post-items.html 的 errorf 循环遍历
+  全部文章，非布尔 featured 在首页构建时即失败（ADR-0009 决策 1），
+  本谓词与该守卫同源。
+
+  调用方（传页面上下文，不得内联拷贝本标记——三处拷贝即第二实现）：
+    · themes/maplemod/layouts/_default/single.html（文章页标题旁）
+    · themes/maplemod/layouts/_default/list.html（列表卡片标题旁）
+    · layouts/index.html（首页网格卡片标题内）
+
+  契约：
+    · 标记 = <span class="mf-featured" title="精选">精选</span>
+    · 视觉样式（颜色/字号/图标）归视觉层，本文件不定（ADR-0012 边界）
+  测试：tests/assert_site_contracts.py 的 assert_featured_badge
+  （fixture 三面全锚 + 真实构建不锚 + 逐面变异检验）。
+*/ -}}
+{{- if eq .Params.featured true -}}<span class="mf-featured" title="精选">精选</span>{{- end -}}

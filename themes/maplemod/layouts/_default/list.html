@@ -68,6 +68,7 @@
         </svg>
       </span>
       {{- end }}
+      {{- partial "featured-badge.html" . }}
     </h2>
   </header>
   {{- if (ne (.Param "hideSummary") true) }}

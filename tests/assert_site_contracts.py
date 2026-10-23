@@ -14,7 +14,8 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
     与 index.html（「可下载产品」计数、首页精选区 featured 分栏）
   · 文章精选 seam —— 独立 fixture 构建（tests/hugo.test.posts.toml，只覆盖
     contentDir）：首页精选区的 3 条 featured、与「最近更新」网格互斥且并集全量、
-    0 篇 featured 时精选区整块不渲染、featured 非布尔即构建失败
+    0 篇 featured 时精选区整块不渲染、featured 非布尔即构建失败；**精选标识
+    三面呈现（文章页 / 列表卡片 / 首页网格）与首页精选行负向**（ADR-0012）
   · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
     逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）、
     产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
@@ -137,6 +138,14 @@ POSTS_ALL_FEATURED_CONTENT = "tests/fixtures/content-posts-all"  # 两篇都标 
 POSTS_BAD_CONTENT = "tests/fixtures/content-posts-bad"     # featured 写成字符串
 POSTS_BAD_INT_CONTENT = "tests/fixtures/content-posts-bad-int"  # featured 写成整数
 POSTS_BAD_FEATURED_EXPECT = "文章精选数据："
+
+# 精选标识（徽标）契约（ADR-0012 决策 2 / 工单 0056）：三面呈现、精选行不加。
+# 期望值为独立字面量：fixture 的 slug 与 featured 分布是手写事实，不从实现重算。
+POSTS_BADGE_FEATURED = ["fx-post-feat-a", "fx-post-feat-b", "fx-post-feat-c", "fx-post-feat-d"]
+POSTS_BADGE_PLAIN = ["fx-post-false", "fx-post-newest"]
+# 契约标记（契约定义处：themes/maplemod/layouts/partials/featured-badge.html docstring）；
+# 测试构建不带 --minify，属性带引号（同 B9 注释）。
+BADGE_SPAN_RE = re.compile(r'<span class="mf-featured" title="精选">')
 
 # 契约坏用例的逐条期望子串（0018 事实底座：旧判定只匹配模块统一前缀，偏弱；
 # 此表按用例钉归属，与 SOP 脚本的逐用例子串登记同型）。缺省沿用产品状态模块前缀。
@@ -277,16 +286,21 @@ def _post_slug(href):
     return m.group(1) if m else href
 
 
-def parse_home_featured_slugs(html):
-    """首页「精选文章」区的 slug 序。
+def parse_home_featured_block(html):
+    """首页「精选文章」区的 ol.mf-rows 块（按标题锚定后的第一个 mf-rows）。
 
-    按标题锚定区块，不取「第一个 mf-rows」——产品精选区同用该 class，
-    0 篇 featured 时第一个 mf-rows 就是产品区（会把空态断言变成假红）。
+    不取「第一个 mf-rows」——产品精选区同用该 class，0 篇 featured 时第一个
+    mf-rows 就是产品区（会把空态断言变成假红）。无「精选文章」标题 → None。
     """
     anchor = re.search(r"精选文章", html)
     if not anchor:
-        return []
-    block = re.search(r'<ol class=["\']?mf-rows["\']?>(.*?)</ol>', html[anchor.start():], re.S)
+        return None
+    return re.search(r'<ol class=["\']?mf-rows["\']?>(.*?)</ol>', html[anchor.start():], re.S)
+
+
+def parse_home_featured_slugs(html):
+    """首页「精选文章」区的 slug 序。"""
+    block = parse_home_featured_block(html)
     if not block:
         return []
     return [_post_slug(h) for h in re.findall(r'mf-row-title"><a href=["\']?([^"\'> ]+)', block.group(1))]
@@ -305,6 +319,26 @@ def parse_spec_count(html, label_contains):
         if num and label and label_contains in label.group(1):
             return int(num.group(1))
     return None
+
+
+def parse_badge_present(html):
+    """页面是否渲染精选徽标（契约标记：span.mf-featured[title=精选]）。"""
+    return bool(BADGE_SPAN_RE.search(html))
+
+
+def parse_card_badges(html, article_class):
+    """按文章卡片容器切块，返回 {slug: 是否带精选徽标}。
+
+    entry-link 是整卡点击层（既有网格判定同款锚点）；徽标在卡片标题内、
+    entry-link 之前，故按 <article> 切块后可同块判定。article_class 传
+    "post-entry"（主题层列表卡）或 "mf-post"（站点层首页网格卡）。
+    """
+    cards = {}
+    for block in re.split(r'<article class="' + article_class + r'[\s"]', html)[1:]:
+        m = re.search(r'class="entry-link"[^>]*href="([^"]+)"', block)
+        if m:
+            cards[_post_slug(m.group(1))] = bool(BADGE_SPAN_RE.search(block))
+    return cards
 
 
 def run(cmd):
@@ -566,6 +600,53 @@ def assert_post_grid_empty(report):
                  parse_home_featured_slugs(html) == ["all-feat-b", "all-feat-a"]
                  and "mf-posts" not in html and parse_home_grid_slugs(html) == [],
                  "grid/featured state unexpected")
+
+
+def assert_featured_badge(report):
+    """精选标识（徽标）三面契约（ADR-0012 决策 2 / 工单 0056 决议）。
+
+    fixture 独立构建（contentDir 覆盖，与文章精选同套 fixture）：
+      ① 文章页（single）：4 篇 featured 有徽标、false/未声明无；
+      ② 列表卡片（分类/标签页 + /posts/，同走主题层 list.html）：按卡片判；
+      ③ 首页网格卡片（站点层 index.html）：被 limit 截断回落的 feat-a 有徽标；
+      ④ 负向：首页精选行（区块标题「精选文章」已表达）无徽标。
+    真实构建不锚（ADR-0009「真实精选清单不锚」原则——真实 featured 由项目负责人掌控）。
+    期望值为独立字面量；变异检验逐面做过（去条件 / 去调用点 / 精选行误加）。
+    """
+    dest = TMP / "posts-fixture-badge"
+    proc = build(POSTS_FIXTURE_CONFIG, dest)
+    report.check("徽标 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    # ① 文章页（single.html 标题旁）
+    bad_has = [s for s in POSTS_BADGE_FEATURED
+               if not parse_badge_present((dest / "posts" / f"{s}.html").read_text(encoding="utf-8"))]
+    report.check("文章页：4 篇 featured 均带精选徽标", not bad_has, f"缺徽标: {bad_has}")
+    bad_plain = [s for s in POSTS_BADGE_PLAIN
+                 if parse_badge_present((dest / "posts" / f"{s}.html").read_text(encoding="utf-8"))]
+    report.check("文章页：false/未声明文章不带徽标", not bad_plain, f"误带: {bad_plain}")
+    # ② 列表卡片（分类/标签页 + /posts/，同走主题层 list.html）
+    for label, path in (("分类页", dest / "categories" / "fixture.html"),
+                        ("标签页", dest / "tags" / "fixture.html"),
+                        ("/posts/ 列表", dest / "posts" / "index.html")):
+        cards = parse_card_badges(path.read_text(encoding="utf-8"), "post-entry")
+        bad_has = [s for s in POSTS_BADGE_FEATURED if not cards.get(s)]
+        report.check(f"{label}：4 篇 featured 卡片带徽标", not bad_has, f"缺徽标: {bad_has}")
+        bad_plain = [s for s in POSTS_BADGE_PLAIN if cards.get(s)]
+        report.check(f"{label}：false/未声明卡片不带徽标", not bad_plain, f"误带: {bad_plain}")
+    # ③ 首页网格卡片（站点层 index.html；被 limit 截断回落的 feat-a 是天然样本）
+    home_html = (dest / "index.html").read_text(encoding="utf-8")
+    grid = parse_card_badges(home_html, "mf-post")
+    report.check("首页网格：截断回落的 featured（fx-post-feat-a）带徽标",
+                 grid.get(POSTS_FIXTURE_TRUNCATED) is True, f"got {grid}")
+    bad_plain = [s for s in POSTS_BADGE_PLAIN if grid.get(s)]
+    report.check("首页网格：false/未声明卡片不带徽标", not bad_plain, f"误带: {bad_plain}")
+    # ④ 负向：首页精选行不带徽标（区块标题「精选文章」已表达，0056 决议一）
+    block = parse_home_featured_block(home_html)
+    report.check("首页精选行不带徽标（区块标题已表达）",
+                 block is not None and not BADGE_SPAN_RE.search(block.group(1)),
+                 "精选行出现徽标" if block else "找不到精选行区块")
 
 
 def assert_search_fixture(report):
@@ -978,6 +1059,7 @@ def main():
     assert_post_featured_bad(report)
     assert_post_featured_bad_int(report)
     assert_post_grid_empty(report)
+    assert_featured_badge(report)
     assert_search_fixture(report)
     assert_empty_state(report)
     assert_bad_cases(report)
