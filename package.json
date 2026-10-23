@@ -2,12 +2,12 @@
   "name": "mapleflow-tests",
   "private": true,
   "type": "module",
-  "description": "reveal 协议行为断言的测试依赖。Hugo 站点本体不依赖 npm；此文件只服务 tests/assert_reveal.mjs（工单 0023 决议：依赖入仓 + CI 权威）。",
+  "description": "reveal 协议与搜索入口行为断言的测试依赖。Hugo 站点本体不依赖 npm；此文件只服务 tests/assert_reveal.mjs 与 tests/assert_search.mjs（依赖入仓 + CI 权威）。",
   "engines": {
     "node": ">=22.22.2"
   },
   "scripts": {
-    "test": "node tests/assert_reveal.mjs"
+    "test": "node tests/assert_reveal.mjs && node tests/assert_search.mjs"
   },
   "devDependencies": {
     "jsdom": "^30.1.3"

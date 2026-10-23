@@ -48,8 +48,8 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 # reveal 协议行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
 npm test
 
-# 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B13 / reveal 产物 / 文章精选 /
-#               搜索索引投影 / 搜索交付面与 fastsearch 守门，共七类）
+# 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 / 文章精选 /
+#               搜索索引投影 / 搜索交付面与 fastsearch 守门 / 搜索入口构件与加载面，共八类）
 # 原名 tests/assert_product_states.py——2026-10 职责扩张后改名；ADR 与历史 handoff
 # 里的旧名指的就是本脚本。
 python3 tests/assert_site_contracts.py

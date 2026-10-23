@@ -15,3 +15,25 @@
 {{- end -}}
 {{- $js := $src | js.Build (dict "format" "iife") | resources.Minify | fingerprint }}
 <script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" crossorigin="anonymous" defer></script>
+
+{{- /*
+  搜索入口引擎加载点（候选 12 工单 0050 决议⑤⑥：全站 `/` 快捷键，轻形态）
+  ============================================================
+  站点层 assets/js/mf-search-entry.js（入口，import '@params' 虚拟模块）
+  + mf-search-entry-engine.js（纯引擎，行为契约定义处）。与 reveal 同款管线，
+  但 params 注入 search 页 RelPermalink——URL 走构建期、不写死，自动带
+  /mapleFlow/ 生产子路径（0046 的 ../index.json 逃逸事故防线）。
+  search 页缺席（fixture 等）时传空串：引擎静默不注册，菜单链接兜底。
+  测试：tests/assert_search.mjs（行为，测纯引擎源码）+
+        tests/assert_site_contracts.py（构件交付面 / 加载面 / URL 子路径）。
+*/ -}}
+{{- $entrySrc := resources.Get "js/mf-search-entry.js" -}}
+{{- if not $entrySrc -}}
+  {{- errorf "搜索入口引擎入口缺失：assets/js/mf-search-entry.js" -}}
+{{- end -}}
+{{- $entryParams := dict "searchUrl" "" -}}
+{{- with site.GetPage "page" "search" -}}
+  {{- $entryParams = dict "searchUrl" .RelPermalink -}}
+{{- end -}}
+{{- $entryJs := $entrySrc | js.Build (dict "format" "iife" "params" $entryParams) | resources.Minify | fingerprint }}
+<script src="{{ $entryJs.RelPermalink }}" integrity="{{ $entryJs.Data.Integrity }}" crossorigin="anonymous" defer></script>

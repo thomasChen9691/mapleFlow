@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖七类职责：
-产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B13（ADR-0008）
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖八类职责：
+产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B14（ADR-0008；
+B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构建）
 · reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
 （候选 8 工单 0043/0044 决议，ADR-0010）· 搜索交付面与 fastsearch 守门（候选 8
-工单 0046/0047 决议，ADR-0010）。
+工单 0046/0047 决议，ADR-0010）· 搜索入口构件与加载面（候选 12 工单 0050
+决议⑧：构件交付面 / URL 子路径 / 全站恒加载 / 第二个消费方反向守门）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -491,6 +493,7 @@ def assert_fixture(report):
     assert_search_index(report, dest)
     assert_search_projection(report, dest)
     assert_search_artifacts(report, dest)
+    assert_search_entry_artifacts(report, dest)
 
 
 def assert_post_featured(report):
@@ -634,6 +637,57 @@ def assert_search_artifacts(report, dest):
                  "fetch path drifted (expected same-dir index.json, no ../)")
 
 
+def assert_search_entry_artifacts(report, dest):
+    """搜索入口构件交付面（工单 0050 决议⑧：产物四条之①②）。
+
+    入口脚本经 extend_footer 的第二个 js.Build 全站恒加载（决议⑤：站点层
+    assets/js/mf-search-entry.js，iife + minify + fingerprint + defer，
+    与 mf-reveal 同款管线）：
+      · 每个非跳转页都引用 mf-search-entry*.js 构件（全站面；页面集与 B7
+        同款——排除 Hugo 别名/跳转页）；
+      · 构件落盘且内含注入的 searchUrl——fixture（dev baseURL）形态为
+        "/search.html"（决议⑥：URL 走 Hugo 构建期注入、不写死；生产子路径
+        形态 "/mapleFlow/search.html" 由 assert_real 守，见 assert_real）。
+    坏掉时的失效形态：入口全站静默缺失（无报错、无结果——静默失效类），
+    或 URL 逃逸域名根 404（0046 的 ../index.json 同类事故）。
+    """
+    pages = [p for p in sorted(dest.rglob("*.html"))
+             if 'http-equiv="refresh"' not in p.read_text(encoding="utf-8")]
+    missing, refs = [], []
+    for p in pages:
+        html = p.read_text(encoding="utf-8")
+        m = re.search(r'<script[^>]+src=["\']?([^"\'\s>]*mf-search-entry[^"\'\s>]*\.js)', html)
+        if not m:
+            missing.append(p.relative_to(dest).as_posix())
+        else:
+            refs.append((p, m.group(1)))
+    report.check(f"全站 {len(pages)} 页均引用 mf-search-entry 构件（extend_footer 恒加载）",
+                 bool(pages) and not missing, f"缺: {missing[:3]}")
+    if not refs:
+        return
+    # 引用 URL 有两种形态：页面相对（./ 或 ../，dev/fixture 构建实测）与绝对
+    # （/mapleFlow/...，生产构建）——按各自页面目录解析，两种都吃
+    resolved = [dest / re.sub(r'^/(mapleFlow/)?', '', ref) if ref.startswith('/')
+                else (p.parent / ref).resolve() for p, ref in refs]
+    off_disk = [r for r in resolved if not r.is_file()]
+    report.check("mf-search-entry 构件落盘（按页面目录解析引用）", not off_disk,
+                 f"missing: {[str(r) for r in off_disk[:2]]}")
+    if off_disk:
+        return
+    js = resolved[0].read_text(encoding="utf-8")
+    report.check('构件内含注入的 searchUrl（fixture 形态 "/search.html"）',
+                 '"/search.html"' in js, "injected URL missing in bundle")
+    # 反向牙（决议⑧③的 fixture 侧）：fastsearch 构件不得出现在非 search 页——
+    # ADR-0010「第二个消费方」触发条件的观测面；fixture 恒跑（--quick 也在），
+    # 与 assert_real 的同名检查各守一层（CI 全量 + 本地快速迭代都不缺席）。
+    leak = [p.relative_to(dest).as_posix() for p in pages
+            if p.name != "search.html"
+            and re.search(r'src=["\']?[^"\'\s>]*assets/js/search\.[^"\'\s>]*\.js',
+                          p.read_text(encoding="utf-8"))]
+    report.check("fastsearch 构件不泄漏到非 search 页（fixture；第二个消费方守门）",
+                 not leak, f"泄漏: {leak[:3]}")
+
+
 def assert_empty_state(report):
     """空态守门：产品数据整体缺席（hugo.Data.products 为 nil）时，
     product-items 返回空 slice，渲染 seam 出「暂无资源」——nil 路径
@@ -760,7 +814,43 @@ def assert_real(report):
     home_ids = [pid for pid in parse_rows(dest / "index.html") if pid]
     report.check("真实数据首页精选 = 3 条 featured 产品（yaml 序）", home_ids == REAL_HOME_FEATURED_IDS,
                  f"got {home_ids}")
+    assert_search_entry_real(report, dest)
     assert_theme_contract(report, dest)
+
+
+def assert_search_entry_real(report, dest):
+    """搜索入口的真实数据面（工单 0050 决议⑧：产物②③；--quick 跳过）。
+
+    ② 生产子路径 URL：入口构件（extend_footer 的 js.Build + params 注入）
+    内 searchUrl 必须是 "/mapleFlow/search.html"——fixture 是 dev baseURL
+    （"/search.html"），只有生产构建能验子路径；写死根路径会逃逸域名根 404
+    （0046 的 ../index.json 同类事故）。
+    ③ 加载面双向：入口构件全站每页在（全站恒加载）；fastsearch 构件仍仅
+    search 页引用——后半条是 ADR-0010「第二个消费方」触发条件的观测牙
+    （0049 缺口 7：此前无任何断言会提示重写条件已被触发）。
+    """
+    bundles = sorted((dest / "js").glob("mf-search-entry*.js"))
+    report.check("入口构件落盘（真实构建 dest/js/）", bool(bundles),
+                 "no mf-search-entry*.js under dest/js")
+    if bundles:
+        js = bundles[0].read_text(encoding="utf-8")
+        report.check('入口构件内 searchUrl 为生产子路径形态 "/mapleFlow/search.html"',
+                     '"/mapleFlow/search.html"' in js, "production subpath URL missing in bundle")
+    pages = [p for p in sorted(dest.rglob("*.html"))
+             if 'http-equiv="refresh"' not in p.read_text(encoding="utf-8")]
+    no_entry = [p.relative_to(dest).as_posix() for p in pages
+                if "mf-search-entry" not in p.read_text(encoding="utf-8")]
+    report.check(f"真实构建全站 {len(pages)} 页均挂入口构件", bool(pages) and not no_entry,
+                 f"缺: {no_entry[:3]}")
+    leak = []
+    for p in pages:
+        if p.name == "search.html":
+            continue
+        if re.search(r'src=["\']?[^"\'\s>]*assets/js/search\.[^"\'\s>]*\.js',
+                     p.read_text(encoding="utf-8")):
+            leak.append(p.relative_to(dest).as_posix())
+    report.check("fastsearch 构件仍仅 search 页引用（不引入第二个消费方）", not leak,
+                 f"泄漏到非 search 页: {leak[:3]}")
 
 
 def assert_theme_contract(report, dest):
@@ -801,6 +891,23 @@ def assert_theme_contract(report, dest):
                                         or k.startswith(("mailto:", "https://github.com/")))]
     report.check("菜单内部链接符合 uglyURLs 形态（.html 或 / 结尾）", not bad_urls,
                  f"bad: {bad_urls}")
+
+    # B14: 搜索入口菜单文案（工单 0050 决议④）：accesskey=/ 退役（浏览器中介、
+    # macOS 实为 Ctrl+Option+/，且零测试），title 后缀 "(Alt + /)" 改 "/"——
+    # 菜单广告的快捷键必须与全站 `/` 入口一致，否则提示即误导。
+    menu = re.search(r"<ul id=[\"']?menu[\"']?>(.*?)</ul>", post_html, re.S)
+    search_anchor = None
+    if menu:
+        for a in re.findall(r"<a [^>]*>", menu.group(1)):
+            if "search.html" in a:
+                search_anchor = a
+                break
+    report.check("B14 搜索菜单项 accesskey 已退役",
+                 search_anchor is not None and "accesskey" not in search_anchor,
+                 f"anchor={search_anchor}")
+    report.check('B14 搜索菜单项 title 提示为 "/"',
+                 search_anchor is not None and 'title="搜索 /"' in search_anchor,
+                 f"anchor={search_anchor}")
 
     # B10: 首页 RSS 只收 posts（内容策略，站点 rss.xml 的核心语义）。
     rss_path = dest / "index.xml"
