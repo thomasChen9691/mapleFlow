@@ -22,3 +22,7 @@
 - **研究产物**：存 `docs/wayfinder/research/NNNN-*.md`，工单 Resolution 里放指针。
 - ** fog 迁移**：工单答案使某条 Not yet specified 可精确表述时，落成新工单并从地图雾区删掉该条——它只以工单形态存在。
 - **越界定性**：若答案揭示某工单已越过目的地，关闭它并在地图 Out of scope 留一行（gist + 原因 + 链接），不进 Decisions so far。
+
+## 历史
+
+本追踪器于 2026-10 取代 OpenSpec：`openspec/` 与 `docs/OPENSPEC_GUIDE.md` 已于 2026-10-23 删除。旧提交或旧文档中出现的 `/opsx:` 命令、「OpenSpec 变更」字样均属历史，不再有效。
