@@ -23,7 +23,7 @@
   ② 排除规则——三类页面不进索引（缺一不可搜索）：
      .Params.searchHidden 为真 / .Layout "archives" / .Layout "search"
 
-  ③ 产品投影——直读 site.Data.products，不过产品索引门禁
+  ③ 产品投影——直读 hugo.Data.products，不过产品索引门禁
      （kind 门禁归属见工单 0045；原 0019 边界注释见下方 with 块内）：
      title = .name；permalink = <产品页 RelPermalink>#<.id>；
      summary = .summary；
@@ -68,12 +68,12 @@
 {{- end -}}
 {{- with site.GetPage "page" "products" -}}
   {{- $productsPermalink := .RelPermalink -}}
-  {{- /* kind 门禁归属（0019 悬置，工单 0045 定案）：此处直读 site.Data.products，
+  {{- /* kind 门禁归属（0019 悬置，工单 0045 定案）：此处直读 hugo.Data.products，
          不经 product-items 的 kind 词汇门禁——门禁归产品索引链（ADR-0006），
          索引不消费 kind（0044：不投影），故无需重复校验。坏 kind 由「产品页恒渲染
          全量 → product-items 恒被调用」触发 errorf，与索引是否存在无关；该隐式
          兜底的牙是 assert_real 的产品页全量断言（tests/assert_site_contracts.py）。 */ -}}
-  {{- range site.Data.products -}}
+  {{- range hugo.Data.products -}}
     {{- /* 投影守自己消费的字段（工单 0043 决议①）：name/summary 是投影的
            必填项——product-state 的 name 有渲染用缺省值，但投影不收缺省，
            缺字段即构建失败（消息前缀「搜索索引数据：」，钉子串见测试）。 */ -}}

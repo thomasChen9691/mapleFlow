@@ -55,7 +55,7 @@
   <div class="mf-spec-item">
     {{- /* 可下载产品 = 已上架条数；判定归产品状态模块（ADR-0004：模板不自行推导） */ -}}
     {{- $listedCount := 0 -}}
-    {{- range site.Data.products -}}
+    {{- range hugo.Data.products -}}
       {{- if (partial "product-state.html" .).listed -}}
         {{- $listedCount = add $listedCount 1 -}}
       {{- end -}}

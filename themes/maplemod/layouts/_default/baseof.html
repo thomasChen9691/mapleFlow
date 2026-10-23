@@ -16,11 +16,11 @@
 <!DOCTYPE html>
 {{- $theme := site.Params.defaultTheme | default "auto" }}
 {{- if eq $theme "dark" }}
-<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" class="no-js" data-theme="dark">
+<html lang="{{ site.Language }}" dir="{{ .Language.Direction | default "auto" }}" class="no-js" data-theme="dark">
 {{- else if eq $theme "light" }}
-<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" class="no-js" data-theme="light">
+<html lang="{{ site.Language }}" dir="{{ .Language.Direction | default "auto" }}" class="no-js" data-theme="light">
 {{- else }}
-<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default "auto" }}" class="no-js" data-theme="auto">
+<html lang="{{ site.Language }}" dir="{{ .Language.Direction | default "auto" }}" class="no-js" data-theme="auto">
 {{- end }}
 
 <head>
