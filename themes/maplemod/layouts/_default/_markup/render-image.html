@@ -1,8 +1,10 @@
 {{- $u := urls.Parse .Destination -}}
 {{- $src := $u.String -}}
+{{- $dims := dict -}}
 {{- if not $u.IsAbs -}}
   {{- $path := strings.TrimPrefix "./" $u.Path }}
-  {{- with or (.PageInner.Resources.Get $path) (resources.Get $path) -}}
+  {{- $res := or (.PageInner.Resources.Get $path) (resources.Get $path) -}}
+  {{- with $res -}}
     {{- $src = .RelPermalink -}}
     {{- with $u.RawQuery -}}
       {{- $src = printf "%s?%s" $src . -}}
@@ -10,9 +12,22 @@
     {{- with $u.Fragment -}}
       {{- $src = printf "%s#%s" $src . -}}
     {{- end -}}
+    {{- /* CLS 防线（2026-10-24 视觉批 E）：把图片真实尺寸写进 width/height
+           属性，浏览器据此预留宽高比空间——不带尺寸的图片在加载后会推动
+           版面（CLS），长文里尤明显。两个约束：
+             ① 值必须 string 化——printf "%q" 遇到 int 会格式化成 rune
+                 字面量（height='<' 就是这么来的，彩排实测踩过）；
+             ② 与站点层 img { height:auto } 配对使用，否则属性高度会锁死
+                 max-width 收缩后的图片，把它压扁。
+           解析不到资源（外部 URL / static 图）时不写——无解，由 max-width
+           兜底不溢出。decoding=async 一并注入（解码不阻塞渲染）。 */ -}}
+    {{- $dims = dict "width" (string .Width) "height" (string .Height) "decoding" "async" -}}
   {{- end -}}
 {{- end -}}
 {{- $attributes := merge .Attributes (dict "alt" .Text "src" $src "title" (.Title | transform.HTMLEscape) "loading" "lazy") -}}
+{{- /* merge 首参优先（彩排实测）：$attributes 在前 = 作者在 markdown 里显式写的
+       width/height 不被计算值覆盖，计算值只补缺。 */ -}}
+{{- $attributes = merge $attributes $dims -}}
 <img
   {{- range $k, $v := $attributes -}}
     {{- if $v -}}

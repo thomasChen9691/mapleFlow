@@ -606,6 +606,50 @@ def assert_search_link(report, dest):
                  f"bad href: {bad_href[:5]}")
 
 
+def assert_image_dimensions(report):
+    """文章内图片必须带真实 width/height（CLS 防线；2026-10-24 视觉批 E）。
+
+    背景：render-image.html 此前只写 alt/src/title/loading，**没有尺寸**——浏览器
+    无法预留宽高比空间，图片加载完成那一刻会推动版面（CLS）。本站文章现在都没
+    用图所以没暴露，但第一篇带图文章一上线就会抖。
+    修法：模板从资源对象注入 width/height（外部图解析不到则不写，无解），
+    站点层配 img { height:auto }（否则属性高度会把 max-width 收缩的图片压扁）。
+
+    两条实证约束（一次性站点彩排踩过，写进断言防回归）：
+      · 值必须 string 化：printf "%q" 遇 int 会格式化成 rune 字面量
+        （height='<' 就是这么来的）——断言直接查 height="60" 字面量；
+      · merge 首参优先：作者在 markdown 显式写的 width 不被计算值覆盖
+        （本 fixture 的图不写作者属性，测的是注入路径）。
+    锚 fixture content-img（页面包 + 真 120x60 PNG，尺寸是独立字面量）。
+    """
+    dest = TMP / "posts-fixture-img"
+    proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", "tests/fixtures/content-img"])
+    report.check("图片 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    # uglyURLs=true → 页面包文章落成 /posts/<slug>.html（不是 /posts/<slug>/index.html）
+    page = dest / "posts" / "fx-post-img.html"
+    if not page.is_file():
+        report.check("图片 fixture 文章页存在", False, f"missing {page}")
+        return
+    html = page.read_text(encoding="utf-8")
+    img = re.search(r"<img[^>]*>", html)
+    if not img:
+        report.check("fixture 文章页渲染 <img>", False, "no img tag")
+        return
+    tag = img.group(0)
+    report.check('图片注入真实 width="120"（string 化，非 rune 字面量）',
+                 re.search(r'width="120"', tag) is not None, tag[:160])
+    report.check('图片注入真实 height="60"', re.search(r'height="60"', tag) is not None, tag[:160])
+    report.check('图片带 decoding="async"', 'decoding="async"' in tag, tag[:160])
+    report.check('图片仍带 loading="lazy" 与 alt', 'loading="lazy"' in tag and 'alt="' in tag, tag[:160])
+    css_text = "\n".join(x.read_text(encoding="utf-8") for x in dest.rglob("*.css"))
+    report.check("产物 CSS 含 img { height:auto }（属性高度不锁死收缩图）",
+                 re.search(r"img\{[^}]*height:auto", css_text) is not None,
+                 "missing img height:auto rule")
+
+
 def assert_theme_transition(report, dest):
     """主题切换过渡（2026-10-24 视觉批 D2）：切换时颜色平滑过渡，不是硬闪。
 
@@ -1566,6 +1610,7 @@ def main():
     assert_post_nav(report)
     # 目录空态只依赖 fixture 构建，--quick 也跑（空态是 A1 的明确要求）
     assert_post_toc_empty(report)
+    assert_image_dimensions(report)
     assert_search_fixture(report)
     assert_empty_state(report)
     assert_bad_cases(report)

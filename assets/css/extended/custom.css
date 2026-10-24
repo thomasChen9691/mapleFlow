@@ -1457,3 +1457,11 @@ a, button {
   -webkit-tap-highlight-color: transparent;  /* 去 iOS 点击灰闪 */
   touch-action: manipulation;                /* 去双击缩放 300ms 延迟（滚动照常） */
 }
+
+/* ---------- 19. 图片尺寸与 CLS 防线（2026-10-24 视觉批 E） ----------
+   render-image.html 现在把真实 width/height 写进 <img> 属性（CLS 修法：
+   浏览器据此预留宽高比空间，图片加载时不推动版面）。**属性只是宽高比提示**，
+   必须配 height:auto——否则主题 reset 的 max-width:100% 在窄屏收缩宽度时，
+   属性高度会把图片锁死压扁（这是该修法的标准配对，单独加属性必踩）。
+   主题 reset 的 img 规则没有 height:auto，站点层在后覆盖补上。 */
+img { height: auto; }
