@@ -988,6 +988,73 @@ main:has(.post-entry + .post-entry) > .post-entry,
   transition-duration: var(--dur-0);
 }
 
+/* ---------- 16c. 搜索结果（fastsearch 渲染面；0051 渲染 + 2026-10 搜索视觉批补样式） ----------
+   .entry-summary 只出现在 search 页的结果 li 内（fastsearch.js 模板是唯一产出点，
+   全站其他位置不消费该类）。角色是「次级信息」：比标题低一档、两行截断——
+   200 字摘要不截断会把每条结果拉成小卡片（0051 决议②的呈现意图，视觉批补齐）。
+   · 字号 .84rem 与列表卡片摘要同档；行高 1.6 保中文两行可读
+   · 颜色走 --secondary，明暗双主题由令牌自动切换
+   · 不写 hover / active：点击热区由 search.css 的 #searchResults a 铺满 li 承担
+   · 断言：assert_search_artifacts「产物 CSS 含 .entry-summary 摘要规则」
+*/
+.entry-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: 3px;
+  font-size: .84rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--secondary);
+  overflow-wrap: break-word;
+}
+
+/* ---------- 16d. 主题切换过渡（2026-10-24 视觉批 D2） ----------
+   明暗切换时颜色平滑过渡而不是硬闪。**纯 CSS 实现**——不新增 JS、不新增动效
+   模块（ADR-0007 边界：新增动效引擎属另一张图的决策，本批只做视觉调值）。
+   机制与取舍：
+   · 只过渡颜色类属性（background-color / color / border-color），不动
+     transform / opacity——不与 reveal 协议抢属性；
+   · 包在 prefers-reduced-motion: no-preference 内：减弱动效偏好下瞬时切换
+     （与 1b 动效语言「减弱动效下定格最终画面」一致）；
+   · 卡片（.post-entry / .mf-post）必须重写整份 transition 列表：transition
+     是单属性、后写整份覆盖，故把 section 15 原有的 transform / box-shadow /
+     border-color 三项原样保留、只追加颜色两项。**改 section 15 的卡片动效时
+     同步改这里**（已知重复，换取零 JS 与零协议扩张；code review 记录在案）；
+   · 不覆盖、切换时瞬时变色的元素（已知取舍）：.mf-row（自带 background-color
+     过渡给悬停用）、.mf-btn / .mf-tag / .mf-cta / .mf-filter（控件自有交互过渡）、
+     .reveal（进场动效归协议）、.top-link（visibility / opacity 过渡）。
+   断言：assert_theme_transition（body 颜色过渡 + 卡片保留 transform +
+   reduced-motion 守卫）。
+*/
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .post-single,
+  .mf-spec,
+  .mf-cta-band,
+  .mf-index,
+  #searchResults li,
+  #searchbox input,
+  code,
+  pre,
+  .mf-kind,
+  .mf-featured {
+    transition: background-color var(--dur-2) var(--ease-std),
+                color var(--dur-2) var(--ease-std),
+                border-color var(--dur-2) var(--ease-std);
+  }
+  /* 卡片：保留原三项动效（时长/曲线与 section 15 一致），追加颜色两项 */
+  .post-entry,
+  .mf-post {
+    transition: transform var(--dur-2) var(--ease-in),
+                box-shadow var(--dur-2) var(--ease-in),
+                border-color var(--dur-1) var(--ease-in),
+                background-color var(--dur-2) var(--ease-std),
+                color var(--dur-2) var(--ease-std);
+  }
+}
+
 /* ---------- 17. 响应式（平板 / 手机，按 768 / 480 两档收口） ---------- */
 @media (max-width: 1024px) {
   .resume { padding-inline: 0; }

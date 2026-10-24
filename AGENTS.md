@@ -51,7 +51,8 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 npm test
 
 # 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 / 文章精选 /
-#               搜索索引投影 / 搜索交付面与 fastsearch 守门 / 搜索入口构件与加载面，共八类）
+#               搜索索引投影 / 搜索交付面与 fastsearch 守门 / 搜索入口构件与加载面 /
+#               阅读辅助 meta（2026-10-24）/ 主题切换过渡（2026-10-24），共十类）
 # 原名 tests/assert_product_states.py——2026-10 职责扩张后改名；ADR 与历史 handoff
 # 里的旧名指的就是本脚本。
 python3 tests/assert_site_contracts.py
@@ -115,6 +116,8 @@ python3 tests/assert_site_contracts.py
 
 14. **搜索入口纪律（ADR-0011；候选 12 全决议）**：全站 `/` 快捷键入口（`assets/js/mf-search-entry*.js`，站点层）与 fastsearch（主题层，仅 search 页）是**两个搜索相关 JS 面、加载条件不同，勿混勿并**。四条硬约束：① **入口只路由**（跳转 / 聚焦），检索归 fastsearch——「第二个消费方」由加载面双向断言守门（fastsearch 构件不得出现在非 search 页，一出现就红，那是 ADR-0010 重评触发条件的观测牙）；② **`js.Build` params 是 ESM import（`import * as params from '@params'`）不是全局对象**——旧 fastsearch 的裸 `params` 写法在现行 Hugo 下是死路径，别模仿；URL 经 params 注入、自动带 `/mapleFlow/` 子路径，写死根路径会逃逸域名根 404；③ **测试所有权分层**：新代码（入口引擎）常驻 jsdom 行为测试；legacy 引擎（fastsearch）只加弱产物断言 + 记录在案的一次性验证——不为 legacy 内部机制（XHR / onload / 模块级捕获）给 CI 征税；④ 改引擎契约 = 改 `mf-search-entry-engine.js` docstring + 同步 `tests/assert_search.mjs`；改 fastsearch 契约另见坑点 13。改本链先跑 `npm test` 与 `python3 tests/assert_site_contracts.py`。
 
+15. **i18n 文件名必须与语言键一致（2026-10-24 实测踩坑）**：`hugo.toml` 的 `defaultContentLanguage = "zh-cn"` ⇒ Hugo 只加载 `i18n/zh-cn.yaml`；文件名写成 `zh.yaml` **不会报错、静默不加载**，`i18n "read_time"` 等全部回落到模板里的 `default` 分支。症状是「中文站上出现 `3 min` / `4 words` / 分页只剩 `»` 没有文字」——静默失效，构建零 WARN。2026-10-24 已改名修复（`themes/maplemod/i18n/zh-cn.yaml`）。**新增语言键或改语言配置时，先 `grep -r "i18n \""` 找出消费点，再核对文件名**。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
@@ -147,6 +150,7 @@ python3 tests/assert_site_contracts.py
 | `layouts/partials/product-items.html` | 产品索引·数据准备 seam：索引渲染链唯一读 `hugo.Data.products` 处，featured 过滤（只认布尔 true，非 bool 即 errorf）+ limit 截断（缺省/0=全量，负数 errorf）+ 交付形态词汇契约（词表外 kind 即 errorf）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `layouts/partials/post-items.html` | 文章精选·数据准备 seam：首页精选链**唯一**读 `site.RegularPages` 并做 featured 判定/截断/补集处。**只服务首页精选链**（docstring 硬边界；其他面不得调用）。入参 `limit`（精选条数，负数 errorf）；一次返回 `{featured, rest, all}` 三片，`rest` 对**实际显示的精选**求补集（被截断的 featured 必须回落到网格）；featured 只认布尔 true、非 bool 即 errorf（循环遍历全部文章，外溢面继承此执法）。候选 7 决议；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `themes/maplemod/layouts/partials/featured-badge.html` | 精选标识（徽标）唯一实现与契约定义处（docstring）：文章页 / 列表卡片 / 首页网格三面呈现（首页精选行不加）；谓词 `eq .Params.featured true`，不得内联拷贝；断言 fixture 三面全锚、真实不锚。ADR-0012；测试 `tests/assert_site_contracts.py`，改动前先跑 |
+| `themes/maplemod/layouts/partials/post_meta.html` | meta 行渲染（两形态）：传 Page → 日期+阅读时长+字数+作者（文章页）；传 `dict "page" . "compact" true` → 省略字数（列表/首页卡片，窄卡上「N 字」会断行成孤字）。阅读时长/字数走 site 级 `ShowReadingTime`/`ShowWordCount`——**SOP 派生文 front matter 只透传 categories/tags/featured，site 级是唯一可达路径**。2026-10-24 阅读体验批；测试 `tests/assert_site_contracts.py`（文章页 / 卡片 / 真实 SOP 派生页三面），改动前先跑 |
 | `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `assets/js/mf-reveal/` | reveal 协议引擎（**契约定义处**）：app.js 入口 / filter.js 筛选 / scroll-in.js 滚动进场 / reduced-motion.js 降级判定。ADR-0007；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |
 | `assets/js/mf-search-entry-engine.js` | 搜索入口引擎（**契约定义处**，站点层）：全站 `/` 快捷键——跳转 search 页 / 页内聚焦 / 焦点与修饰键门控 / 无 searchUrl 静默降级；纯函数 seam（registerSearchEntry），零 Hugo 依赖；与 fastsearch.js 契约并列互指。经 `assets/js/mf-search-entry.js`（入口，import `@params`）由 extend_footer 双 js.Build 全站恒加载。候选 12 / ADR-0011；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |

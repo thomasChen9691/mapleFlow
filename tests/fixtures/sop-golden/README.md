@@ -58,3 +58,12 @@ python3 tests/capture_sop_golden.py <slug>    # 为指定 slug 新建/更新 gol
 序列 == 源笔记、笔记末行在场、标题 == H1、日期 == 注册表 date、
 meta description == 注册表）。页面正确性由 PR 期人工审阅把关——与
 任何内容变更同等流程。想更强就跑捕获脚本建一个 golden。
+
+## 重捕获记录
+
+- **2026-10-24（阅读体验批 A2）**：6 份 golden 重捕获。变更仅两处——
+  ① meta 行新增「N 分钟 · N 字」（site 级 `ShowReadingTime`/`ShowWordCount`
+  开启，正文与标题零变化，已逐字段核对 diff）；② 时间戳属性由 `+0800 CST`
+  变为 `+0800`（`post_meta.html` 早已改显式格式，规范化比对本就容忍两者，
+  本次捕获顺带对齐）。**此后 golden 含 A2 之后的 meta 形态**——迁移保真
+  语义是「相对上一次已审阅的页面形态不漂移」，不再是 2026-10-15 原样。

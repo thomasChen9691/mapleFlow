@@ -27,7 +27,7 @@
 | `layouts/partials/{author,anchored_headings,cover}.html` | 作者、标题锚点、封面 |
 | `layouts/partials/templates/{opengraph,twitter_cards,schema_json,_funcs/get-page-images}.html` | 社交与结构化数据（含 ogImage 兜底） |
 | `assets/css/**` · `assets/js/**` | 主题样式与 fastsearch/fuse |
-| `i18n/zh.yaml` | 单语言站点的 6 个在用键（prev/next/read_time/words/code_copy/code_copied） |
+| `i18n/zh-cn.yaml` | 单语言站点的 6 个在用键（prev/next/read_time/words/code_copy/code_copied）。文件名必须与 `defaultContentLanguage`（`zh-cn`）一致——曾名 `zh.yaml` 而从不被加载（2026-10-24 修复） |
 
 ## 分层契约
 

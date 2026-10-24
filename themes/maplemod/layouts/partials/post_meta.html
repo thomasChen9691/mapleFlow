@@ -14,21 +14,33 @@
   故不能靠配置消除。
 */ -}}
 {{- $scratch := newScratch }}
-
-{{- if not .Date.IsZero -}}
-{{- $scratch.Add "meta" (slice (printf "<span title='%s'>%s</span>" (.Date.Format "2006-01-02 15:04:05 -0700") (.Date | time.Format (default ":date_long" site.Params.DateFormat)))) }}
+{{- /* 2026-10-24（阅读体验批 A2）：支持两种调用形态——
+     · partial "post_meta.html" .                              → 文章页（Page）
+     · partial "post_meta.html" (dict "page" . "compact" true)  → 列表/网格卡片
+   compact = true 时省略字数：窄卡片上「N 字」会换行成孤字（首页 335px 卡片
+   实测「571 / 字」断行），阅读时长才是卡片上真正有决策价值的信息。
+   文章页两种都显示——那里空间足够，且是阅读前的投入判断。 */}}
+{{- $p := . -}}
+{{- $compact := false -}}
+{{- if reflect.IsMap . -}}
+  {{- $p = .page -}}
+  {{- $compact = .compact | default false -}}
 {{- end }}
 
-{{- if (.Param "ShowReadingTime") -}}
-{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "read_time" .ReadingTime | default (printf "%d min" .ReadingTime)))) }}
+{{- if not $p.Date.IsZero -}}
+{{- $scratch.Add "meta" (slice (printf "<span title='%s'>%s</span>" ($p.Date.Format "2006-01-02 15:04:05 -0700") ($p.Date | time.Format (default ":date_long" site.Params.DateFormat)))) }}
 {{- end }}
 
-{{- if (.Param "ShowWordCount") -}}
-{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "words" .WordCount | default (printf "%d words" .WordCount)))) }}
+{{- if ($p.Param "ShowReadingTime") -}}
+{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "read_time" $p.ReadingTime | default (printf "%d min" $p.ReadingTime)))) }}
 {{- end }}
 
-{{- if not (.Param "hideAuthor") -}}
-{{- with (partial "author.html" .) }}
+{{- if and (not $compact) ($p.Param "ShowWordCount") -}}
+{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "words" $p.WordCount | default (printf "%d words" $p.WordCount)))) }}
+{{- end }}
+
+{{- if not ($p.Param "hideAuthor") -}}
+{{- with (partial "author.html" $p) }}
 {{- $scratch.Add "meta" (slice (printf "<span>%s</span>" .)) }}
 {{- end }}
 {{- end }}

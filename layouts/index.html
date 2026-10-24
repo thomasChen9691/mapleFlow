@@ -135,7 +135,7 @@
       </div>
       {{- end }}
       <footer class="entry-footer">
-        {{- partial "post_meta.html" . -}}
+        {{- partial "post_meta.html" (dict "page" . "compact" true) -}}
       </footer>
       <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
     </article>

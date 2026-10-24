@@ -46,6 +46,12 @@ defaultTheme = "auto"
 
 author = "thomasChen"
 description = "运维开发 / SRE / DevOps 实战 SOP：Kubernetes、Docker、CI/CD、AIOps 与可观测性"
+# 阅读辅助：meta 行呈现阅读时长与字数（post_meta.html 经 .Param 读取，
+# site 级回退对 SOP 派生文同样生效——派生文 front matter 只透传
+# categories/tags/featured，页面级参数不可设）。中文串由主题 i18n
+# zh-cn.yaml 的 read_time / words 承载。断言：assert_post_reading_meta。
+ShowReadingTime = true
+ShowWordCount = true
 # SOP 发布管线的源笔记目录（content/posts/_content.gotmpl 的输入；
 # wayfinder 工单 0008/0009 决议）。测试构建可覆盖此值指向 fixture 笔记目录。
 sopNotesDir = "docs/sop"

@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖八类职责：
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖十类职责：
 产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B14（ADR-0008；
 B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构建）
 · reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
 （候选 8 工单 0043/0044 决议，ADR-0010）· 搜索交付面与 fastsearch 守门（候选 8
 工单 0046/0047 决议，ADR-0010）· 搜索入口构件与加载面（候选 12 工单 0050
-决议⑧：构件交付面 / URL 子路径 / 全站恒加载 / 第二个消费方反向守门）。
+决议⑧：构件交付面 / URL 子路径 / 全站恒加载 / 第二个消费方反向守门）
+· 阅读辅助 meta（2026-10-24 阅读体验批 A2：文章页含时长+字数、卡片 compact
+只留时长、SOP 派生页含两者）· 主题切换过渡（2026-10-24 视觉批 D2：body 颜色
+过渡 / 卡片保留 transform / reduced-motion 守卫）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -16,6 +19,10 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
     contentDir）：首页精选区的 3 条 featured、与「最近更新」网格互斥且并集全量、
     0 篇 featured 时精选区整块不渲染、featured 非布尔即构建失败；**精选标识
     三面呈现（文章页 / 列表卡片 / 首页网格）与首页精选行负向**（ADR-0012）
+  · 阅读辅助 seam —— 同一 posts fixture 的文章页 .post-meta 与 /posts/ 卡片
+    entry-footer（两种调用形态）+ 真实构建的 SOP 派生页（site 级参数可达派生文）
+  · 主题切换过渡 seam —— fixture 构建产物 CSS 的 body / 卡片 transition 规则
+    与 prefers-reduced-motion 守卫（视觉值非契约，只守规则在场）
   · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
     逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）、
     产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
@@ -528,6 +535,34 @@ def assert_fixture(report):
     assert_search_projection(report, dest)
     assert_search_artifacts(report, dest)
     assert_search_entry_artifacts(report, dest)
+    assert_theme_transition(report, dest)
+
+
+def assert_theme_transition(report, dest):
+    """主题切换过渡（2026-10-24 视觉批 D2）：切换时颜色平滑过渡，不是硬闪。
+
+    纯 CSS 实现（不新增 JS / 动效模块）：body 等大面元素在切换时过渡颜色；
+    卡片必须**保留原有 transform 动效**（按下反馈）再追加颜色，否则整份
+    transition 被覆盖会把卡片按压动画弄丢。
+    三条落地牙：
+      ① body 规则含 background-color 过渡（页面底色是切换最显眼的面）；
+      ② 卡片规则同时含 transform 与 background-color（保留动效 + 追加颜色）；
+      ③ 整段包在 prefers-reduced-motion 守卫内（减弱动效偏好下瞬时切换）。
+    只守「规则在场且属性对」，不守时长/曲线具体值（视觉值非契约，
+    与 .mf-featured 同款纪律）。期望值为独立字面量：属性名与媒体查询词是
+    spec 的直写，不从实现重算。
+    """
+    css_text = "\n".join(p.read_text(encoding="utf-8") for p in dest.rglob("*.css"))
+    report.check("产物 CSS 含 body 背景色过渡（主题切换不硬闪）",
+                 re.search(r"body[^{]*\{transition:[^}]*background-color", css_text) is not None,
+                 "missing body background-color transition in built CSS")
+    report.check("卡片过渡保留 transform 并追加 background-color（按下反馈不丢）",
+                 re.search(r"\.post-entry[^{]*\{transition:[^}]*transform[^}]*background-color",
+                           css_text) is not None,
+                 "card transition lost transform or background-color")
+    report.check("主题切换过渡包在 prefers-reduced-motion 守卫内",
+                 re.search(r"prefers-reduced-motion:\s*(no-preference|reduce)", css_text) is not None,
+                 "missing prefers-reduced-motion guard around theme transition")
 
 
 def assert_post_featured(report):
@@ -654,6 +689,56 @@ def assert_featured_badge(report):
                  ".mf-featured" in css_text, "missing .mf-featured rule in built CSS")
 
 
+def assert_post_reading_meta(report):
+    """文章页 meta 行的阅读辅助契约（2026-10-24 阅读体验批 A2）。
+
+    契约：文章页 meta 行同时呈现阅读时长（「N 分钟」）与字数（「N 字」）。
+    中文串由主题 i18n zh-cn.yaml 的 read_time / words 既有条目承载；本批只开
+    site 级参数 ShowReadingTime / ShowWordCount。**site 级是唯一可达路径**：
+    SOP 派生文的 front matter 只透传 categories/tags/featured
+    （content/posts/_content.gotmpl），页面级参数对派生文不可设。
+    本断言守「参数确实开启且渲染到产物」，不守具体数值——读数由正文长度
+    决定，非契约。
+
+    期望值为独立字面量：中文单位串「分钟」「字」来自 i18n 契约，不从实现重算。
+    锚 fixture 构建（POSTS_FIXTURE_CONFIG，与精选/徽标同套 fixture）。
+    """
+    dest = TMP / "posts-fixture-reading"
+    proc = build(POSTS_FIXTURE_CONFIG, dest)
+    report.check("阅读辅助 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+    sample = dest / "posts" / f"{POSTS_BADGE_FEATURED[0]}.html"
+    if not sample.is_file():
+        report.check("阅读辅助：样本文章页存在", False, f"missing {sample}")
+        return
+    html = sample.read_text(encoding="utf-8")
+    m = re.search(r'<div class="post-meta">(.*?)</div>', html, re.S)
+    if not m:
+        report.check("阅读辅助：文章页存在 post-meta 区块", False, "no .post-meta block")
+        return
+    meta = m.group(1)
+    report.check("meta 行含阅读时长（N 分钟）", re.search(r"\d+\s*分钟", meta) is not None,
+                 f"meta={meta[:160]!r}")
+    report.check("meta 行含字数（N 字）", re.search(r"\d+\s*字", meta) is not None,
+                 f"meta={meta[:160]!r}")
+    # 卡片形态（compact）：只留阅读时长、不留字数——窄卡片上「N 字」会换行成
+    # 孤字（首页 335px 卡片实测「571 / 字」断行）。同一 partial 两种形态，
+    # 本对断言守「两种形态确实不同」。
+    list_html = (dest / "posts" / "index.html").read_text(encoding="utf-8")
+    card = re.search(r'<footer class="entry-footer">(.*?)</footer>', list_html, re.S)
+    if not card:
+        report.check("阅读辅助：列表卡片存在 entry-footer", False, "no card footer in /posts/")
+        return
+    card_meta = card.group(1)
+    report.check("卡片 meta 含阅读时长", re.search(r"\d+\s*分钟", card_meta) is not None,
+                 f"card meta={card_meta[:160]!r}")
+    report.check("卡片 meta 不含字数（compact 形态，避免窄卡孤字换行）",
+                 re.search(r"\d+\s*字", card_meta) is None,
+                 f"card meta={card_meta[:160]!r}")
+
+
 def assert_search_fixture(report):
     """文章侧投影形态与三类排除规则（工单 0043 决议⑤；0044 字段契约的落面）。
 
@@ -731,6 +816,15 @@ def assert_search_artifacts(report, dest):
     report.check('构件含摘要渲染引用（item.summary；0051 呈现层加深）',
                  re.search(r'item\.summary|item\[[\'"]summary[\'"]\]', js) is not None,
                  "summary rendering reference missing in bundle")
+    # 视觉层落地牙（2026-10-24 搜索视觉批 B1）：搜索结果摘要必须有样式规则。
+    # 契约：.entry-summary 在结果 li 内是「次级信息」——必须带行数截断，
+    # 否则 200 字摘要把每条结果拉成小卡片（0051 已渲染、视觉批补样式）。
+    # 只守「规则存在且带截断」，不守字号/颜色具体值（视觉值非契约，
+    # 与 .mf-featured 同款纪律）。
+    css_text = "\n".join(p.read_text(encoding="utf-8") for p in dest.rglob("*.css"))
+    report.check("产物 CSS 含 .entry-summary 摘要规则（含行数截断）",
+                 re.search(r"\.entry-summary\{[^}]*line-clamp", css_text) is not None,
+                 "missing .entry-summary rule with line-clamp in built CSS")
 
 
 def assert_search_entry_artifacts(report, dest):
@@ -912,6 +1006,20 @@ def assert_real(report):
                  f"got {home_ids}")
     assert_search_entry_real(report, dest)
     assert_theme_contract(report, dest)
+    # 阅读辅助的真实面（2026-10-24 阅读体验批 A2）：SOP 派生文也必须显示
+    # 阅读时长/字数——这是「site 级参数是派生文唯一可达路径」的直接证据
+    # （派生文 front matter 只透传 categories/tags/featured）。
+    sop_page = dest / "posts" / "sop-ansible-automation-guide.html"
+    if not sop_page.is_file():
+        report.check("阅读辅助：真实 SOP 派生页存在", False, f"missing {sop_page}")
+    else:
+        html = sop_page.read_text(encoding="utf-8")
+        m = re.search(r'<div class="post-meta">(.*?)</div>', html, re.S)
+        sop_meta = m.group(1) if m else ""
+        report.check("SOP 派生页 meta 含阅读时长与字数（site 级参数可达派生文）",
+                     re.search(r"\d+\s*分钟", sop_meta) is not None
+                     and re.search(r"\d+\s*字", sop_meta) is not None,
+                     f"meta={sop_meta[:160]!r}")
 
 
 def assert_search_entry_real(report, dest):
@@ -1065,6 +1173,7 @@ def main():
     assert_post_featured_bad_int(report)
     assert_post_grid_empty(report)
     assert_featured_badge(report)
+    assert_post_reading_meta(report)
     assert_search_fixture(report)
     assert_empty_state(report)
     assert_bad_cases(report)
