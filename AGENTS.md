@@ -52,8 +52,8 @@ npm test
 
 # 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 / 文章精选 /
 #               搜索索引投影 / 搜索交付面与 fastsearch 守门 / 搜索入口构件与加载面 /
-#               阅读辅助 meta / 主题切换过渡 / 文章目录 / 上下篇导航 / 分页页码
-#               （2026-10-24），共十三类）
+#               阅读辅助 meta / 主题切换过渡 / 文章目录 / 上下篇导航 / 分页页码 /
+#               触屏搜索入口（2026-10-24），共十四类）
 # 原名 tests/assert_product_states.py——2026-10 职责扩张后改名；ADR 与历史 handoff
 # 里的旧名指的就是本脚本。
 python3 tests/assert_site_contracts.py
