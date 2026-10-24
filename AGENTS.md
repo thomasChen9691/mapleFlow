@@ -14,14 +14,17 @@
 
 | 分支 | 用途 | 操作权限 |
 |------|------|----------|
-| `main` | 源码与配置；所有开发工作在此分支 | 你应在此分支工作 |
+| `main` | 源码与配置；**受规则集 `main-protection` 保护** | 只能经 PR 合入（squash），**直推会被拒绝** |
 | `gh-pages` | 由 GitHub Actions 自动构建的静态站点产物 | **不要手动修改/提交** |
-| `origin/main` | 远端源码；推送到它会触发部署 | 仅通过 push 更新 |
+| 特性分支 | 日常开发落点 | 推送后开 PR → 门禁绿 → squash 合并 → 自动部署 |
+
+- **分支规则集（2026-10-24 配置，仓库 Settings → Rules → Rulesets）**：Target `main`，Active；启用 Require status checks to pass（唯一必需检查 = `验证（测试 + 构建 + 守门）`，即 verify job；Loose 模式——不要求分支最新）、Require a pull request before merging（**Required approvals = 0**——solo 仓库，设 1 以上自己的 PR 无人可批）、Allowed merge methods **仅 squash**（配合 Require linear history）、Block force pushes、Require linear history、Restrict deletions；Bypass list 留空。**直接 `git push origin main` 从此被拒**——这是预期行为，新流程见下。
+- 日常流程：`git checkout -b <type>/<topic>` → 提交 → `git push origin <branch>` → 开 PR（`pull_request` 触发即跑完整门禁）→ 验证绿 → **Squash and merge** → 合并动作触发部署（push main → verify → deploy）。本地合入前可用 `git fetch origin && git rebase origin/main` 同步。
 
 - CI/CD 流水线见 `.github/workflows/ci-cd.yml`（2026-10-24 由 `deploy.yml` 重建为双 job；历史文档里的 `deploy.yml` 指同一文件）：
   - **verify job**（PR → main、push → main、手动触发都跑）：`npm test`（reveal + 搜索前端行为断言）→ 生产构建（**零 WARN 守门**）→ `assert_site_contracts.py` → `assert_sop_pipeline.py` → **localhost 泄漏守门**（坑点 5b）；
   - **deploy job**（`needs: verify`，仅 main 的 push / 手动触发）：重建 → `peaceiris/actions-gh-pages` 推 `gh-pages`。
-  - 即：**PR 阶段就有完整门禁**（此前只在 push 后验证，红提交先落 main 再失败）；推送 main 且全绿才部署。
+  - 即：**PR 阶段就有完整门禁**（此前只在 push 后验证，红提交先落 main 再失败）；且规则集把门禁变成硬约束——检查不绿的 PR 合不进去，验证不过的合并不可能发生。
 - 切勿直接编辑 `gh-pages` 或本地 `public/`（构建产物会覆盖）。
 
 ## 3. 核心命令
