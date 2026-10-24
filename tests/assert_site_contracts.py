@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖十一类职责：
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖十三类职责：
 产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B14（ADR-0008；
 B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构建）
 · reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
@@ -12,7 +12,8 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
 只留时长、SOP 派生页含两者）· 主题切换过渡（2026-10-24 视觉批 D2：body 颜色
 过渡 / 卡片 --card-motion 单一真源 / 次级文本 color 过渡 / reduced-motion 守卫）
 · 文章目录（2026-10-24 阅读体验批 A1：条目与正文 h2 数量/文本/顺序全等；无 h2
-的页面整块不渲染）。
+的页面整块不渲染）· 上下篇导航（2026-10-24 A3：上一篇=更早/下一篇=更晚、首末单边、
+不指向自身）· 分页页码（2026-10-24 D3：页码链 + aria-current、单页不出分页器）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -27,6 +28,10 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
     无标题文章页（空态整块不渲染）
   · 主题切换过渡 seam —— fixture 构建产物 CSS 的 body / 卡片 / 次级文本 transition
     规则与 prefers-reduced-motion 守卫（视觉值非契约，只守规则在场）
+  · 上下篇 seam —— fixture 构建（6 篇固定日期）的首/中/末三面：日期序锚死
+    「上一篇=更早、下一篇=更晚」的映射（方法名与中文顺序易反，见 post-nav.html docstring）
+  · 分页 seam —— 真实构建 /posts/ 两页的页码链与 aria-current（pagerSize=6 是配置事实）
+    + fixture 六篇恰好一页时不出分页器
   · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
     逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）、
     产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
@@ -808,6 +813,190 @@ def assert_post_toc(report):
                  "column count missing (desktop 2 / mobile 1)")
 
 
+def assert_post_nav(report):
+    """上下篇导航（2026-10-24 阅读体验批 A3）：按日期相邻，首末篇单边，不指向自身。
+
+    契约：文章页底部 `<nav class="post-nav">` 给「上一篇 / 下一篇」——
+      · **上一篇 = 更早 = `.PrevInSection`**、**下一篇 = 更晚 = `.NextInSection`**
+        （fixture 日期序实测坐实：feat-c 的 Prev 是 feat-b、Next 是 feat-d；
+        不要凭方法名猜，也不要照抄早期写反的文档）；
+      · 首篇只有下一篇、末篇只有上一篇；两侧都无（单篇文章）时整块不渲染；
+      · 链接指向 /posts/ 下另一篇，不指向自身；
+      · **范围守卫**：仅 `posts` section（about/products/search 等独立页互为 root
+        section 邻居，无守卫会渲染「上一篇：搜索」这类链接——真实构建实测泄漏）。
+    锚三套构建（本函数自建，不依赖其他断言的构建顺序）：
+      · 6 篇 fixture（日期字面量：feat-a 02-01 最旧 → newest 02-10 最新）：
+        feat-c（02-03）上一篇 = feat-b（02-02）、下一篇 = feat-d（02-04）；
+        newest 只有上一篇 = fx-post-false（02-05）；feat-a 只有下一篇 = feat-b；
+      · 单篇 fixture（content-one）：不出 .post-nav（全空分支）；
+      · 真实构建：about.html 不出 .post-nav（section 守卫）。
+    期望值为 fixture 日期序 / 单篇事实的直写（独立字面量）。
+    """
+    dest = TMP / "posts-fixture-nav"
+    proc = build(POSTS_FIXTURE_CONFIG, dest)
+    report.check("上下篇 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+
+    def nav_of(root, slug):
+        page = root / "posts" / f"{slug}.html"
+        if not page.is_file():
+            return None
+        html = page.read_text(encoding="utf-8")
+        return re.search(r'<nav class="post-nav"[^>]*>(.*?)</nav>', html, re.S)
+
+    def link_slug(nav_html, cls):
+        if not nav_html:
+            return None
+        m = re.search(r'<a class="' + cls + r'"[^>]*href="([^"]+)"', nav_html)
+        if not m:
+            return None
+        return m.group(1).rstrip("/").split("/")[-1].replace(".html", "")
+
+    mid = nav_of(dest, "fx-post-feat-c")
+    if mid is None:
+        report.check("中间文章渲染 post-nav", False, "no .post-nav on fx-post-feat-c")
+    else:
+        body = mid.group(1)
+        report.check("中间文章：上一篇 = 更早的 feat-b（PrevInSection 语义）",
+                     link_slug(body, "post-nav-prev") == "fx-post-feat-b",
+                     f"got prev={link_slug(body, 'post-nav-prev')}")
+        report.check("中间文章：下一篇 = 更晚的 feat-d（NextInSection 语义）",
+                     link_slug(body, "post-nav-next") == "fx-post-feat-d",
+                     f"got next={link_slug(body, 'post-nav-next')}")
+        report.check("导航不指向自身", "fx-post-feat-c" not in body, "self link found")
+
+    newest = nav_of(dest, "fx-post-newest")
+    if newest is None:
+        report.check("末篇文章渲染 post-nav", False, "no .post-nav on fx-post-newest")
+    else:
+        report.check("末篇只有上一篇（无下一篇）",
+                     link_slug(newest.group(1), "post-nav-prev") == "fx-post-false"
+                     and link_slug(newest.group(1), "post-nav-next") is None,
+                     f"got prev={link_slug(newest.group(1), 'post-nav-prev')} "
+                     f"next={link_slug(newest.group(1), 'post-nav-next')}")
+
+    oldest = nav_of(dest, "fx-post-feat-a")
+    if oldest is None:
+        report.check("首篇文章渲染 post-nav", False, "no .post-nav on fx-post-feat-a")
+    else:
+        report.check("首篇只有下一篇（无上一篇）",
+                     link_slug(oldest.group(1), "post-nav-next") == "fx-post-feat-b"
+                     and link_slug(oldest.group(1), "post-nav-prev") is None,
+                     f"got prev={link_slug(oldest.group(1), 'post-nav-prev')} "
+                     f"next={link_slug(oldest.group(1), 'post-nav-next')}")
+
+    # 单篇文章：两侧都无 → 整块不渲染
+    solo = TMP / "posts-fixture-nav-solo"
+    proc = build(POSTS_FIXTURE_CONFIG, solo, ["--contentDir", "tests/fixtures/content-one"])
+    if proc.returncode != 0:
+        report.check("单篇 fixture 构建成功", False, proc.stderr[-400:])
+    else:
+        solo_page = solo / "posts" / "solo-post.html"
+        report.check("单篇文章不出 post-nav（两侧都无时整块不渲染）",
+                     solo_page.is_file() and 'class="post-nav"' not in solo_page.read_text(encoding="utf-8"),
+                     "post-nav rendered on a single-article site")
+
+    # 范围守卫（真实构建面）见 assert_post_nav_scope——那里 real 一定已构建
+
+
+def assert_post_nav_scope(report):
+    """上下篇导航的范围守卫（A3，真实构建面）：非 posts 文章页不得出导航。
+
+    single.html 同时服务 about / products / search 等独立页；它们互为 root
+    section 的邻居，不加 `eq .Section "posts"` 守卫会渲染出
+    「上一篇：搜索 / 下一篇：产品」这类无意义链接（2026-10-24 实测泄漏）。
+    单独成函数是因为它依赖 assert_real 的产物，必须在其后执行——放在
+    assert_post_nav 里用 `if about.is_file()` 兜底会变成静默跳过。
+    """
+    real = TMP / "real"
+    for name in ("about.html", "products.html", "search.html"):
+        page = real / name
+        if not page.is_file():
+            report.check(f"范围守卫：{name} 产物存在", False, f"missing {page}")
+            continue
+        report.check(f"非文章页不出 post-nav（{name}）",
+                     'class="post-nav"' not in page.read_text(encoding="utf-8"),
+                     "post-nav leaked to a non-article page")
+
+
+def assert_pagination(report):
+    """分页页码（2026-10-24 阅读体验批 D3）：页码链 + 当前页标记 + 单页不出分页器。
+
+    契约（站点与主题共用同一 partial）：
+      · 多页时渲染 `.page-num` 链（1..N），当前页是 `<span aria-current="page">`，
+        其余是链接；首/末页的上一页/下一页按现有习惯隐藏；
+      · 只有一页时整块不渲染（与空态纪律一致）。
+    锚真实构建（`pagerSize = 6`：10 篇文章 → /posts/ 2 页；首页补集 7 篇 → 2 页）
+    与 fixture 构建（6 篇 → 恰好 1 页，不出分页器）。
+    期望值为配置事实（pagerSize=6 + 文章数），不从 paginator 实现重算。
+    """
+    real = TMP / "real"
+    if not real.is_dir():
+        report.check("分页：真实构建产物存在", False, "missing tests/tmp/real")
+        return
+    for label, path, cur in (("/posts/ 第 1 页", real / "posts" / "index.html", "1"),
+                             ("/posts/ 第 2 页", real / "posts" / "page" / "2" / "index.html", "2")):
+        if not path.is_file():
+            report.check(f"分页：{label} 产物存在", False, f"missing {path}")
+            continue
+        html = path.read_text(encoding="utf-8")
+        block = re.search(r'<nav class="pagination"[^>]*>(.*?)</nav>', html, re.S)
+        if not block:
+            report.check(f"{label}：渲染分页器", False, "no .pagination block")
+            continue
+        body = block.group(1)
+        nums = re.findall(r'<a class="page-num"[^>]*>(\d+)</a>|<span class="page-num is-current"[^>]*>(\d+)</span>', body)
+        flat = [a or b for a, b in nums]
+        report.check(f"{label}：页码链 = 1,2", flat == ["1", "2"], f"got {flat}")
+        cur_m = re.search(r'<span class="page-num is-current"[^>]*aria-current="page"[^>]*>(\d+)</span>', body)
+        report.check(f"{label}：当前页标记 = {cur}", cur_m is not None and cur_m.group(1) == cur,
+                     f"got {cur_m.group(1) if cur_m else None}")
+
+    # 站点层首页共用同一 partial（spec：两处共用同一实现）——首页补集 7 篇 → 2 页
+    home = real / "index.html"
+    if home.is_file():
+        hb = re.search(r'<nav class="pagination"[^>]*>(.*?)</nav>',
+                       home.read_text(encoding="utf-8"), re.S)
+        report.check("首页也渲染页码链（与主题列表共用同一 partial）",
+                     hb is not None
+                     and re.findall(r'class="page-num(?: is-current)?"[^>]*>(\d+)<', hb.group(1)) == ["1", "2"],
+                     "home pagination missing or wrong numbers")
+
+    fixture = TMP / "posts-fixture-reading"
+    one_page = fixture / "posts" / "index.html"
+    if one_page.is_file():
+        report.check("单页列表不出分页器（6 篇 = 1 页）",
+                     'class="pagination"' not in one_page.read_text(encoding="utf-8"),
+                     "pagination rendered on a single-page list")
+
+    # 分页窗口：pagerSize=1 的标量覆盖让 6 篇 fixture 产出 6 页，走到窗口分支
+    # （真实配置 2 页时窗口恒全显、page-gap 永不出现——没有这条断言，删掉整段
+    #  窗口逻辑套件仍绿）。cur=1 → 1,2,3,…,6；cur=6 → 1,…,4,5,6；每段只补一次省略号。
+    win_dest = TMP / "pager-window"
+    proc = build("hugo.toml,tests/hugo.test.posts.toml,tests/hugo.test.pager.toml", win_dest)
+    report.check("分页窗口 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode == 0:
+        for label, path, expect in (
+                ("第 1 页", win_dest / "posts" / "index.html", ["1", "2", "3", "6"]),
+                ("第 6 页", win_dest / "posts" / "page" / "6" / "index.html", ["1", "4", "5", "6"])):
+            if not path.is_file():
+                report.check(f"分页窗口：{label} 产物存在", False, f"missing {path}")
+                continue
+            block = re.search(r'<nav class="pagination"[^>]*>(.*?)</nav>',
+                              path.read_text(encoding="utf-8"), re.S)
+            if not block:
+                report.check(f"分页窗口：{label} 渲染分页器", False, "no .pagination")
+                continue
+            body = block.group(1)
+            nums = re.findall(r'class="page-num(?: is-current)?"[^>]*>(\d+)<', body)
+            gaps = body.count("page-gap")
+            report.check(f"分页窗口：{label} 页码 = {','.join(expect)} 且只补一次省略号",
+                         nums == expect and gaps == 1, f"got nums={nums} gaps={gaps}")
+
+
 def assert_post_toc_empty(report):
     """目录空态（A1）：无 h2 的页面整块不渲染（与精选区/网格同一空态纪律）。
 
@@ -1260,6 +1449,7 @@ def main():
     assert_post_grid_empty(report)
     assert_featured_badge(report)
     assert_post_reading_meta(report)
+    assert_post_nav(report)
     # 目录空态只依赖 fixture 构建，--quick 也跑（空态是 A1 的明确要求）
     assert_post_toc_empty(report)
     assert_search_fixture(report)
@@ -1272,6 +1462,8 @@ def main():
         assert_real(report)
         # 目录正面锚真实构建产物（--quick 不建 real，故跟随 assert_real 一起跳过）
         assert_post_toc(report)
+        assert_post_nav_scope(report)
+        assert_pagination(report)
 
     width = max(len(name) for _, name, _ in report.items)
     for ok, name, detail in report.items:

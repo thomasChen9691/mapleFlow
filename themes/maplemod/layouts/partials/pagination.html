@@ -1,0 +1,62 @@
+{{- /*
+  pagination.html —— 分页器（页码链 + 上一页/下一页；契约定义处）
+  ============================================================
+  2026-10-24 阅读体验批 D3。站点层首页（layouts/index.html）与主题层列表
+  （_default/list.html）共用本 partial——此前两处各写一份 prev/next 标记，
+  改一处忘另一处即漂移。
+
+  入参：paginator（`.Paginate` 的返回值）。
+
+  DOM 契约：
+    写  <footer class="page-footer"><nav class="pagination" aria-label="分页">
+          [<a class="prev">« 上一页</a>]              ← 有上一页才渲染
+          <span class="page-nums">
+            <a class="page-num" href>{n}</a> | <span class="page-num is-current"
+              aria-current="page">{n}</span> | <span class="page-gap">…</span>
+          </span>
+          [<a class="next">下一页 »</a>]              ← 有下一页才渲染
+        </nav></footer>
+    页码窗口 首尾恒显示 + 当前页 ±2；跳过的区间用 page-gap 省略号补一次
+        （scratch 变量 $shown 记上一枚已渲染页码，避免连续省略号）。
+    空态 只有一页（TotalPages <= 1）时整块不渲染。
+    文案 上一页/下一页走 i18n 的 prev_page / next_page（zh-cn.yaml 既有键）——
+        不要硬写中文：那会让两个键变成零读取点的死配置（坑点 3 / 坑点 15）。
+    弃用 ShowPageNums 参数：原实现把「N/M」塞进上一页/下一页文案；有页码链后
+        该信息冗余，且本参数从未在 hugo.toml 开启（无读取点即死配置，坑点 3）。
+    视觉值在站点层 custom.css 的 16f 节（页码走等宽小字、当前页实心药丸）。
+
+  断言：assert_pagination（真实构建 /posts/ 两页的页码链与 aria-current；
+  fixture 六篇恰好一页 → 不出分页器）。
+*/ -}}
+{{- $p := . -}}
+{{- if gt $p.TotalPages 1 }}
+<footer class="page-footer">
+  <nav class="pagination" aria-label="分页">
+    {{- if $p.HasPrev }}
+    <a class="prev" href="{{ $p.Prev.URL | absURL }}">«&nbsp;{{ i18n "prev_page" }}</a>
+    {{- end }}
+    <span class="page-nums">
+      {{- $cur := $p.PageNumber -}}
+      {{- $total := $p.TotalPages -}}
+      {{- $shown := 0 -}}
+      {{- range $p.Pagers -}}
+        {{- $n := .PageNumber -}}
+        {{- $d := sub $n $cur -}}
+        {{- if lt $d 0 }}{{ $d = mul $d -1 }}{{ end -}}
+        {{- if or (eq $n 1) (eq $n $total) (le $d 2) -}}
+          {{- if gt (sub $n $shown) 1 }}<span class="page-gap" aria-hidden="true">…</span>{{ end -}}
+          {{- if eq $n $cur -}}
+          <span class="page-num is-current" aria-current="page">{{ $n }}</span>
+          {{- else -}}
+          <a class="page-num" href="{{ .URL | absURL }}">{{ $n }}</a>
+          {{- end -}}
+          {{- $shown = $n -}}
+        {{- end -}}
+      {{- end -}}
+    </span>
+    {{- if $p.HasNext }}
+    <a class="next" href="{{ $p.Next.URL | absURL }}">{{ i18n "next_page" }}&nbsp;»</a>
+    {{- end }}
+  </nav>
+</footer>
+{{- end }}

@@ -25,6 +25,8 @@
 | `layouts/partials/extend_footer.html` | reveal 协议引擎的 js.Build 加载点（源码在站点 `assets/js/mf-reveal/`） |
 | `layouts/partials/post_meta.html` | 文章元信息；title 属性用显式时区格式（构建机时区不决定字节）；支持 `compact` 形态（卡片省略字数） |
 | `layouts/partials/toc.html` | 文章目录（文内顶部，只收 h2；契约定义处 = 文件头 docstring；2026-10-24 阅读体验批 A1 重新引入——0029 曾删掉上游的 toc partial） |
+| `layouts/partials/post-nav.html` | 上下篇导航（上一篇=更早 / 下一篇=更晚；首末单边；2026-10-24 A3——0029 删掉的上游 `post_nav_links` 由第一方实现替代） |
+| `layouts/partials/pagination.html` | 分页器（页码链 + 上一页/下一页；站点层首页与主题层列表共用；2026-10-24 D3） |
 | `layouts/partials/{author,anchored_headings,cover}.html` | 作者、标题锚点、封面 |
 | `layouts/partials/templates/{opengraph,twitter_cards,schema_json,_funcs/get-page-images}.html` | 社交与结构化数据（含 ogImage 兜底） |
 | `assets/css/**` · `assets/js/**` | 主题样式与 fastsearch/fuse |

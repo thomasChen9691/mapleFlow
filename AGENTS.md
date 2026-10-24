@@ -52,7 +52,8 @@ npm test
 
 # 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 / 文章精选 /
 #               搜索索引投影 / 搜索交付面与 fastsearch 守门 / 搜索入口构件与加载面 /
-#               阅读辅助 meta / 主题切换过渡 / 文章目录（2026-10-24），共十一类）
+#               阅读辅助 meta / 主题切换过渡 / 文章目录 / 上下篇导航 / 分页页码
+#               （2026-10-24），共十三类）
 # 原名 tests/assert_product_states.py——2026-10 职责扩张后改名；ADR 与历史 handoff
 # 里的旧名指的就是本脚本。
 python3 tests/assert_site_contracts.py
@@ -152,6 +153,8 @@ python3 tests/assert_site_contracts.py
 | `themes/maplemod/layouts/partials/featured-badge.html` | 精选标识（徽标）唯一实现与契约定义处（docstring）：文章页 / 列表卡片 / 首页网格三面呈现（首页精选行不加）；谓词 `eq .Params.featured true`，不得内联拷贝；断言 fixture 三面全锚、真实不锚。ADR-0012；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `themes/maplemod/layouts/partials/post_meta.html` | meta 行渲染（两形态）：传 Page → 日期+阅读时长+字数+作者（文章页）；传 `dict "page" . "compact" true` → 省略字数（列表/首页卡片，窄卡上「N 字」会断行成孤字）。阅读时长/字数走 site 级 `ShowReadingTime`/`ShowWordCount`——**SOP 派生文 front matter 只透传 categories/tags/featured，site 级是唯一可达路径**。2026-10-24 阅读体验批；测试 `tests/assert_site_contracts.py`（文章页 / 卡片 / 真实 SOP 派生页三面），改动前先跑 |
 | `themes/maplemod/layouts/partials/toc.html` | 文章目录（**契约定义处**，docstring）：文内顶部、只收 h2（`hugo.toml` 的 `[markup.tableOfContents] startLevel=2 endLevel=2`）；桌面两列（`custom.css` 16e）/ ≤768px 单列（17 节覆写）、无滚动高亮、不折叠。**空态判据是 `.TableOfContents` 里含 `<a `**——无标题时 Hugo 返回空 `<nav>` 而非空串，`with` 判真值会渲染空目录框。断言 `assert_post_toc`（真实 SOP 页条目 == 源笔记 h2 序列；列数 / 无 details）+ `assert_post_toc_empty`（fixture 无标题页不渲染，`--quick` 也跑），改动前先跑 |
+| `themes/maplemod/layouts/partials/post-nav.html` | 上下篇导航（**契约定义处**，docstring）：`posts` section 内按日期相邻。**语义映射易反**——上一篇=更早=`.PrevInSection`、下一篇=更晚=`.NextInSection`（fixture 日期序实测坐实）；首/末篇单边渲染，两侧都无时整块不渲染；窄屏（≤480px）竖排。断言 `assert_post_nav`，改动前先跑 |
+| `themes/maplemod/layouts/partials/pagination.html` | 分页器（**契约定义处**，docstring）：站点层首页与主题层列表**共用同一 partial**（此前两处各写一份）；页码链首尾恒显 + 当前页 ±2，跳过的区间用 `page-gap` 补一次省略号；当前页是 `<span aria-current="page">`；单页不出分页器；`ShowPageNums` 参数已弃用（有页码链后冗余）。断言 `assert_pagination`，改动前先跑 |
 | `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `assets/js/mf-reveal/` | reveal 协议引擎（**契约定义处**）：app.js 入口 / filter.js 筛选 / scroll-in.js 滚动进场 / reduced-motion.js 降级判定。ADR-0007；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |
 | `assets/js/mf-search-entry-engine.js` | 搜索入口引擎（**契约定义处**，站点层）：全站 `/` 快捷键——跳转 search 页 / 页内聚焦 / 焦点与修饰键门控 / 无 searchUrl 静默降级；纯函数 seam（registerSearchEntry），零 Hugo 依赖；与 fastsearch.js 契约并列互指。经 `assets/js/mf-search-entry.js`（入口，import `@params`）由 extend_footer 双 js.Build 全站恒加载。候选 12 / ADR-0011；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |

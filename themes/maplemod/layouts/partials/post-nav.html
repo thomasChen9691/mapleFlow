@@ -1,0 +1,48 @@
+{{- /*
+  post-nav.html —— 上下篇导航（契约定义处）
+  ============================================================
+  2026-10-24 阅读体验批 A3。
+
+  **语义映射（最容易写反的地方，已用 fixture 日期序实测坐实）**：
+    上一篇 = 更早的文章 = `.PrevInSection`
+    下一篇 = 更晚的文章 = `.NextInSection`
+  实测证据（fixture 六篇，feat-a 02-01 最旧 → newest 02-10 最新）：
+    feat-c（02-03）的 `.PrevInSection` = feat-b（02-02）、`.NextInSection` = feat-d（02-04）；
+    newest（02-10）的 `.NextInSection` = nil（没有更新的）。**不要凭方法名猜**——
+  改这里之前先看 assert_post_nav 的日期序锚。
+
+  范围：**仅 `posts` section 的文章页**（`eq .Section "posts"` 守卫）。single.html 同时
+  服务 about / products / search 等独立页——它们互为 root section 的「邻居」，
+  不加守卫会渲染出「上一篇：搜索 / 下一篇：产品」这类无意义链接（2026-10-24 实测泄漏，
+  评审抓出）。分类/标签页不是文章页，本就不走 single.html。
+
+  DOM 契约：
+    写  <nav class="post-nav" aria-label="文章导航">
+          <a class="post-nav-prev" href rel="prev"><span class="post-nav-label">上一篇</span>
+            <span class="post-nav-title">{标题}</span></a>
+          <a class="post-nav-next" href rel="next">…下一篇…</a>
+        </nav>
+    空态 首篇只有下一篇、末篇只有上一篇；两者都无（单篇文章）时整块不渲染
+        （与精选区/网格同一空态纪律）。视觉值在站点层 custom.css 的 16f 节。
+    断言：assert_post_nav（fixture 日期序锚：首/中/末三面 + 不指向自身）。
+*/ -}}
+{{- if eq .Section "posts" -}}
+{{- $prev := .PrevInSection -}}
+{{- $next := .NextInSection -}}
+{{- if or $prev $next }}
+<nav class="post-nav" aria-label="文章导航">
+  {{- with $prev }}
+  <a class="post-nav-prev" href="{{ .RelPermalink }}" rel="prev">
+    <span class="post-nav-label">上一篇</span>
+    <span class="post-nav-title">{{ .Title }}</span>
+  </a>
+  {{- end }}
+  {{- with $next }}
+  <a class="post-nav-next" href="{{ .RelPermalink }}" rel="next">
+    <span class="post-nav-label">下一篇</span>
+    <span class="post-nav-title">{{ .Title }}</span>
+  </a>
+  {{- end }}
+</nav>
+{{- end }}
+{{- end }}

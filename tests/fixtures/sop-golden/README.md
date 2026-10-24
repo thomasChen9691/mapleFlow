@@ -71,3 +71,8 @@ meta description == 注册表）。页面正确性由 PR 期人工审阅把关�
   文章页 `<article>` 开头插入 `.post-toc` 目录块（文内顶部、7 条 h2 章节）。
   已用脚本逐字段比对：title / meta_description 未变，article_html 仅一处
   insert（目录块），无其他漂移。
+- **2026-10-24（阅读体验批 A3）**：6 份 golden 再次重捕获。变更仅一处——
+  正文之后插入 `<nav class="post-nav">` 上下篇导航（上一篇/下一篇 + 标题）。
+  逐字段比对：title / meta_description 未变，article_html 仅一处 insert。
+  注：`eq .Section "posts"` 范围守卫对文章页输出无影响（守卫是防 about/products/
+  search 泄漏），故本次捕获与守卫前后一致。

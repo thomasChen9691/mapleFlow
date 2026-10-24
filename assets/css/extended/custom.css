@@ -1110,6 +1110,81 @@ main:has(.post-entry + .post-entry) > .post-entry,
 .post-toc a:hover,
 .post-toc a:focus-visible { color: var(--primary); }
 
+/* ---------- 16f. 文章导航与分页（A3 上下篇 + D3 页码链） ----------
+   契约见主题层 partial：post-nav.html（上下篇，上一篇=更早/下一篇=更晚）、
+   pagination.html（页码链 + 上一页/下一页）。本节只负视觉值：
+   · 上下篇 = 两张等宽卡（方向感来自左右位置与对齐），只有一侧时贴对应边
+   · 分页：上一页/下一页沿用主题的实心药丸；页码链用等宽小字，
+     当前页实心药丸与按钮同族——「位置」是导航，「当前在哪」是状态
+   · 省略号（page-gap）只占位不交互，颜色压到 tertiary 之上、secondary 之下
+   断言：assert_post_nav / assert_pagination
+*/
+.post-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  margin: 2rem 0 1.1rem;
+}
+.post-nav a {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  padding: .7rem .9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--entry);
+  text-decoration: none;
+  transition: border-color var(--dur-1) var(--ease-in),
+              background-color var(--dur-2) var(--ease-std),
+              color var(--dur-2) var(--ease-std);
+}
+.post-nav a:hover,
+.post-nav a:focus-visible { border-color: var(--primary); }
+.post-nav-prev { grid-column: 1; }
+/* 只有下一篇时贴右（单侧不占满整行，方向感不丢） */
+.post-nav-next { grid-column: 2; text-align: right; }
+.post-nav-label {
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  letter-spacing: .1em;
+  color: var(--secondary);
+  transition: color var(--dur-2) var(--ease-std);
+}
+.post-nav-title { font-size: .92rem; color: var(--content); }
+
+.pagination { display: flex; align-items: center; gap: .4rem; }
+.pagination .page-nums {
+  display: flex;
+  align-items: center;
+  gap: .15rem;
+  margin-inline: auto;          /* 页码居中，上一页/下一页各贴一侧 */
+}
+.pagination .page-num {
+  min-width: 34px;
+  padding: 0 .45rem;
+  line-height: 30px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--secondary);
+  background: transparent;
+  border-radius: 999px;
+}
+.pagination .page-num:hover,
+.pagination .page-num:focus-visible { color: var(--primary); background: var(--primary-soft); }
+.pagination .page-num.is-current {
+  color: #f5f6fc;
+  background: var(--primary);
+  font-weight: 600;
+}
+:root[data-theme="dark"] .pagination .page-num.is-current { color: #0e1233; }
+.pagination .page-gap {
+  padding: 0 .2rem;
+  color: var(--secondary);
+  font-size: .8rem;
+  opacity: .6;
+}
+
 /* ---------- 17. 响应式（平板 / 手机，按 768 / 480 两档收口） ---------- */
 @media (max-width: 1024px) {
   .resume { padding-inline: 0; }
@@ -1142,6 +1217,11 @@ main:has(.post-entry + .post-entry) > .post-entry,
   .mf-cta-band { padding: 1.35rem; }
   .projects { grid-template-columns: 1fr; }
   .post-single { padding: 1.15rem 1.15rem; }
+  /* 上下篇导航：窄屏两列只有 ~148px，标题折成两三行——改竖排，各占满宽 */
+  .post-nav { grid-template-columns: 1fr; }
+  .post-nav-next { grid-column: 1; text-align: left; }
+  /* 页码触摸目标抬到 44px（§17 的既有纪律：不小于 44px） */
+  .pagination .page-num { min-width: 44px; line-height: 44px; }
   /* 触摸目标不小于 44px */
   .mf-filter { min-height: 44px; padding: .45rem 1rem; }
   .mf-count { margin-left: 0; width: 100%; }

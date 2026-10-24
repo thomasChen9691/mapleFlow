@@ -1,0 +1,6 @@
+# 分页窗口断言的**标量覆盖**（2026-10-24 D3），不是第四套 fixture 基建：
+# 只把 pagerSize 压到 1，让 6 篇 fixture 产出 6 页，从而走到「首尾恒显 +
+# 当前页 ±2 + 省略号」的窗口分支（真实配置 pagerSize=6 只有 2 页，窗口恒全显、
+# page-gap 永远不出现）。baseURL / contentDir / 其他参数一律沿用既有配置。
+[pagination]
+pagerSize = 1

@@ -82,6 +82,14 @@ _Avoid_: 搜索数据库、索引文件、search.json（文件名不作术语）
 文章页顶部的章节导航，只收 h2（h3 是子步骤，不进目录）；桌面两列 / 窄屏单列，不折叠、不做滚动高亮。契约（位置 / 深度 / 空态判据）的定义处是 `themes/maplemod/layouts/partials/toc.html` 文件头 docstring。
 _Avoid_: 侧边栏目录、大纲、outline
 
+**上下篇导航 (Post Navigation)**：
+文章页底部的相邻文章入口，范围是 posts 分区内按日期相邻。**上一篇 = 更早、下一篇 = 更晚**——与 Hugo 的 `.PrevInSection` / `.NextInSection` 方法名同向（实测坐实，勿凭直觉反写）。首/末篇单边渲染。契约定义处是 `themes/maplemod/layouts/partials/post-nav.html` 文件头 docstring。
+_Avoid_: 前后文章、相关阅读
+
+**分页器 (Paginator)**：
+列表页的翻页控件：页码链 + 上一页/下一页，当前页带 `aria-current="page"`；只有一页时整块不渲染。站点层首页与主题层列表共用同一实现（`themes/maplemod/layouts/partials/pagination.html`）。
+_Avoid_: 翻页条、pager
+
 ## 客户端交互
 
 **reveal 协议**：
