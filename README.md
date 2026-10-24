@@ -32,18 +32,21 @@ hugo server -D
 
 ### 线上部署（GitHub Pages）
 
-仓库已配置 GitHub Actions 自动部署，工作流文件：`.github/workflows/deploy.yml`。
+仓库已配置 GitHub Actions 自动化 CI/CD，工作流文件：`.github/workflows/ci-cd.yml`（2026-10-24 由 `deploy.yml` 重建）。
 
-- **部署流程概览**
-  1. 推送到 `main` 分支；
-  2. GitHub Actions 触发 workflow，执行：
-     - 检出代码
-     - 使用命令：
-       ```bash
-       hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
-       ```
-     - 将 `public/` 中生成的内容推送到 `gh-pages` 分支；
-  3. GitHub Pages 从 `gh-pages` 分支读取静态文件，对外提供访问。
+- **验证（verify）**：PR 与 push 到 `main` 都会触发——
+  1. `npm test`：reveal 协议 + 搜索前端行为断言（jsdom）；
+  2. 生产构建（与 CI 权威命令逐字一致）并守门**零 WARN**：
+     ```bash
+     hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
+     ```
+  3. `python3 tests/assert_site_contracts.py`：站点契约产物断言（十五类）；
+  4. `python3 tests/assert_sop_pipeline.py`：SOP 发布管线保真 + CI wiring 自守门；
+  5. localhost 泄漏守门：`public/` 不得残留 `localhost:1313` 绝对链接。
+
+- **部署（deploy）**：仅 `main` 的 push / 手动触发，且 **verify 全绿后才跑**——重建并推送到 `gh-pages`，GitHub Pages 从该分支读取静态文件对外提供访问。
+
+- **日常使用**：推送到 `main` 即自动验证 + 部署；PR 先过门禁再合入。无需任何手工构建/拷贝。建议在仓库 Settings → Branches 为 `main` 开启「Require status checks to pass（CI/CD / verify）」，让 PR 门禁成为硬约束。
 
 - **GitHub Pages 设置（只需配置一次）**
   - 打开 GitHub 仓库 → `Settings` → `Pages`

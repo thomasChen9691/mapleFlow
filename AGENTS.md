@@ -18,7 +18,10 @@
 | `gh-pages` | 由 GitHub Actions 自动构建的静态站点产物 | **不要手动修改/提交** |
 | `origin/main` | 远端源码；推送到它会触发部署 | 仅通过 push 更新 |
 
-- 部署流水线见 `.github/workflows/deploy.yml`：push `main` → 检出 → `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml` → 推 `gh-pages`。
+- CI/CD 流水线见 `.github/workflows/ci-cd.yml`（2026-10-24 由 `deploy.yml` 重建为双 job；历史文档里的 `deploy.yml` 指同一文件）：
+  - **verify job**（PR → main、push → main、手动触发都跑）：`npm test`（reveal + 搜索前端行为断言）→ 生产构建（**零 WARN 守门**）→ `assert_site_contracts.py` → `assert_sop_pipeline.py` → **localhost 泄漏守门**（坑点 5b）；
+  - **deploy job**（`needs: verify`，仅 main 的 push / 手动触发）：重建 → `peaceiris/actions-gh-pages` 推 `gh-pages`。
+  - 即：**PR 阶段就有完整门禁**（此前只在 push 后验证，红提交先落 main 再失败）；推送 main 且全绿才部署。
 - 切勿直接编辑 `gh-pages` 或本地 `public/`（构建产物会覆盖）。
 
 ## 3. 核心命令
@@ -146,7 +149,7 @@ python3 tests/assert_site_contracts.py
 | `assets/css/extended/custom.css` | 品牌样式（明暗双主题 CSS 变量） |
 | `static/img/avatar.svg` | 占位头像 |
 | `themes/maplemod/layouts/partials/post_meta.html` | 文章元信息（日期悬浮提示显式时区格式，消除「构建机器时区决定输出字节」）；主题层文件，无同步义务（0030 合并后站点层无覆盖） |
-| `.github/workflows/deploy.yml` | 自动部署流水线 |
+| `.github/workflows/ci-cd.yml` | CI/CD 流水线（verify + deploy 双 job；PR 门禁 + 零 WARN / localhost 泄漏守门）。2026-10-24 前名 `deploy.yml`，`assert_sop_pipeline.py` 的 `assert_ci_wiring` 以 glob 守「工作流里必须跑 SOP 断言」 |
 | `docs/sop/` | 运维 SOP 源笔记 |
 | `layouts/partials/product-state.html` | 产品状态模块：上架/免费判定 + 控件语义（ADR-0004；测试 `tests/assert_site_contracts.py`，改动前先跑） |
 | `layouts/partials/product-items.html` | 产品索引·数据准备 seam：索引渲染链唯一读 `hugo.Data.products` 处，featured 过滤（只认布尔 true，非 bool 即 errorf）+ limit 截断（缺省/0=全量，负数 errorf）+ 交付形态词汇契约（词表外 kind 即 errorf）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |

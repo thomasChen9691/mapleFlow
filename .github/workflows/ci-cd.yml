@@ -1,0 +1,139 @@
+name: CI/CD
+
+# 触发面（2026-10-24 重建，DevOps 批）：
+#   · pull_request → main：**PR 门禁**。此前只在 push 后验证——红提交先落 main、
+#     部署后失败，是「容易出错」的主因；现在 PR 上就跑完整守门链。
+#   · push → main：验证通过才部署（deploy job needs: verify）。
+#   · workflow_dispatch：手动重跑/补部署（main 上）。
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# 并发按 ref 分组：PR 之间互不取消；main 上连续推送只保留最新一轮。
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: 验证（测试 + 构建 + 守门）
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.164.0'   # CI 钉版（ADR-0004：0.166+ 条件多 return 本地过 CI 红）
+          extended: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # 与 package.json engines 一致（jsdom 30 要求 >=22.22.2）；不浮动主版本
+          node-version: '22.22.2'
+          cache: 'npm'
+
+      - name: Install test deps
+        # jsdom 为 tests/assert_reveal.mjs 与 tests/assert_search.mjs 双套件服务；
+        # Hugo 站点本体不依赖 npm。
+        # --ignore-scripts：不执行依赖的安装脚本。
+        run: npm ci --ignore-scripts
+
+      - name: Assert behavior suites
+        # reveal 协议 + 搜索前端行为断言（jsdom 执行引擎源码）：
+        # reveal 套件覆盖筛选/aria/计数/空态/减弱动效/IO 降级/多实例/阅读进度条；
+        # 搜索套件覆盖 / 键门控/页内聚焦/params 降级/浮层开关四路/焦点与困排/
+        # 懒加载与缓存/fuse parity/渲染结构/空态/三种索引失败态。
+        # 入口走 package.json 的 test 脚本，本地/CI 同一条命令。
+        run: npm test
+
+      - name: Build Hugo site（生产配置，零 WARN 守门）
+        # 项目纪律：生产构建必须零 WARN（AGENTS.md §3「提交前以 CI 钉版为准」）。
+        # 此前只构建不检查输出——WARN 会被冗长日志吞掉；现在显式守门。
+        # bash 默认 -eo pipefail：hugo 非零退出即红；grep 在 if 条件里不触发 -e。
+        run: |
+          hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml 2>&1 | tee build.log
+          if grep -iE "warn|error" build.log; then
+            echo "::error::生产构建出现 WARN/Error——纪律要求零 WARN（见 AGENTS.md §3）"
+            exit 1
+          fi
+        # --cleanDestinationDir：构建前清空 public/。不加会导致旧产物残留
+        # （已删除文章对应的页面留在 public/ 被推上线，2026-09-20 审计的
+        #  posts/aiop.html 即此类残留）。
+
+      - name: Assert site contracts
+        # 站点契约的产物断言（十五类，见套件头注释）：产品状态 / 产品索引 /
+        # 主题契约 / reveal 产物 / 文章精选 / 搜索索引投影 / 搜索交付面 /
+        # 搜索入口构件 / 阅读辅助 meta / 主题切换过渡 / 文章目录 / 上下篇导航 /
+        # 分页页码 / 触屏搜索入口 / 搜索浮层。
+        # fixture 全分支 + 真实数据线上回归 + 契约坏用例。失败即阻断部署——
+        # 不让失实的「可下载产品」数字上线（2026-10 首页 5-vs-0 事故的守门）。
+        run: python3 tests/assert_site_contracts.py
+
+      - name: Assert SOP pipeline
+        # SOP 发布管线的产物断言（wayfinder 工单 0008/0009 决议）：
+        # 6 篇派生文章的迁移保真（golden token 序列比对，容忍 CI/本机渲染器版本差异）
+        # + 契约坏用例构建失败 + draft 语义 + README↔注册表漂移 + ref 解析 + 搜索投影
+        # + CI wiring 自守门（本文件里必须出现本脚本路径）。
+        # 失败即阻断部署——源笔记与线上页面的沉默分叉从此不可能发生。
+        run: python3 tests/assert_sop_pipeline.py
+
+      - name: Assert no localhost leak（坑点 5b）
+        # 草稿孤儿文件会带着 localhost:1313 绝对链接被推上线（2026-10-24 实测踩坑）。
+        # --cleanDestinationDir 已防新孤儿；此步是第二道牙，防配置回归。
+        run: |
+          if grep -rq "localhost:1313" public/; then
+            echo "::error::public/ 残留 localhost:1313 绝对链接"
+            grep -rl "localhost:1313" public/ | head -5
+            exit 1
+          fi
+
+      - name: Upload build log（失败时排障）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ github.run_id }}
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deploy:
+    name: 部署到 GitHub Pages
+    # 只在 main 的 push / 手动触发时部署——PR 与 fork 永不部署。
+    needs: verify
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write       # 推 gh-pages 分支必需
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.164.0'
+          extended: true
+
+      - name: Build Hugo site
+        # 与 CI 权威命令逐字一致（hugo.toml + config.production.toml 合并配置）。
+        run: hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages  # 显式指定部署到 gh-pages 分支

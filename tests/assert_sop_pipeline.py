@@ -448,13 +448,20 @@ def assert_search_index(report):
 
 def assert_ci_wiring(report):
     """CI 守门在位（0013 预裁：CI 权威 + 本地 advisory）——部署流水线里
-    必须跑本脚本，否则断言的「失败阻断部署」不存在。"""
-    workflow = REPO / ".github" / "workflows" / "deploy.yml"
-    if not workflow.is_file():
-        report.check("deploy.yml 存在", False, str(workflow))
+    必须跑本脚本，否则断言的「失败阻断部署」不存在。
+
+    2026-10-24（DevOps 批）：工作流由 deploy.yml 重建为 ci-cd.yml（verify +
+    deploy 双 job、PR 门禁）。自守门改为 **glob 全部工作流**——不再钉文件名，
+    流水线再改名/拆分时这条守门照样生效（钉文件名曾是隐性耦合：改名即红，
+    而红的原因与 SOP 管线无关）。"""
+    workflows = sorted((REPO / ".github" / "workflows").glob("*.yml"))
+    if not workflows:
+        report.check("CI 工作流文件存在", False, "no *.yml under .github/workflows")
         return
-    text = workflow.read_text(encoding="utf-8")
-    report.check("deploy.yml 含 SOP 管线断言步", "tests/assert_sop_pipeline.py" in text)
+    text = "\n".join(w.read_text(encoding="utf-8") for w in workflows)
+    report.check("CI 工作流含 SOP 管线断言步",
+                 "tests/assert_sop_pipeline.py" in text,
+                 f"checked: {[w.name for w in workflows]}")
 
 
 def main():
