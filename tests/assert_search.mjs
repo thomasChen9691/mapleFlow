@@ -382,6 +382,69 @@ async function typeQuery(doc, value) {
         `got ${tp.doc.activeElement && (tp.doc.activeElement.id || tp.doc.activeElement.className)}`);
 }
 
+// ---- MFO-17..19：滚锁与 inert（引擎在上一块内解构，此处重新导入——ESM 缓存，
+//      不会重跑模块副作用；引擎模块本身无顶层副作用）----
+{
+    const { initSearchOverlay } = await import(pathToFileURL(OVERLAY_ENGINE).href);
+    const x = installOverlay({ records: [] });
+    Object.defineProperty(x.dom.window, 'scrollY', { value: 640, configurable: true });
+    const scrolledTo = [];
+    x.dom.window.scrollTo = (_x, y) => scrolledTo.push(y);   // scrollTo(x, y)——记录 y
+    initSearchOverlay(x.doc, x.dom.window, {
+        indexUrl: INDEX_URL, fetchImpl: x.fetchImpl, fuseFactory: x.fuseFactory,
+        navigate: () => {}, supportsInert: false,
+    }).open();
+    const bs = x.doc.body.style;
+    // left/right 兼容 '0' 与 '0px'——jsdom 的 cssstyle 会把 '0' 规范成 '0px'，
+    // 真实浏览器两种都接受（等价）
+    const zero = (v) => v === '0' || v === '0px';
+    check('MFO-17a 打开时滚锁 = overflow:hidden + position:fixed + 负 top + width:100%',
+        bs.overflow === 'hidden' && bs.position === 'fixed' && bs.top === '-640px'
+        && zero(bs.left) && zero(bs.right) && bs.width === '100%',
+        `got overflow=${bs.overflow} position=${bs.position} top=${bs.top} left=${bs.left} right=${bs.right} width=${bs.width}`);
+    // 关闭：样式逐项还原 + scrollTo 回原位置（顺序反了会看到页面跳顶再回来）
+    x.doc.dispatchEvent(new x.dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('MFO-17b 关闭时滚锁还原并 scrollTo 回原位',
+        bs.overflow !== 'hidden' && bs.position === '' && bs.top === '' && bs.width === ''
+        && scrolledTo.length === 1 && scrolledTo[0] === 640,
+        `got pos=${bs.position} top=${bs.top} scrolledTo=${JSON.stringify(scrolledTo)}`);
+}
+
+// ---- MFO-18：inert 分支（支持时背景钉 inert，不依赖手写困排）----
+{
+    const { initSearchOverlay } = await import(pathToFileURL(OVERLAY_ENGINE).href);
+    const x = installOverlay({ records: [] });
+    initSearchOverlay(x.doc, x.dom.window, {
+        indexUrl: INDEX_URL, fetchImpl: x.fetchImpl, fuseFactory: x.fuseFactory,
+        navigate: () => {}, supportsInert: true,
+    }).open();
+    const trigger = x.doc.querySelector('.mf-search-link');
+    const overlayEl = x.doc.getElementById('mfSearchOverlay');
+    trigger.focus();   // 先聚焦触发器，关闭时才有焦点可还（同 MFO-4/5 的约定）
+    check('MFO-18a 打开时背景节点被钉 inert（触发器在内、浮层自身不在）',
+        trigger.hasAttribute('inert') && !overlayEl.hasAttribute('inert'));
+    x.doc.dispatchEvent(new x.dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('MFO-18b 关闭时 inert 移除（先摘 inert 再还焦，顺序对焦点才回得去）',
+        !trigger.hasAttribute('inert') && x.doc.activeElement === trigger);
+}
+
+// ---- MFO-19：inert 支持时手写困排不启动（两个机制不同时开）----
+{
+    const { initSearchOverlay } = await import(pathToFileURL(OVERLAY_ENGINE).href);
+    const x = installOverlay({ records: [] });
+    initSearchOverlay(x.doc, x.dom.window, {
+        indexUrl: INDEX_URL, fetchImpl: x.fetchImpl, fuseFactory: x.fuseFactory,
+        navigate: () => {}, supportsInert: true,
+    }).open();
+    const focusables = () => [...x.doc.querySelectorAll('.mf-search-panel button, .mf-search-panel input')];
+    const last = focusables().pop();
+    last.focus();
+    x.doc.dispatchEvent(new x.dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+    check('MFO-19 inert 路径下 Tab 不触发手写循环（焦点留在末元素，困排交给 inert）',
+        x.doc.activeElement === last,
+        `got ${x.doc.activeElement && (x.doc.activeElement.id || x.doc.activeElement.className)}`);
+}
+
 console.log(`\n${passed}/${passed + failed} passed`);
 if (failed) {
     console.log('RED — %d 个行为未满足', failed);

@@ -54,7 +54,7 @@ python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 # reveal 协议与搜索入口行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
 # 双套件：assert_reveal.mjs（23 条，含 D1 阅读进度条 RGR-9/10/11）+ assert_search.mjs
-#        （36 条：快捷键入口 14 + ADR-0013 搜索浮层 22）
+#        （41 条：快捷键入口 14 + 搜索浮层 27，含 iOS 双机制滚锁 / inert 分支 / 困排兜底）
 npm test
 
 # 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 / 文章精选 /
@@ -165,7 +165,7 @@ python3 tests/assert_site_contracts.py
 | `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `assets/js/mf-reveal/` | reveal 协议引擎（**契约定义处**）：app.js 入口 / filter.js 筛选 / scroll-in.js 滚动进场 / reduced-motion.js 降级判定 / reading-progress.js 阅读进度条（写 `--mf-progress`，仅 posts 文章页）。ADR-0007（2026-10-24 D1 加指针）；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物 B15），改动前先跑 |
 | `assets/js/mf-search-entry-engine.js` | 搜索入口引擎（**契约定义处**，站点层）：全站 `/` 快捷键。**2026-10-24 ADR-0013 决策 4 起动作改为「开浮层」**（env.openSearch 钩子；无钩子回落 searchUrl 跳转——原轻形态降级为兜底）；search 页分支（聚焦 #searchInput）/ 键位 / 修饰键 / 焦点门控不变。纯函数 seam，零 Hugo 依赖；与 fastsearch.js、mf-search-overlay-engine.js 三契约并列互指。候选 12 / ADR-0011 / ADR-0013；测试 `npm test` + `tests/assert_site_contracts.py`，改动前先跑 |
-| `assets/js/mf-search-overlay-engine.js` | 搜索浮层引擎（**契约定义处**，站点层；ADR-0013）：开 / 关（Esc·backdrop·关闭按钮·选中）、焦点管理（入焦 / 还焦 / Tab 困排）、body 滚锁、懒加载索引（fetch indexUrl，失败走可见错误态——不继承快照的静默失效）、fuse 检索与结果渲染。**fuse 配置与 fastsearch 快照逐字一致，parity 断言执法**（两处同改）。纯函数 seam（initSearchOverlay），零 Hugo 依赖；挂点缺失即返回 null（降级）。测试 `npm test`（MFO-1..16）+ 产物断言（构件 / DOM / parity），改动前先跑 |
+| `assets/js/mf-search-overlay-engine.js` | 搜索浮层引擎（**契约定义处**，站点层；ADR-0013）：开 / 关（Esc·backdrop·关闭按钮·选中）、焦点管理（入焦 / 还焦 / **inert 背景钉住**，手写 Tab 困排降级为不支持 inert 时的兜底）、body 滚锁（**双机制**：overflow 挡桌面程序化滚动 + position:fixed 挡 iOS 触摸滚动，关闭先还原样式再 scrollTo 回位）、懒加载索引（fetch indexUrl，失败走可见错误态——不继承快照的静默失效）、fuse 检索与结果渲染。**fuse 配置与 fastsearch 快照逐字一致，parity 断言执法**（两处同改）。纯函数 seam（initSearchOverlay），零 Hugo 依赖；挂点缺失即返回 null（降级）；inert 分支测试经 config.supportsInert 注入（jsdom 无原生 inert）。测试 `npm test`（MFO-1..19）+ 产物断言（构件 / DOM / parity），改动前先跑 |
 | `assets/js/mf-search-overlay.js` | 搜索前端 js.Build 装配入口（ADR-0013 决策 3）：import `@params`（searchUrl + indexUrl）→ 装浮层 → 把 open 作为入口钩子。与 fuse/license concat 后 fingerprint，经 extend_footer **全站恒加载**（第二个加载面——ADR-0010 重评结论）。不被测试导入（@params 仅 Hugo 可解析） |
 | `themes/maplemod/layouts/partials/header.html` | 头部含搜索触发器 `.mf-search-link`（图标 `<a href=search 页>`）：**2026-10-24 ADR-0013 起它是浮层触发器**（JS 拦截点击开浮层；无 JS 时是普通链接跳 search 页——no-js 兜底），与 `/` 快捷键并列的两条路由。href 走 RelPermalink 自动带子路径。断言 `assert_search_link`，改动前先跑 |
 | `themes/maplemod/layouts/partials/search-overlay.html` | 搜索浮层 DOM 骨架（ADR-0013 决策 3；挂 baseof 全站在场、**默认 hidden**——无 JS 不可见）。交互契约定义处 = 站点层 `mf-search-overlay-engine.js` docstring，本文件只提供骨架 |

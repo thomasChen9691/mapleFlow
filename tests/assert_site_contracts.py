@@ -687,6 +687,25 @@ def assert_theme_transition(report, dest):
     report.check("产物 CSS 含 .mf-search-overlay[hidden] 覆盖规则（压过 flex）",
                  re.search(r"\.mf-search-overlay\[hidden\]\{[^}]*display:none", css_text) is not None,
                  "missing .mf-search-overlay[hidden] display:none override")
+    # 进出场统一（2026-10-24 F 批）：@starting-style 提供进入起点、gate 内关掉
+    # keyframes（两个机制不叠加——同属性双驱动会抢）
+    report.check("产物 CSS 含 @starting-style 进入起点与 allow-discrete gate",
+                 "@starting-style" in css_text
+                 and re.search(r"@supports\(transition-behavior:allow-discrete\)", css_text) is not None
+                 and re.search(r"\.mf-search-overlay:not\(\[hidden\]\)\s*\.mf-search-panel[^}]*animation:none",
+                               css_text) is not None,
+                 "missing @starting-style entry styles or gate keyframe override")
+    # 打印样式（F 批）：@media print 在、浮层与进度条在其中隐藏
+    report.check("产物 CSS 含 @media print 块",
+                 re.search(r"@media print", css_text) is not None, "missing @media print")
+    print_block = re.search(r"@media print\{.*?\}\s*\}", css_text, re.S)
+    pb = print_block.group(0) if print_block else ""
+    report.check("打印块隐藏浮层与进度条（纸上无交互）",
+                 ".mf-search-overlay" in pb and ".mf-progress" in pb and "display:none" in pb.replace(" ", ""),
+                 f"print block too short or missing hide rules ({len(pb)} chars)")
+    report.check("打印块强制浅色底（深色主题不打墨底纸）",
+                 re.search(r"body\{[^}]*background:#fff", pb.replace(" ", "")) is not None,
+                 "missing forced white background in print block")
     # 行内次级文本与目录标签显式着色 var(--secondary)，不会随 body 的 color
     # 过渡继承——不单独给它们加 color 过渡，切换时会跳色。允许合成一条规则
     # 或分散声明（只要求「每个选择器都有 transition + color」）。

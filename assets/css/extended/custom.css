@@ -1251,10 +1251,17 @@ main:has(.post-entry + .post-entry) > .post-entry,
   justify-content: center;
   padding: 8vh 1rem 1rem;
 }
-/* 退出过场（2026-10-24 E 批）：`display … allow-discrete` 让 display:none 的
-   生效延后到过渡结束——退出从「瞬闪」变「淡出 + 轻抬」。进入过场仍是下方
-   keyframes（全浏览器一致），两者不打架：进入时 display 从 none 翻转变即生效，
-   opacity 由 keyframes 驱动；退出时 opacity/transform 走这条 transition。
+/* 进出过场（2026-10-24 E 批退出 + F 批 @starting-style 统一）：
+   两条路径并存，按能力分流——
+   ① **不支持 allow-discrete 的浏览器**：进入走下方 keyframes（全浏览器一致），
+      退出无过场（瞬闪）。至少能看。
+   ② **支持的浏览器**（Chrome/Edge 117+；@supports 探测 transition-behavior，
+      它与 @starting-style 同期发货、可作代理）：进出统一走**单一 transition
+      机制**——进入起点由 @starting-style 提供，退出由 allow-discrete 把
+      display:none 延后到过渡结束。
+   方向性曲线（1b 动效语言的「进入 ease-out / 退出 ease-in」落地）：transition
+   取「变更后状态」的声明——基态（打开后）写 ease-out，[hidden] 态写 ease-in。
+   keyframes 方案进出同曲线，这一版比它更守纪律。
    注意 [hidden] 规则必须继续显式压过上面的 display:flex（no-js 基线破口）。 */
 .mf-search-overlay {
   transition: opacity var(--dur-1) var(--ease-in),
@@ -1263,9 +1270,40 @@ main:has(.post-entry + .post-entry) > .post-entry,
 .mf-search-overlay[hidden] { display: none; opacity: 0; }
 .mf-search-panel { transition: transform var(--dur-1) var(--ease-in); }
 .mf-search-overlay[hidden] .mf-search-panel { transform: translateY(-8px) scale(.98); }
+@supports (transition-behavior: allow-discrete) {
+  .mf-search-overlay {
+    transition: opacity var(--dur-2) var(--ease-out),
+                display var(--dur-2) allow-discrete;
+  }
+  .mf-search-overlay[hidden] {
+    transition: opacity var(--dur-1) var(--ease-in),
+                display var(--dur-1) allow-discrete;
+  }
+  .mf-search-panel { transition: transform var(--dur-2) var(--ease-out); }
+  .mf-search-overlay[hidden] .mf-search-panel {
+    transform: translateY(-8px) scale(.98);
+    transition: transform var(--dur-1) var(--ease-in);
+  }
+  .mf-search-backdrop { transition: opacity var(--dur-2) var(--ease-out); }
+  .mf-search-overlay[hidden] .mf-search-backdrop {
+    opacity: 0;
+    transition: opacity var(--dur-1) var(--ease-in);
+  }
+  /* 进入起点：display:none → 可见那一刻的初始值（@starting-style 的专属用途） */
+  @starting-style {
+    .mf-search-overlay:not([hidden]) { opacity: 0; }
+    .mf-search-overlay:not([hidden]) .mf-search-panel { transform: translateY(-8px) scale(.98); }
+    .mf-search-overlay:not([hidden]) .mf-search-backdrop { opacity: 0; }
+  }
+  /* 统一后 keyframes 退场：两个机制不叠加（同属性双驱动会抢） */
+  .mf-search-overlay:not([hidden]) .mf-search-panel,
+  .mf-search-overlay:not([hidden]) .mf-search-backdrop { animation: none; }
+}
+/* 减弱动效偏好：两条路径的过场一并压掉。放在 @supports 之后，才能覆盖 gate 内声明 */
 @media (prefers-reduced-motion: reduce) {
   .mf-search-overlay,
-  .mf-search-panel { transition: none !important; }
+  .mf-search-panel,
+  .mf-search-backdrop { transition: none !important; }
 }
 .mf-search-backdrop {
   position: absolute;
@@ -1465,3 +1503,50 @@ a, button {
    属性高度会把图片锁死压扁（这是该修法的标准配对，单独加属性必踩）。
    主题 reset 的 img 规则没有 height:auto，站点层在后覆盖补上。 */
 img { height: auto; }
+
+/* ---------- 20. 打印样式（2026-10-24 视觉批 F） ----------
+   场景：读者打印 / 「打印为 PDF」存文章。纸上没有的东西一律不出现（省墨、
+   避免深色主题打出一片黑底），该保留的一样不少（正文 / 代码 / 图片 / 表格）。
+   三条底线：
+   ① 交互与导航 chrome 全隐（header / footer / 浮层 / 进度条 / 目录 /
+      上下篇 / 页码 / 回顶）——它们服务屏幕，不服务纸；
+   ② 强制浅色：深色主题下 --theme/--entry 是近黑，不覆盖会打出墨底纸；
+      覆盖用 !important——主题变量选择器的特异性更高，不加压不住；
+   ③ 不断页：代码块 / 表格 / 图片整块 avoid，标题不与正文拆页（break-after:
+      avoid）；外链在链接后打印 URL（纸上没法点）。
+   注意：@page 的 margin 只在部分浏览器生效（Chrome 忽略它、用自带默认），
+   写上不亏。 */
+@media print {
+  .header, .footer, .mf-search-overlay, .mf-search-link, .mf-progress,
+  .post-toc, .post-nav, .pagination, .top-link, #theme-toggle,
+  .mf-search-close, .post-meta .mf-search-link { display: none !important; }
+
+  html, body { background: #fff !important; }
+  body { color: #000 !important; }
+  .post-single, .mf-post, .post-entry {
+    background: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .post-single .post-title,
+  .post-content, .post-content p, .post-content li { color: #000 !important; }
+
+  .post-content { font-size: 11pt; line-height: 1.55; }
+  .post-content a { color: #000; text-decoration: underline; }
+  .post-content a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8.5pt;
+    color: #444;
+    word-break: break-all;
+  }
+  .post-content img { max-width: 100% !important; }
+  pre, .highlight, code, blockquote, table, img { break-inside: avoid; }
+  h1, h2, h3, h4 { break-after: avoid; }
+  pre, .highlight { background: #f4f4f4 !important; border: 1px solid #ddd !important; }
+  pre, code { color: #000 !important; }
+  blockquote { border-left: 3px solid #999 !important; background: none !important; }
+
+  @page { margin: 1.6cm; }
+}
