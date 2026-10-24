@@ -1,7 +1,8 @@
 # AGENTS.md — MapleFlow 博客项目（AI 编码代理须知）
 
 本文件为 AI 编码代理（Claude Code / Codex / CodeBuddy 等）提供项目上下文与操作约束。
-若同时读取到 `CLAUDE.md`，其内容与本文件一致。
+`CLAUDE.md` 是指向本文件的指针（2026-10-24 起不再维护第二份副本——此前副本已过期，
+仍写着 PaperMod 子模块等 ADR-0008 之前的旧结构）；**以本文件为唯一真源**。
 
 ## 1. 项目概览
 
@@ -85,6 +86,17 @@ python3 tests/assert_site_contracts.py
    ```
    验证：`grep -r "localhost:1313" public/` 必须无输出。
    注：CI（GitHub Actions）每次全新 checkout，`public/` 本就为空，不受此问题影响。
+
+5c. **dev server 运行期间不要跑生产构建**（Hugo 0.167 "Serving pages from disk" 模式，2026-10-24 实测踩坑）：
+   `hugo server` 把渲染结果写进 `public/` 并**直接从 disk 伺服**页面。此时若另开终端跑
+   `hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.toml`，
+   `public/` 会被生产配置产物覆盖（压缩 HTML + baseURL 带 `/mapleFlow/` 子路径），
+   而 dev server **不会自动重渲染**——浏览器拿到的页面引用 `/mapleFlow/assets/...` 全部 404，
+   表现为「整页无样式、无 JS」（资源真实路径是 `/assets/...`，curl 之返回 200 可自证）。
+   排查：`curl -s http://localhost:1313/ | head -c 300`——若见到 `robots=index, follow`、
+   `canonical=...github.io/mapleFlow/`、无换行的压缩 HTML，即被生产产物污染。
+   修复：**重启 dev server**（启动时会用 dev 配置重新渲染 `public/`）。
+   纪律：要跑生产构建验证，先停 dev server；或只检查 `public/` 文件本身，不经 localhost:1313。
 
 6. **图片/资源在 GitHub Pages 子路径下**：站点部署在 `.../mapleFlow/`（非根域）。页面内联 SVG 头像比引用 `static/img/*` 更稳；若引用静态资源，路径需相对正确。
 

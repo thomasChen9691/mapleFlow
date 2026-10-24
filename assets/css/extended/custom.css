@@ -596,7 +596,11 @@ span.mf-cta[aria-disabled="true"] {
      精选在文章标题，不共面不混淆）；不用蓝（蓝是本站的交互色，静态标记抢语义）
    · 等宽 + .68rem + 字距 .08em——与 mf-kind 丸标同一刻度，小而不弱
    · 双主题全走令牌（accent / accent-soft），无硬编码色
-   · vertical-align: middle——贴标题基线居中；margin-left 与标题文字呼吸
+   · align-self: center——三个呈现面（文章页 h1 / 列表 h2 / 首页网格 h2）都是
+     .entry-hint-parent（flex + space-between，主题为 Draft 图标而设），徽标是 flex
+     子项：inline-block 被块状化、vertical-align 失效、默认 stretch 会把它拉成标题
+     行高（文章页 40px 字号下实测 50px 高竖条）；align-self: center 恢复小丸贴行居中。
+     右对齐由父级 space-between 决定——与 Draft 铅笔图标同侧同机制，是有意的呈现
    改视觉值只动本节；改 class / 谓词 / 呈现面 = 改 featured-badge.html 契约（另开会话）
 */
 .mf-featured {
@@ -612,6 +616,13 @@ span.mf-cta[aria-disabled="true"] {
   color: var(--accent);
   white-space: nowrap;
   vertical-align: middle;
+  /* line-height 显式钉死：不写则继承各呈现面的标题行高（h1/h2 不同），
+     实测文章页 17.8px、列表页 23.2px 两把尺；1.2 与 11.56px 字号配出 ~17.3px 小丸 */
+  line-height: 1.2;
+  /* flex 子项修正：父级 .entry-hint-parent 是 flex+space-between，不写这条默认 stretch
+     会把小丸拉成标题行高（文章页 50px 竖条）；vertical-align 在 flex 下无效、留作
+     非 flex 上下文（若有）的兜底 */
+  align-self: center;
 }
 
 /* ---------- 12. 产品页筛选控件 ---------- */
