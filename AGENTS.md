@@ -47,13 +47,14 @@ hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.to
 python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 # reveal 协议与搜索入口行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
-# 双套件：assert_reveal.mjs（23 条，含 2026-10-24 D1 阅读进度条 RGR-9/10/11）+ assert_search.mjs（13 条，候选 12）
+# 双套件：assert_reveal.mjs（23 条，含 D1 阅读进度条 RGR-9/10/11）+ assert_search.mjs
+#        （36 条：快捷键入口 14 + ADR-0013 搜索浮层 22）
 npm test
 
 # 站点契约断言（产品状态 / 产品索引 / 主题契约 B7-B14 / reveal 产物 / 文章精选 /
 #               搜索索引投影 / 搜索交付面与 fastsearch 守门 / 搜索入口构件与加载面 /
 #               阅读辅助 meta / 主题切换过渡 / 文章目录 / 上下篇导航 / 分页页码 /
-#               触屏搜索入口（2026-10-24），共十四类）
+#               触屏搜索入口 / 搜索浮层（2026-10-24），共十五类）
 # 原名 tests/assert_product_states.py——2026-10 职责扩张后改名；ADR 与历史 handoff
 # 里的旧名指的就是本脚本。
 python3 tests/assert_site_contracts.py
@@ -115,7 +116,7 @@ python3 tests/assert_site_contracts.py
 
 13. **搜索契约纪律：两个定义处，三处同步（ADR-0010；候选 8 全决议）**：投影契约的定义处是 `layouts/_default/index.json` 文件头 docstring（**六字段冻结**——featured / kind 不投影，0044 负向决策；产品 name/summary 缺失即 errorf，前缀「搜索索引数据：」）；检索契约的定义处是 `themes/maplemod/assets/js/fastsearch.js` 文件头 docstring（**现状快照**：fuseOpts 参数位已删，默认值 threshold 0.4 / distance 100 / ignoreLocation true / keys 四字段就是契约）。三条硬约束：① **改投影字段 = 三处同步**（投影 docstring / fastsearch keys / 差集断言）——差集恰为 tags/categories，多一个字段就红；② **fastsearch.js 禁项目级 assets 覆盖复活**——单副本守门断言会红（2026-10 翻车实录：项目级 `assets/js/fastsearch.js` 曾是活文件、主题层副本是死的，`resources.Get` 项目级优先）；③ fixture 造搜索相关页面时日期用过去日（坑点 12）。kind 门禁归产品索引链（索引零暴露，见坑点 9 与 0045 定案）。测试 `python3 tests/assert_site_contracts.py`（投影 / 交付面 / 守门）。
 
-14. **搜索入口纪律（ADR-0011；候选 12 全决议）**：全站 `/` 快捷键入口（`assets/js/mf-search-entry*.js`，站点层）与 fastsearch（主题层，仅 search 页）是**两个搜索相关 JS 面、加载条件不同，勿混勿并**。四条硬约束：① **入口只路由**（跳转 / 聚焦），检索归 fastsearch——「第二个消费方」由加载面双向断言守门（fastsearch 构件不得出现在非 search 页，一出现就红，那是 ADR-0010 重评触发条件的观测牙）；② **`js.Build` params 是 ESM import（`import * as params from '@params'`）不是全局对象**——旧 fastsearch 的裸 `params` 写法在现行 Hugo 下是死路径，别模仿；URL 经 params 注入、自动带 `/mapleFlow/` 子路径，写死根路径会逃逸域名根 404；③ **测试所有权分层**：新代码（入口引擎）常驻 jsdom 行为测试；legacy 引擎（fastsearch）只加弱产物断言 + 记录在案的一次性验证——不为 legacy 内部机制（XHR / onload / 模块级捕获）给 CI 征税；④ 改引擎契约 = 改 `mf-search-entry-engine.js` docstring + 同步 `tests/assert_search.mjs`；改 fastsearch 契约另见坑点 13。改本链先跑 `npm test` 与 `python3 tests/assert_site_contracts.py`。
+14. **搜索入口纪律（ADR-0011；候选 12 全决议）**：全站 `/` 快捷键入口（`assets/js/mf-search-entry*.js`，站点层）与 fastsearch（主题层，仅 search 页）是**两个搜索相关 JS 面、加载条件不同，勿混勿并**。四条硬约束：① **入口只路由**（跳转 / 聚焦），检索归 fastsearch——「第二个消费方」由加载面双向断言守门（fastsearch 构件不得出现在非 search 页，一出现就红，那是 ADR-0010 重评触发条件的观测牙）；② **`js.Build` params 是 ESM import（`import * as params from '@params'`）不是全局对象**——旧 fastsearch 的裸 `params` 写法在现行 Hugo 下是死路径，别模仿；URL 经 params 注入、自动带 `/mapleFlow/` 子路径，写死根路径会逃逸域名根 404；③ **测试所有权分层**：新代码（入口引擎）常驻 jsdom 行为测试；legacy 引擎（fastsearch）只加弱产物断言 + 记录在案的一次性验证——不为 legacy 内部机制（XHR / onload / 模块级捕获）给 CI 征税；④ 改引擎契约 = 改对应引擎 docstring + 同步 `tests/assert_search.mjs`（入口 / 浮层各一套行为）；改 fastsearch 契约另见坑点 13。改本链先跑 `npm test` 与 `python3 tests/assert_site_contracts.py`。**2026-10-24 ADR-0013 重评后语义更新**：「第二个消费方」已从「守门观测牙」变为**已实现的第二加载面**——浮层 bundle（`mf-search-overlay*`）全站恒加载、消费 index.json 投影；fastsearch 仍仅 search 页（加载面双向断言拆成两条：新 bundle 全站在、fastsearch 不泄漏）。浮层的 fuse 配置与快照 parity 由断言执法，改一处不改另一处即红。
 
 15. **i18n 文件名必须与语言键一致（2026-10-24 实测踩坑）**：`hugo.toml` 的 `defaultContentLanguage = "zh-cn"` ⇒ Hugo 只加载 `i18n/zh-cn.yaml`；文件名写成 `zh.yaml` **不会报错、静默不加载**，`i18n "read_time"` 等全部回落到模板里的 `default` 分支。症状是「中文站上出现 `3 min` / `4 words` / 分页只剩 `»` 没有文字」——静默失效，构建零 WARN。2026-10-24 已改名修复（`themes/maplemod/i18n/zh-cn.yaml`）。**新增语言键或改语言配置时，先 `grep -r "i18n \""` 找出消费点，再核对文件名**。
 
@@ -157,9 +158,11 @@ python3 tests/assert_site_contracts.py
 | `themes/maplemod/layouts/partials/pagination.html` | 分页器（**契约定义处**，docstring）：站点层首页与主题层列表**共用同一 partial**（此前两处各写一份）；页码链首尾恒显 + 当前页 ±2，跳过的区间用 `page-gap` 补一次省略号；当前页是 `<span aria-current="page">`；单页不出分页器；`ShowPageNums` 参数已弃用（有页码链后冗余）。断言 `assert_pagination`，改动前先跑 |
 | `layouts/partials/product-index.html` | 产品索引·纯渲染 seam：零全局读，只渲染传入 items；`items`/`uid` 必填（缺失即构建失败），筛选 UI（交互行为归 reveal 协议引擎 `assets/js/mf-reveal/`）。ADR-0006；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `assets/js/mf-reveal/` | reveal 协议引擎（**契约定义处**）：app.js 入口 / filter.js 筛选 / scroll-in.js 滚动进场 / reduced-motion.js 降级判定 / reading-progress.js 阅读进度条（写 `--mf-progress`，仅 posts 文章页）。ADR-0007（2026-10-24 D1 加指针）；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物 B15），改动前先跑 |
-| `assets/js/mf-search-entry-engine.js` | 搜索入口引擎（**契约定义处**，站点层）：全站 `/` 快捷键——跳转 search 页 / 页内聚焦 / 焦点与修饰键门控 / 无 searchUrl 静默降级；纯函数 seam（registerSearchEntry），零 Hugo 依赖；与 fastsearch.js 契约并列互指。经 `assets/js/mf-search-entry.js`（入口，import `@params`）由 extend_footer 双 js.Build 全站恒加载。候选 12 / ADR-0011；测试 `npm test`（行为）+ `tests/assert_site_contracts.py`（产物），改动前先跑 |
-| `themes/maplemod/layouts/partials/header.html` | 头部含触屏搜索入口（2026-10-24 C 批）：`.mf-search-link` 图标 `<a>` 直链 search 页（RelPermalink 自动带子路径；零 JS、零浮层），与 `/` 快捷键并列的第二路由；断言 `assert_search_link`，改动前先跑 |
-| `themes/maplemod/layouts/partials/header.html` | 头部 `.logo-switches` 内的**触屏搜索入口**（2026-10-24 C 批）：`<a class=mf-search-link href=RelPermalink aria-label=搜索>` 直链 search 页——全站 `/` 快捷键只对键盘有效，这是触屏替代入口；零 JS、零浮层（浮层须先过 ADR-0010 第二个消费方重评）；热区 40×40。与 `#theme-toggle` 并排，主题层（ADR-0008 判据）。断言 `assert_search_link`（全站每页在场 + href 指向 search 页），改动前先跑 |
+| `assets/js/mf-search-entry-engine.js` | 搜索入口引擎（**契约定义处**，站点层）：全站 `/` 快捷键。**2026-10-24 ADR-0013 决策 4 起动作改为「开浮层」**（env.openSearch 钩子；无钩子回落 searchUrl 跳转——原轻形态降级为兜底）；search 页分支（聚焦 #searchInput）/ 键位 / 修饰键 / 焦点门控不变。纯函数 seam，零 Hugo 依赖；与 fastsearch.js、mf-search-overlay-engine.js 三契约并列互指。候选 12 / ADR-0011 / ADR-0013；测试 `npm test` + `tests/assert_site_contracts.py`，改动前先跑 |
+| `assets/js/mf-search-overlay-engine.js` | 搜索浮层引擎（**契约定义处**，站点层；ADR-0013）：开 / 关（Esc·backdrop·关闭按钮·选中）、焦点管理（入焦 / 还焦 / Tab 困排）、body 滚锁、懒加载索引（fetch indexUrl，失败走可见错误态——不继承快照的静默失效）、fuse 检索与结果渲染。**fuse 配置与 fastsearch 快照逐字一致，parity 断言执法**（两处同改）。纯函数 seam（initSearchOverlay），零 Hugo 依赖；挂点缺失即返回 null（降级）。测试 `npm test`（MFO-1..16）+ 产物断言（构件 / DOM / parity），改动前先跑 |
+| `assets/js/mf-search-overlay.js` | 搜索前端 js.Build 装配入口（ADR-0013 决策 3）：import `@params`（searchUrl + indexUrl）→ 装浮层 → 把 open 作为入口钩子。与 fuse/license concat 后 fingerprint，经 extend_footer **全站恒加载**（第二个加载面——ADR-0010 重评结论）。不被测试导入（@params 仅 Hugo 可解析） |
+| `themes/maplemod/layouts/partials/header.html` | 头部含搜索触发器 `.mf-search-link`（图标 `<a href=search 页>`）：**2026-10-24 ADR-0013 起它是浮层触发器**（JS 拦截点击开浮层；无 JS 时是普通链接跳 search 页——no-js 兜底），与 `/` 快捷键并列的两条路由。href 走 RelPermalink 自动带子路径。断言 `assert_search_link`，改动前先跑 |
+| `themes/maplemod/layouts/partials/search-overlay.html` | 搜索浮层 DOM 骨架（ADR-0013 决策 3；挂 baseof 全站在场、**默认 hidden**——无 JS 不可见）。交互契约定义处 = 站点层 `mf-search-overlay-engine.js` docstring，本文件只提供骨架 |
 | `layouts/_default/index.json` | 搜索索引·投影契约（**唯一定义处**）：六字段冻结 + 三类排除 + 产品投影；产品 name/summary 缺失即 errorf；与 fastsearch 的 keys 对齐由断言执法。ADR-0010；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `themes/maplemod/assets/js/fastsearch.js` | 搜索协议·检索契约（**唯一定义处**，现状快照）：挂点 / `.focus` / li 结构 / 键盘语义 / XHR 容错；fuseOpts 参数位已删、默认值是契约；禁项目级 assets 覆盖复活（单副本守门断言）。ADR-0010；测试 `tests/assert_site_contracts.py`，改动前先跑 |
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（ADR-0005；契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |

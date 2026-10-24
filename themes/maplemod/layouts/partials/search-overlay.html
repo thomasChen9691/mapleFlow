@@ -1,0 +1,40 @@
+{{- /*
+  search-overlay.html —— 搜索浮层的 DOM 骨架（ADR-0013 决策 3）
+  ============================================================
+  挂 baseof 末尾、全站在场。**默认 hidden**——无 JS 时整块不可见（no-js 基线，
+  ADR-0002：无内容被隐藏，只是增强；header 的 .mf-search-link 此时是普通链接，
+  点击跳 search 页）。
+
+  交互契约（开 / 关 / 检索 / 渲染 / 键盘）的定义处是站点层
+  assets/js/mf-search-overlay-engine.js 文件头 docstring——本文件只提供骨架，
+  不承载行为；两处并列互指、不合并命名（与 fastsearch 快照契约同款纪律）。
+
+  与 search 页的关系：search 页仍是完整检索落点（fastsearch 领地）；本浮层是
+  全站就地快查面，消费同一 index.json 投影（第二个消费方，重评见 ADR-0013）。
+*/ -}}
+<div class="mf-search-overlay" id="mfSearchOverlay" role="dialog" aria-modal="true" aria-label="搜索" hidden>
+    <div class="mf-search-backdrop"></div>
+    <div class="mf-search-panel">
+        <div class="mf-search-box">
+            <svg class="mf-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input id="mfSearchInput" type="search" maxlength="64" aria-label="搜索"
+                placeholder="搜索文章、命令、配置…" autocomplete="off" spellcheck="false">
+            <button type="button" class="mf-search-close" aria-label="关闭搜索">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <ul class="mf-search-results" id="mfSearchResults" aria-label="搜索结果"></ul>
+        <p class="mf-search-empty" hidden>没有匹配的结果——换个关键词，或到搜索页浏览全部。</p>
+        <p class="mf-search-error" hidden>索引加载失败，请稍后重试或前往搜索页。</p>
+    </div>
+</div>

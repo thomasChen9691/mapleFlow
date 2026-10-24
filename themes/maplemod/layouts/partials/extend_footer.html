@@ -17,23 +17,32 @@
 <script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" crossorigin="anonymous" defer></script>
 
 {{- /*
-  搜索入口引擎加载点（候选 12 工单 0050 决议⑤⑥：全站 `/` 快捷键，轻形态）
+  搜索前端加载点（ADR-0013 决策 3：快捷键入口 + 全站浮层，一个 bundle）
   ============================================================
-  站点层 assets/js/mf-search-entry.js（入口，import '@params' 虚拟模块）
-  + mf-search-entry-engine.js（纯引擎，行为契约定义处）。与 reveal 同款管线，
-  但 params 注入 search 页 RelPermalink——URL 走构建期、不写死，自动带
-  /mapleFlow/ 生产子路径（0046 的 ../index.json 逃逸事故防线）。
-  search 页缺席（fixture 等）时传空串：引擎静默不注册，菜单链接兜底。
+  站点层 assets/js/mf-search-overlay.js（装配入口，import '@params' 虚拟模块）
+  + mf-search-entry-engine.js（`/` 快捷键纯引擎）+ mf-search-overlay-engine.js
+  （浮层纯引擎，行为契约定义处）。与 reveal 同款管线，但 params 注入两个 URL：
+  searchUrl（search 页 RelPermalink）与 indexUrl（index.json 的 relLangURL）——
+  URL 走构建期、不写死，自动带 /mapleFlow/ 生产子路径（0046 的 ../index.json
+  逃逸事故防线）。search 页缺席（fixture 等）时 searchUrl 为空串：入口静默
+  不注册、浮层不装，菜单/图标链接兜底（ADR-0002）。
+  bundle = js.Build(入口) 与 fuse.basic.min.js + license.js concat——fuse 在
+  前段，浮层运行时 Fuse 已定义（与 head.html 给 search 页的 search.js 同款；
+  差异：那件纯 concat 经典脚本，本件先 js.Build 再 concat）。
   测试：tests/assert_search.mjs（行为，测纯引擎源码）+
-        tests/assert_site_contracts.py（构件交付面 / 加载面 / URL 子路径）。
+        tests/assert_site_contracts.py（构件交付面 / URL 子路径 / parity）。
 */ -}}
-{{- $entrySrc := resources.Get "js/mf-search-entry.js" -}}
+{{- $entrySrc := resources.Get "js/mf-search-overlay.js" -}}
 {{- if not $entrySrc -}}
-  {{- errorf "搜索入口引擎入口缺失：assets/js/mf-search-entry.js" -}}
+  {{- errorf "搜索前端入口缺失：assets/js/mf-search-overlay.js" -}}
 {{- end -}}
-{{- $entryParams := dict "searchUrl" "" -}}
+{{- $entryParams := dict "searchUrl" "" "indexUrl" "" -}}
 {{- with site.GetPage "page" "search" -}}
-  {{- $entryParams = dict "searchUrl" .RelPermalink -}}
+  {{- $entryParams = merge $entryParams (dict "searchUrl" .RelPermalink) -}}
 {{- end -}}
-{{- $entryJs := $entrySrc | js.Build (dict "format" "iife" "params" $entryParams) | resources.Minify | fingerprint }}
+{{- $entryParams = merge $entryParams (dict "indexUrl" ("index.json" | relLangURL)) -}}
+{{- $fusejs := resources.Get "js/fuse.basic.min.js" -}}
+{{- $licenseJs := resources.Get "js/license.js" -}}
+{{- $overlayBuilt := $entrySrc | js.Build (dict "format" "iife" "params" $entryParams) | resources.Minify -}}
+{{- $entryJs := (slice $fusejs $licenseJs $overlayBuilt) | resources.Concat "assets/js/mf-search-overlay.bundle.js" | fingerprint }}
 <script src="{{ $entryJs.RelPermalink }}" integrity="{{ $entryJs.Data.Integrity }}" crossorigin="anonymous" defer></script>

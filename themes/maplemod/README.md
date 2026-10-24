@@ -27,6 +27,7 @@
 | `layouts/partials/toc.html` | 文章目录（文内顶部，只收 h2；契约定义处 = 文件头 docstring；2026-10-24 阅读体验批 A1 重新引入——0029 曾删掉上游的 toc partial） |
 | `layouts/partials/post-nav.html` | 上下篇导航（上一篇=更早 / 下一篇=更晚；首末单边；2026-10-24 A3——0029 删掉的上游 `post_nav_links` 由第一方实现替代） |
 | `layouts/partials/pagination.html` | 分页器（页码链 + 上一页/下一页；站点层首页与主题层列表共用；2026-10-24 D3） |
+| `layouts/partials/search-overlay.html` | 搜索浮层 DOM 骨架（挂 baseof、默认 hidden；交互契约在站点层 mf-search-overlay-engine.js。2026-10-24 ADR-0013） |
 | `layouts/partials/{author,anchored_headings,cover}.html` | 作者、标题锚点、封面 |
 | `layouts/partials/templates/{opengraph,twitter_cards,schema_json,_funcs/get-page-images}.html` | 社交与结构化数据（含 ogImage 兜底） |
 | `assets/css/**` · `assets/js/**` | 主题样式与 fastsearch/fuse |

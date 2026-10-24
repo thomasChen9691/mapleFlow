@@ -32,3 +32,7 @@
 - 主题内部结构保持上游布局（assets/css 分文件、partial 目录不重组）——无功能收益且保留与上游的对照性。
 
 **2026-10-23 指针（候选 12 收口，轻笔）**：本 ADR 决策 3 的分层判据（「交互 → 主题层」）与实践出现第二次偏离——站点层交互引擎现有两例：reveal 的 `assets/js/mf-reveal/` 与候选 12 的 `assets/js/mf-search-entry*.js`（均经主题 partial 的 js.Build 全站加载）。判据本身不改（ADR 是历史记录；修判据是独立议题），此备注防「读判据 → 以为入口该放主题层 → 搬错地方」。见 ADR-0011 决策 3。
+
+**轻笔（2026-10-24，ADR-0013）**：站点层交互引擎实践增至三例——mf-reveal（动效）、
+mf-search-entry（快捷键）、mf-search-overlay（浮层）；浮层 DOM 骨架按分层判据落主题层
+（`partials/search-overlay.html`，因视觉 / 骨架而变 → 主题层），行为引擎落站点层。

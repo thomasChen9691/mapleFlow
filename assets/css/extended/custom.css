@@ -1231,6 +1231,126 @@ main:has(.post-entry + .post-entry) > .post-entry,
 }
 .no-js .mf-progress { display: none; }
 
+/* ---------- 16h. 搜索浮层（ADR-0013：全站就地检索面） ----------
+   契约（开/关/检索/键盘）见 assets/js/mf-search-overlay-engine.js docstring；
+   本节只负视觉值：
+   · 定位 = 顶部居中的模态面板（不占满全屏——列表可扫、背景可感，比全屏
+     浮层更适合「快查一下就走」）；
+   · **`[hidden]` 必须显式压过 flex**：`.mf-search-overlay` 是 display:flex，
+     不写这条，hidden 属性的 display:none 会被自己的规则吃掉，浮层无 JS 也可见
+     （no-js 基线破口——这类「属性被样式覆盖」的坑本项目踩过一次）；
+   · 过场只动 opacity / transform（1b 动效语言），包在 no-preference 内；
+     过场归搜索协议（ADR-0013 决策 8），不归 reveal（ADR-0007 边界）。
+*/
+.mf-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8vh 1rem 1rem;
+}
+.mf-search-overlay[hidden] { display: none; }
+.mf-search-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 18, 35, .45);
+}
+.mf-search-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  max-height: 78vh;
+  background: var(--entry);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.mf-search-box {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem .9rem;
+  border-bottom: 1px solid var(--border);
+}
+.mf-search-icon { flex: none; color: var(--secondary); }
+.mf-search-box input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--content);
+  font-size: 1rem;
+  outline: none;
+}
+.mf-search-box input::placeholder { color: var(--secondary); }
+.mf-search-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-in),
+              background-color var(--dur-2) var(--ease-std);
+}
+.mf-search-close:hover,
+.mf-search-close:focus-visible { color: var(--primary); background: var(--primary-soft); }
+.mf-search-results {
+  list-style: none;
+  margin: 0;
+  padding: .35rem;
+  overflow-y: auto;
+}
+.mf-search-results:empty { display: none; }
+.mf-search-item a {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  padding: .55rem .65rem;
+  border-radius: 8px;
+  text-decoration: none;
+}
+.mf-search-item a:hover,
+.mf-search-item a:focus-visible { background: var(--primary-soft); }
+.mf-search-title { font-size: .95rem; font-weight: 600; color: var(--content); }
+.mf-search-summary {
+  font-size: .82rem;
+  line-height: 1.5;
+  color: var(--secondary);
+  overflow-wrap: break-word;
+}
+.mf-search-empty,
+.mf-search-error {
+  margin: 0;
+  padding: 1rem .95rem;
+  font-size: .85rem;
+  line-height: 1.6;
+  color: var(--secondary);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mf-search-overlay:not([hidden]) .mf-search-panel {
+    animation: mf-overlay-in var(--dur-2) var(--ease-out);
+  }
+  .mf-search-overlay:not([hidden]) .mf-search-backdrop {
+    animation: mf-fade-in var(--dur-1) var(--ease-out);
+  }
+}
+@keyframes mf-overlay-in {
+  from { opacity: 0; transform: translateY(-8px) scale(.98); }
+}
+@keyframes mf-fade-in {
+  from { opacity: 0; }
+}
+
 /* ---------- 17. 响应式（平板 / 手机，按 768 / 480 两档收口） ---------- */
 @media (max-width: 1024px) {
   .resume { padding-inline: 0; }
@@ -1247,6 +1367,9 @@ main:has(.post-entry + .post-entry) > .post-entry,
   .mf-hero { padding: 1.75rem 0 1.25rem; }
   .mf-hero h1 { max-width: none; }
   .post-single { padding: 1.4rem 1.4rem; }
+  /* 浮层贴顶、去掉 8vh 的桌面呼吸感 */
+  .mf-search-overlay { padding: 0; align-items: stretch; }
+  .mf-search-panel { width: 100%; max-height: 100vh; border-radius: 0; border-left: 0; border-right: 0; border-top: 0; }
   /* 目录在窄屏收成单列（同一标记，仅列数变化；不折叠，理由见 toc.html docstring） */
   .post-toc ul { columns: 1; }
   .projects { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }

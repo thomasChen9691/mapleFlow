@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖十四类职责：
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖十五类职责：
 产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B14（ADR-0008；
 B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构建）
 · reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
@@ -15,7 +15,8 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
 的页面整块不渲染）· 上下篇导航（2026-10-24 A3：上一篇=更早/下一篇=更晚、首末单边、
 不指向自身）· 分页页码（2026-10-24 D3：页码链 + aria-current、单页不出分页器）
 · 触屏搜索入口（2026-10-24 C 批：全站 .mf-search-link 图标链接 + href 指向
-search 页）。
+search 页）· 搜索浮层（2026-10-24 ADR-0013：mf-search-overlay 构件全站恒加载 /
+两个注入 URL 的生产子路径 / 浮层骨架全站在且默认 hidden / fuse 配置 parity）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -636,6 +637,12 @@ def assert_theme_transition(report, dest):
     report.check("主题切换过渡包在 prefers-reduced-motion 守卫内",
                  re.search(r"prefers-reduced-motion:\s*(no-preference|reduce)", css_text) is not None,
                  "missing prefers-reduced-motion guard around theme transition")
+    # no-js 守门（ADR-0013 决策 10）：.mf-search-overlay 是 display:flex，
+    # 不写 [hidden] 覆盖规则，hidden 属性的 display:none 会被自己的规则吃掉，
+    # 浮层无 JS 也可见——属性在而规则丢，基线即破（DOM 侧断言守不住这条）
+    report.check("产物 CSS 含 .mf-search-overlay[hidden] 覆盖规则（压过 flex）",
+                 re.search(r"\.mf-search-overlay\[hidden\]\{[^}]*display:none", css_text) is not None,
+                 "missing .mf-search-overlay[hidden] display:none override")
     # 行内次级文本与目录标签显式着色 var(--secondary)，不会随 body 的 color
     # 过渡继承——不单独给它们加 color 过渡，切换时会跳色。允许合成一条规则
     # 或分散声明（只要求「每个选择器都有 transition + color」）。
@@ -1161,30 +1168,32 @@ def assert_search_artifacts(report, dest):
 
 
 def assert_search_entry_artifacts(report, dest):
-    """搜索入口构件交付面（工单 0050 决议⑧：产物四条之①②）。
+    """搜索前端构件交付面（工单 0050 决议⑧ ①② + ADR-0013 决策 3/9 扩展）。
 
-    入口脚本经 extend_footer 的第二个 js.Build 全站恒加载（决议⑤：站点层
-    assets/js/mf-search-entry.js，iife + minify + fingerprint + defer，
-    与 mf-reveal 同款管线）：
-      · 每个非跳转页都引用 mf-search-entry*.js 构件（全站面；页面集与 B7
-        同款——排除 Hugo 别名/跳转页）；
-      · 构件落盘且内含注入的 searchUrl——fixture（dev baseURL）形态为
-        "/search.html"（决议⑥：URL 走 Hugo 构建期注入、不写死；生产子路径
-        形态 "/mapleFlow/search.html" 由 assert_real 守，见 assert_real）。
+    装配入口经 extend_footer 的第二个 js.Build 全站恒加载（站点层
+    assets/js/mf-search-overlay.js，iife + minify + fingerprint + defer，
+    与 fuse/license concat 后 fingerprint；与 mf-reveal 同款管线）：
+      · 每个非跳转页都引用 mf-search-overlay*.js 构件（全站面；页面集与
+        B7 同款——排除 Hugo 别名/跳转页）；
+      · 构件落盘且内含两个注入 URL——searchUrl（fixture 形态
+        "/search.html"）与 indexUrl（"/index.json"）：URL 走 Hugo 构建期
+        注入、不写死；生产子路径形态由 assert_real 守；
+      · 浮层 DOM 契约：每个非跳转页都有 #mfSearchOverlay 且**默认 hidden**
+        （无 JS 不可见——no-js 基线；ADR-0013 决策 10）。
     坏掉时的失效形态：入口全站静默缺失（无报错、无结果——静默失效类），
-    或 URL 逃逸域名根 404（0046 的 ../index.json 同类事故）。
+    URL 逃逸域名根 404（0046 同类事故），或浮层无 JS 也可见（基线破口）。
     """
     pages = [p for p in sorted(dest.rglob("*.html"))
              if 'http-equiv="refresh"' not in p.read_text(encoding="utf-8")]
     missing, refs = [], []
     for p in pages:
         html = p.read_text(encoding="utf-8")
-        m = re.search(r'<script[^>]+src=["\']?([^"\'\s>]*mf-search-entry[^"\'\s>]*\.js)', html)
+        m = re.search(r'<script[^>]+src=["\']?([^"\'\s>]*mf-search-overlay[^"\'\s>]*\.js)', html)
         if not m:
             missing.append(p.relative_to(dest).as_posix())
         else:
             refs.append((p, m.group(1)))
-    report.check(f"全站 {len(pages)} 页均引用 mf-search-entry 构件（extend_footer 恒加载）",
+    report.check(f"全站 {len(pages)} 页均引用 mf-search-overlay 构件（extend_footer 恒加载）",
                  bool(pages) and not missing, f"缺: {missing[:3]}")
     if not refs:
         return
@@ -1193,13 +1202,25 @@ def assert_search_entry_artifacts(report, dest):
     resolved = [dest / re.sub(r'^/(mapleFlow/)?', '', ref) if ref.startswith('/')
                 else (p.parent / ref).resolve() for p, ref in refs]
     off_disk = [r for r in resolved if not r.is_file()]
-    report.check("mf-search-entry 构件落盘（按页面目录解析引用）", not off_disk,
+    report.check("mf-search-overlay 构件落盘（按页面目录解析引用）", not off_disk,
                  f"missing: {[str(r) for r in off_disk[:2]]}")
     if off_disk:
         return
     js = resolved[0].read_text(encoding="utf-8")
     report.check('构件内含注入的 searchUrl（fixture 形态 "/search.html"）',
-                 '"/search.html"' in js, "injected URL missing in bundle")
+                 '"/search.html"' in js, "injected searchUrl missing in bundle")
+    report.check('构件内含注入的 indexUrl（fixture 形态 "/index.json"）',
+                 '"/index.json"' in js, "injected indexUrl missing in bundle")
+    # 浮层 DOM 契约（ADR-0013 决策 3/10）：骨架全站在场 + 默认 hidden
+    no_overlay = [p.relative_to(dest).as_posix() for p in pages
+                  if 'id="mfSearchOverlay"' not in p.read_text(encoding="utf-8")]
+    report.check("全站每页渲染浮层骨架 #mfSearchOverlay", not no_overlay,
+                 f"缺: {no_overlay[:3]}")
+    not_hidden = [p.relative_to(dest).as_posix() for p in pages
+                  if not re.search(r'id="mfSearchOverlay"[^>]*\bhidden\b',
+                                   p.read_text(encoding="utf-8"))]
+    report.check("浮层骨架默认 hidden（无 JS 不可见，no-js 基线）", not not_hidden,
+                 f"未隐藏: {not_hidden[:3]}")
     # 反向牙（决议⑧③的 fixture 侧）：fastsearch 构件不得出现在非 search 页——
     # ADR-0010「第二个消费方」触发条件的观测面；fixture 恒跑（--quick 也在），
     # 与 assert_real 的同名检查各守一层（CI 全量 + 本地快速迭代都不缺席）。
@@ -1378,17 +1399,21 @@ def assert_search_entry_real(report, dest):
     search 页引用——后半条是 ADR-0010「第二个消费方」触发条件的观测牙
     （0049 缺口 7：此前无任何断言会提示重写条件已被触发）。
     """
-    bundles = sorted((dest / "js").glob("mf-search-entry*.js"))
-    report.check("入口构件落盘（真实构建 dest/js/）", bool(bundles),
-                 "no mf-search-entry*.js under dest/js")
+    # bundle 由 resources.Concat 落到 assets/js/（concat 目标路径决定，与
+    # js.Build 单件的 js/ 不同——0046 翻车教训的镜像：先 ls 再断言）
+    bundles = sorted((dest / "assets" / "js").glob("mf-search-overlay*.js"))
+    report.check("搜索前端构件落盘（真实构建 assets/js/）", bool(bundles),
+                 "no mf-search-overlay*.js under dest/assets/js")
     if bundles:
         js = bundles[0].read_text(encoding="utf-8")
-        report.check('入口构件内 searchUrl 为生产子路径形态 "/mapleFlow/search.html"',
-                     '"/mapleFlow/search.html"' in js, "production subpath URL missing in bundle")
+        report.check('构件内 searchUrl 为生产子路径形态 "/mapleFlow/search.html"',
+                     '"/mapleFlow/search.html"' in js, "production subpath searchUrl missing in bundle")
+        report.check('构件内 indexUrl 为生产子路径形态 "/mapleFlow/index.json"',
+                     '"/mapleFlow/index.json"' in js, "production subpath indexUrl missing in bundle")
     pages = [p for p in sorted(dest.rglob("*.html"))
              if 'http-equiv="refresh"' not in p.read_text(encoding="utf-8")]
     no_entry = [p.relative_to(dest).as_posix() for p in pages
-                if "mf-search-entry" not in p.read_text(encoding="utf-8")]
+                if "mf-search-overlay" not in p.read_text(encoding="utf-8")]
     report.check(f"真实构建全站 {len(pages)} 页均挂入口构件", bool(pages) and not no_entry,
                  f"缺: {no_entry[:3]}")
     leak = []
@@ -1398,8 +1423,27 @@ def assert_search_entry_real(report, dest):
         if re.search(r'src=["\']?[^"\'\s>]*assets/js/search\.[^"\'\s>]*\.js',
                      p.read_text(encoding="utf-8")):
             leak.append(p.relative_to(dest).as_posix())
-    report.check("fastsearch 构件仍仅 search 页引用（不引入第二个消费方）", not leak,
+    report.check("fastsearch 构件仍仅 search 页引用（快照协议加载面不变）", not leak,
                  f"泄漏到非 search 页: {leak[:3]}")
+    # ADR-0013 决策 5：浮层引擎的 fuse 配置与 fastsearch 快照逐字一致
+    # （两处配置同改——改一处不改另一处即红，防检索行为静默分叉）
+    def _fuse_cfg(text):
+        keys_m = re.search(r"keys:\s*\[([^\]]*)\]", text, re.S)
+        return (
+            re.search(r"distance:\s*(\d+)", text).group(1),
+            re.search(r"threshold:\s*([\d.]+)", text).group(1),
+            re.search(r"ignoreLocation:\s*(true|false)", text).group(1),
+            tuple(k.strip().strip("'\"") for k in keys_m.group(1).split(",") if k.strip()),
+        )
+    fast_txt = (REPO / "themes/maplemod/assets/js/fastsearch.js").read_text(encoding="utf-8")
+    overlay_txt = (REPO / "assets/js/mf-search-overlay-engine.js").read_text(encoding="utf-8")
+    report.check("浮层 fuse 配置与 fastsearch 快照 parity（distance/threshold/ignoreLocation/keys）",
+                 _fuse_cfg(fast_txt) == _fuse_cfg(overlay_txt),
+                 f"fastsearch={_fuse_cfg(fast_txt)} overlay={_fuse_cfg(overlay_txt)}")
+    # 浮层骨架：真实构建同样全站在场且默认 hidden
+    no_overlay = [p.relative_to(dest).as_posix() for p in pages
+                  if 'id="mfSearchOverlay"' not in p.read_text(encoding="utf-8")]
+    report.check("真实构建全站渲染浮层骨架", not no_overlay, f"缺: {no_overlay[:3]}")
 
 
 def assert_theme_contract(report, dest):

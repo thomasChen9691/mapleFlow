@@ -37,6 +37,8 @@
         {{- block "main" . }}{{ end }}
     </main>
     {{ partialCached "footer.html" . .Layout .Kind (.Param "hideFooter") (.Param "ShowCodeCopyButtons") -}}
+    {{- /* 搜索浮层骨架（ADR-0013）：全站在场、默认 hidden；行为归站点层引擎 */ -}}
+    {{ partial "search-overlay.html" . }}
 </body>
 
 </html>

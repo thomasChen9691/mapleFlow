@@ -71,7 +71,7 @@ _Avoid_: 资源列表、商品索引、产品目录、索引页
 ## 站内搜索
 
 **搜索入口 (Search Entry)**：
-把任意页面路由到搜索页的机制，**两条路由**：① 全站 `/` 快捷键（只负责跳转 / 聚焦，契约定义处是 `assets/js/mf-search-entry-engine.js` 文件头 docstring）；② 头部搜索图标链接（`.mf-search-link` 直链 search 页，触屏替代入口，2026-10-24 C 批）。检索仍归「搜索索引」链路（fastsearch）。两种入口并列互指、不合并命名（候选 12 / ADR-0011 决议）。
+把任意页面发起搜索的机制，**两条路由**：① 全站 `/` 快捷键；② 头部搜索图标链接（`.mf-search-link`）。**2026-10-24 ADR-0013 起重评后两条都打开「搜索浮层」**（无浮层时才回落跳转 search 页）。快捷键契约（键位 / 焦点与修饰键门控 / 开浮层钩子 / 降级）的定义处是 `assets/js/mf-search-entry-engine.js` 文件头 docstring；检索归「搜索索引」链路（fastsearch，仅 search 页）。三个契约并列互指、不合并命名（候选 12 / ADR-0011 / ADR-0013）。
 _Avoid_: 搜索框、搜索按钮、命令面板（command palette）
 
 **搜索索引 (Search Index)**：
@@ -83,12 +83,16 @@ _Avoid_: 搜索数据库、索引文件、search.json（文件名不作术语）
 _Avoid_: 侧边栏目录、大纲、outline
 
 **上下篇导航 (Post Navigation)**：
+文章页底部的相邻文章入口，范围是 posts 分区内按日期相邻。**上一篇 = 更早、下一篇 = 更晚**——与 Hugo 的 `.PrevInSection` / `.NextInSection` 方法名同向（实测坐实，勿凭直觉反写）。首/末篇单边渲染。契约定义处是 `themes/maplemod/layouts/partials/post-nav.html` 文件头 docstring。
+_Avoid_: 前后文章、相关阅读
 
 **阅读进度条 (Reading Progress)**：
 文章页顶部的细条，宽度随正文（不含标题 / 目录 / 上下篇）阅读进度增长。值是 `--mf-progress`（0..1），由 reveal 协议引擎 `reading-progress.js` 唯一写入；仅 posts 文章页渲染挂点，no-js 下整条不出现，减弱动效偏好下不豁免（功能性指示）。契约定义处是该引擎的文件头 docstring。
 _Avoid_: 进度环、reading progress bar
-文章页底部的相邻文章入口，范围是 posts 分区内按日期相邻。**上一篇 = 更早、下一篇 = 更晚**——与 Hugo 的 `.PrevInSection` / `.NextInSection` 方法名同向（实测坐实，勿凭直觉反写）。首/末篇单边渲染。契约定义处是 `themes/maplemod/layouts/partials/post-nav.html` 文件头 docstring。
-_Avoid_: 前后文章、相关阅读
+
+**搜索浮层 (Search Overlay)**：
+全站就地检索面（ADR-0013）：点头部图标或按 `/` 打开，输入即检索（懒加载索引、失败有可见错误态），Esc / 背景 / 关闭按钮 / 选中结果即关。契约（开关 / 焦点 / 键盘 / 渲染 / fuse 配置）的定义处是 `assets/js/mf-search-overlay-engine.js` 文件头 docstring；DOM 骨架在主题层 `partials/search-overlay.html`（默认 hidden）。**它是 index.json 投影的第二个消费方、fastsearch 之外的第二个搜索加载面**——ADR-0010「不重写」结论因此正式重评，结论与设计见 ADR-0013。search 页仍是完整检索落点。
+_Avoid_: 搜索弹窗、搜索模态框、command palette
 
 **分页器 (Paginator)**：
 列表页的翻页控件：页码链 + 上一页/下一页，当前页带 `aria-current="page"`；只有一页时整块不渲染。站点层首页与主题层列表共用同一实现（`themes/maplemod/layouts/partials/pagination.html`）。
