@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖十三类职责：
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖十四类职责：
 产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B14（ADR-0008；
 B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构建）
 · reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
@@ -13,7 +13,9 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
 过渡 / 卡片 --card-motion 单一真源 / 次级文本 color 过渡 / reduced-motion 守卫）
 · 文章目录（2026-10-24 阅读体验批 A1：条目与正文 h2 数量/文本/顺序全等；无 h2
 的页面整块不渲染）· 上下篇导航（2026-10-24 A3：上一篇=更早/下一篇=更晚、首末单边、
-不指向自身）· 分页页码（2026-10-24 D3：页码链 + aria-current、单页不出分页器）。
+不指向自身）· 分页页码（2026-10-24 D3：页码链 + aria-current、单页不出分页器）
+· 触屏搜索入口（2026-10-24 C 批：全站 .mf-search-link 图标链接 + href 指向
+search 页）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -32,6 +34,10 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
     「上一篇=更早、下一篇=更晚」的映射（方法名与中文顺序易反，见 post-nav.html docstring）
   · 分页 seam —— 真实构建 /posts/ 两页的页码链与 aria-current（pagerSize=6 是配置事实）
     + fixture 六篇恰好一页时不出分页器
+  · 触屏搜索入口 seam —— fixture 构建全站页面集（排除跳转页）的 .mf-search-link
+    在场与 href 终点
+  · 阅读进度条 seam —— fixture 构建的文章页有 .mf-progress、列表页与独立页
+    （about/products/search）均无、产物 CSS 含规则与 no-js 隐藏
   · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
     逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）、
     产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
@@ -490,6 +496,27 @@ def assert_reveal_artifacts(report, dest):
     report.check("B6 产物 CSS 含 .no-js .mf-rise 降级规则", ".no-js .mf-rise" in css_text,
                  "missing .no-js .mf-rise rule")
 
+    # B15 阅读进度条挂点（2026-10-24 D1）：进度只算 .post-content，故仅文章页
+    # 渲染 .mf-progress；列表页/独立页渲染它 = 引擎会量错对象（no-op 或假进度）。
+    article = dest / "posts" / "aiops-state-and-tools.html"
+    list_page = dest / "posts" / "index.html"
+    report.check("B15 文章页渲染 .mf-progress 挂点",
+                 article.is_file() and 'class="mf-progress"' in article.read_text(encoding="utf-8"),
+                 "missing .mf-progress on article page")
+    report.check("B15 列表页不渲染 .mf-progress（进度只算正文）",
+                 list_page.is_file() and 'class="mf-progress"' not in list_page.read_text(encoding="utf-8"),
+                 ".mf-progress leaked to list page")
+    # single.html 是 about/products 等独立页的兜底模板——无 section 守卫时进度条
+    # 会渲染到它们身上（2026-10-24 评审实测泄漏），故每个独立页都要锚缺席。
+    leaked = [name for name in ("about.html", "products.html", "search.html")
+              if (dest / name).is_file()
+              and 'class="mf-progress"' in (dest / name).read_text(encoding="utf-8")]
+    report.check("B15 独立页（about/products/search）不渲染 .mf-progress", not leaked,
+                 f"leaked to: {leaked}")
+    report.check("B15 产物 CSS 含 .mf-progress 规则与 no-js 隐藏",
+                 ".mf-progress" in css_text and ".no-js .mf-progress" in css_text,
+                 "missing .mf-progress rule or its no-js fallback")
+
 
 def assert_fixture(report):
     dest = TMP / "fixture"
@@ -544,7 +571,38 @@ def assert_fixture(report):
     assert_search_projection(report, dest)
     assert_search_artifacts(report, dest)
     assert_search_entry_artifacts(report, dest)
+    assert_search_link(report, dest)
     assert_theme_transition(report, dest)
+
+
+def assert_search_link(report, dest):
+    """触屏搜索入口（2026-10-24 C 批）：头部一个可点的搜索图标链接，全站恒在。
+
+    背景：全站 `/` 快捷键只对键盘用户有效；触屏设备没有替代入口，搜索要靠
+    菜单横滑找「搜索」项（雾区「移动端形态」的触发条件——项目负责人 2026-10-24
+    决定现在做）。形态取**最轻**：`<a>` 直链 search 页，零 JS、零浮层
+    （首页常驻框/浮层仍须先过 ADR-0010 的第二个消费方重评，本批不碰）。
+
+    契约：每个非跳转页的头部都有 `<a class="mf-search-link" href="…/search.html"
+    aria-label="搜索">`——href 必须走 RelPermalink（自动带生产 /mapleFlow/ 子路径，
+    写死根路径会逃逸域名根 404，与搜索入口 params 注入同一条纪律）。
+    锚 fixture 构建（dev baseURL），生产子路径形态由 assert_real 侧的
+    入口构件断言覆盖同一风险面。
+    """
+    pages = [x for x in sorted(dest.rglob("*.html"))
+             if 'http-equiv="refresh"' not in x.read_text(encoding="utf-8")]
+    missing, bad_href = [], []
+    for page in pages:
+        html = page.read_text(encoding="utf-8")  # 单次读入：过滤与检查共用
+        m = re.search(r'<a class="mf-search-link" href="([^"]+)"[^>]*aria-label="搜索"', html)
+        if not m:
+            missing.append(page.relative_to(dest).as_posix())
+        elif not m.group(1).endswith("/search.html"):
+            bad_href.append((page.relative_to(dest).as_posix(), m.group(1)))
+    report.check(f"全站 {len(pages)} 页均有搜索图标链接（触屏入口）", not missing,
+                 f"missing on: {missing[:5]}")
+    report.check("搜索图标链接指向 search 页（RelPermalink，非写死根路径）", not bad_href,
+                 f"bad href: {bad_href[:5]}")
 
 
 def assert_theme_transition(report, dest):
@@ -1295,6 +1353,18 @@ def assert_real(report):
                      re.search(r"\d+\s*分钟", sop_meta) is not None
                      and re.search(r"\d+\s*字", sop_meta) is not None,
                      f"meta={sop_meta[:160]!r}")
+        # 口径下界（2026-10-24 A2 修正）：Hugo 的 .WordCount 是**空白分词**
+        # （该文 654）、.ReadingTime 由它推出（4 分钟），而真实非空白字符约 4300。
+        # 下界 3000 字 / 8 分钟是「真实字符数口径」与「Hugo 默认口径」的分界：
+        # 退回 .WordCount/.ReadingTime 立刻红。上界不设（内容会长）。
+        chars_m = re.search(r"(\d+)\s*字", sop_meta)
+        mins_m = re.search(r"(\d+)\s*分钟", sop_meta)
+        report.check("SOP 派生页字数为真实字符数口径（> 3000，非 Hugo WordCount 的 654）",
+                     chars_m is not None and int(chars_m.group(1)) > 3000,
+                     f"got {chars_m.group(1) if chars_m else None}")
+        report.check("SOP 派生页阅读时长按 400 字/分钟换算（>= 8 分钟）",
+                     mins_m is not None and int(mins_m.group(1)) >= 8,
+                     f"got {mins_m.group(1) if mins_m else None}")
 
 
 def assert_search_entry_real(report, dest):

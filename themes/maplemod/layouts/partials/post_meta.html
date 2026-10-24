@@ -27,16 +27,26 @@
   {{- $compact = .compact | default false -}}
 {{- end }}
 
+{{- /* 字数与阅读时长的口径（2026-10-24 修正）：**不用** .WordCount / .ReadingTime。
+   它们是「空白分词」口径——中文长文 + 代码块会被严重低估（实测某篇 4747 字符的
+   SOP 只算 654「词」、4 分钟，按此显示就是「1050 字/分钟」的假数据）。
+   改用：字数 = 非空白字符数（含中英文与代码，`\S` 逐字符匹配，不受字节数影响）；
+        阅读时长 = 字数 / 400，向上取整，最少 1 分钟（中文技术内容约 400 字/分钟）。
+   断言：assert_post_reading_meta 的 SOP 派生页下界（> 3000 字 / >= 8 分钟）。 */}}
+{{- $chars := len (findRE `\S` $p.Plain) -}}
+{{- $minutes := int (math.Ceil (div (float $chars) 400)) -}}
+{{- if lt $minutes 1 }}{{ $minutes = 1 }}{{ end }}
+
 {{- if not $p.Date.IsZero -}}
 {{- $scratch.Add "meta" (slice (printf "<span title='%s'>%s</span>" ($p.Date.Format "2006-01-02 15:04:05 -0700") ($p.Date | time.Format (default ":date_long" site.Params.DateFormat)))) }}
 {{- end }}
 
 {{- if ($p.Param "ShowReadingTime") -}}
-{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "read_time" $p.ReadingTime | default (printf "%d min" $p.ReadingTime)))) }}
+{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "read_time" $minutes | default (printf "%d 分钟" $minutes)))) }}
 {{- end }}
 
 {{- if and (not $compact) ($p.Param "ShowWordCount") -}}
-{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "words" $p.WordCount | default (printf "%d words" $p.WordCount)))) }}
+{{- $scratch.Add "meta" (slice (printf "<span>%s</span>" (i18n "words" $chars | default (printf "%d 字" $chars)))) }}
 {{- end }}
 
 {{- if not ($p.Param "hideAuthor") -}}

@@ -316,5 +316,51 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
   );
 }
 
+// ---- RGR-9：阅读进度条·纯计算（computeProgress 的字面量期望）----
+{
+  const dom = installDom('<div></div>');
+  const mod = await loadFresh('assets/js/mf-reveal/reading-progress.js');
+  const p0 = mod.computeProgress({ scrollY: 300, viewportH: 800, contentTop: 300, contentH: 2000 });
+  const pMid = mod.computeProgress({ scrollY: 800, viewportH: 800, contentTop: 300, contentH: 2000 });
+  const pEnd = mod.computeProgress({ scrollY: 1500, viewportH: 800, contentTop: 300, contentH: 2000 });
+  const pOver = mod.computeProgress({ scrollY: 9999, viewportH: 800, contentTop: 300, contentH: 2000 });
+  const pBefore = mod.computeProgress({ scrollY: 0, viewportH: 800, contentTop: 300, contentH: 2000 });
+  const pShort = mod.computeProgress({ scrollY: 500, viewportH: 800, contentTop: 300, contentH: 600 });
+  check('RGR-9a 顶部（scrollY = contentTop）→ 0', p0 === 0, `got ${p0}`);
+  check('RGR-9b 中点（可滚动 1200，已滚 500）→ 0.4166666666666667（字面量，非公式反推）',
+    Math.abs(pMid - 0.4166666666666667) < 1e-12, `got ${pMid}`);
+  check('RGR-9c 到底（scrollY = contentTop + 可滚动高度）→ 1', pEnd === 1, `got ${pEnd}`);
+  check('RGR-9d 越界钳制（超底 → 1、未到顶 → 0）', pOver === 1 && pBefore === 0,
+    `got over=${pOver} before=${pBefore}`);
+  check('RGR-9e 内容不足一屏（total <= 0）→ 0（条为空，不误导）', pShort === 0, `got ${pShort}`);
+}
+
+// ---- RGR-10：阅读进度条·写入 seam（--mf-progress）----
+{
+  const dom = installDom(`<div class="mf-progress" aria-hidden="true"><span></span></div>
+    <div class="post-content">x</div>`);
+  const win = dom.window;
+  const bar = win.document.querySelector('.mf-progress');
+  const content = win.document.querySelector('.post-content');
+  // getBoundingClientRect 是**视口相对**坐标：绝对 top=300、已滚 900 时
+  // rect.top = 300 - 900 = -600（引擎会 +scrollY 还原绝对位置）
+  content.getBoundingClientRect = () => ({ top: -600, height: 2000, bottom: 1400, left: 0, right: 0, width: 0 });
+  Object.defineProperty(win, 'innerHeight', { value: 800, configurable: true });
+  Object.defineProperty(win, 'scrollY', { value: 900, configurable: true, writable: true });
+  await loadFresh('assets/js/mf-reveal/reading-progress.js');
+  const v = bar.style.getPropertyValue('--mf-progress');
+  check('RGR-10a import 即按当前位置写入 --mf-progress（900 滚 / 可滚 1200 → 0.500）',
+    Math.abs(parseFloat(v) - 0.5) < 1e-3, `got "${v}"`);
+}
+
+// ---- RGR-11：非文章页（缺 .mf-progress / .post-content）静默 no-op ----
+{
+  const dom = installDom('<div class="list-page">no article here</div>');
+  const mod = await loadFresh('assets/js/mf-reveal/reading-progress.js');
+  let threw = false;
+  try { mod.initReadingProgress(dom.window.document); } catch { threw = true; }
+  check('RGR-11 缺挂点时不抛错（非文章页静默降级）', !threw);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

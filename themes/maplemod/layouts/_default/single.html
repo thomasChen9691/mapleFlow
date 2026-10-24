@@ -1,5 +1,14 @@
 {{- define "main" }}
 
+{{- /* 阅读进度条（D1）：**仅 posts 文章页**渲染——single.html 同时是 about /
+       products 等独立页的兜底模板，无守卫时它们的 .post-content 也会被量，
+       进度条会出现在非文章页上（2026-10-24 评审实测泄漏）。
+       引擎在 assets/js/mf-reveal/reading-progress.js 写 --mf-progress；
+       no-js 下整条隐藏。 */}}
+{{- if eq .Section "posts" }}
+<div class="mf-progress" aria-hidden="true"><span></span></div>
+{{- end }}
+
 <article class="post-single">
   <header class="post-header">
     <h1 class="post-title entry-hint-parent">

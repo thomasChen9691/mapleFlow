@@ -987,6 +987,27 @@ main:has(.post-entry + .post-entry) > .post-entry,
   transition-duration: var(--dur-0);
 }
 
+/* 触屏搜索入口（2026-10-24 C 批）：与主题切换并排的图标链接。
+   热区 40×40（盒子即热区，图标 18px 居中）；桌面同样显示——`/` 快捷键对
+   键盘用户成立，图标是它的可发现性入口。 */
+.mf-search-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: auto 2px;
+  border-radius: 10px;
+  color: var(--secondary);
+  transition: color var(--dur-1) var(--ease-in),
+              background-color var(--dur-2) var(--ease-std);
+}
+.mf-search-link:hover,
+.mf-search-link:focus-visible {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
 /* 回到顶部：沿用主题自带的 visibility/opacity 过渡，补上位移与底色 */
 .top-link:hover {
   transform: translateY(-3px);
@@ -1184,6 +1205,31 @@ main:has(.post-entry + .post-entry) > .post-entry,
   font-size: .8rem;
   opacity: .6;
 }
+
+/* ---------- 16g. 阅读进度条（D1） ----------
+   契约见 assets/js/mf-reveal/reading-progress.js 的文件头 docstring；本节只负视觉：
+   · 顶部固定 2px，宽度由 --mf-progress 驱动（transform: scaleX，不触发布局）
+   · 无 transition——进度只随滚动变化，加过渡会变成「追着滚」的假动效
+   · 功能性指示（同滚动条），减弱动效偏好下**不豁免**
+   · no-js 下整条不出现（无 JS 就没有进度可算，不能留一条空槽）
+*/
+.mf-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 100;
+  pointer-events: none;
+}
+.mf-progress span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transform: scaleX(var(--mf-progress, 0));
+  transform-origin: 0 50%;
+}
+.no-js .mf-progress { display: none; }
 
 /* ---------- 17. 响应式（平板 / 手机，按 768 / 480 两档收口） ---------- */
 @media (max-width: 1024px) {

@@ -76,3 +76,9 @@ meta description == 注册表）。页面正确性由 PR 期人工审阅把关�
   逐字段比对：title / meta_description 未变，article_html 仅一处 insert。
   注：`eq .Section "posts"` 范围守卫对文章页输出无影响（守卫是防 about/products/
   search 泄漏），故本次捕获与守卫前后一致。
+- **2026-10-24（A2 口径修正 + C + D1）**：6 份 golden 第四次重捕获。变更仅 meta 行
+  的数字——`post_meta.html` 把 Hugo 的 `.WordCount`/`.ReadingTime`（空白分词口径：
+  654「词」/ 4 分钟）换成真实非空白字符数与 400 字/分钟换算（3586 字 → ceil(3586/400)
+  = 9 分钟，算术自洽）。逐字段比对：title / meta_description 未变，article_html 仅
+  meta 行的两处数字。进度条元素在 `<article>` 之外（`single.html` 的 main 开头），
+  故不进 golden——其产物面由 assert_reveal_artifacts 的 B15 守。

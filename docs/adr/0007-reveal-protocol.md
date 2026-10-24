@@ -33,3 +33,5 @@
 **2026-10-22 指针**：本 ADR Consequences 末条「搜索 JS（fastsearch）与 index.json 投影归候选 8」已由 **ADR-0010** 定案——fastsearch 独立为「搜索协议」现状快照契约（docstring 落 `themes/maplemod/assets/js/fastsearch.js` 文件头），**不并入本协议**；投影侧契约见同一 ADR。本 ADR 正文不改（历史记录）。
 
 **2026-10-23 指针（二）（候选 12 收口）**：本 ADR 的模块边界（动效交互三块）被候选 12 显式问过并闭合——搜索入口（全站 `/` 快捷键）是**纯功能交互、零动效面**，不归 reveal 协议、不并入本 ADR 的任何引擎；作为第三个并列模块落站点层 `assets/js/mf-search-entry-engine.js`，自有 docstring、与 fastsearch.js 快照契约并列互指（ADR-0011 决策 3 / 工单 0052 决议③）。本 ADR 正文不改（历史记录）。
+
+**2026-10-24 指针（三）（D1 阅读进度条）**：本协议的动效交互从三块扩到四块——新增引擎 `assets/js/mf-reveal/reading-progress.js`（阅读进度条，写 `--mf-progress`，量 `.post-content`，仅 posts 文章页渲染）。性质上它属本协议（滚动驱动的界面状态，非纯功能交互），故并入 mf-reveal 而非另立模块；契约定义处 = 该引擎文件头 docstring，行为测试 RGR-9/10/11 入 `tests/assert_reveal.mjs`，产物断言 B15 入 `tests/assert_site_contracts.py`。**不进本 ADR 正文**（历史记录）；若将来出现第二个「非滚动驱动的纯功能」搜索类入口，仍按 2026-10-23 指针（二）的判据另立模块。
