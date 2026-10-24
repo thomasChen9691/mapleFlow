@@ -158,6 +158,6 @@ python3 auto_push.py
 - Hugo 官方文档：<https://gohugo.io/documentation/>
 - PaperMod 主题：<https://github.com/adityatelange/hugo-PaperMod>
 - PaperMod 配置示例：`themes/PaperMod/exampleSite/config.yml`
-- CI/CD 流水线：`.github/workflows/ci-cd.yml`（PR 门禁 + 推送 main 自动部署；2026-10-24 前名 `deploy.yml`）
+- CI/CD 流水线：`.github/workflows/ci-cd.yml`（PR 门禁 + 合并后自动部署；2026-10-24 前名 `deploy.yml`）。`main` 受规则集 `main-protection` 保护：特性分支 → PR → 验证绿 → squash 合并 → 自动部署，直推 main 会被拒
 - 项目上下文（AI 代理）：根目录 `AGENTS.md` / `CLAUDE.md`
 - 同类 SOP 索引：`docs/sop/README.md`

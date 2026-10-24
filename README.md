@@ -46,7 +46,14 @@ hugo server -D
 
 - **部署（deploy）**：仅 `main` 的 push / 手动触发，且 **verify 全绿后才跑**——重建并推送到 `gh-pages`，GitHub Pages 从该分支读取静态文件对外提供访问。
 
-- **日常使用**：推送到 `main` 即自动验证 + 部署；PR 先过门禁再合入。无需任何手工构建/拷贝。建议在仓库 Settings → Branches 为 `main` 开启「Require status checks to pass（CI/CD / verify）」，让 PR 门禁成为硬约束。
+- **日常使用（受规则集保护的 PR 流程）**：`main` 已由规则集 `main-protection` 保护——**直接 push 到 `main` 会被拒绝**。标准流程：
+  ```bash
+  git checkout -b feat/your-topic   # 1. 开特性分支
+  git push origin feat/your-topic   # 2. 推送（PR 上自动跑完整验证）
+  # 3. 开 Pull Request → 「验证」检查全绿后才能合并
+  # 4. Squash and merge → 合并即触发构建并部署到 GitHub Pages
+  ```
+  规则集要点：唯一必需检查 `验证（测试 + 构建 + 守门）`、Required approvals = 0（solo 仓库可合并自己的 PR）、仅允许 squash 合并、线性历史、禁强推与删除。无需任何手工构建/拷贝；规则集可在 Settings → Rules → Rulesets 调整。
 
 - **GitHub Pages 设置（只需配置一次）**
   - 打开 GitHub 仓库 → `Settings` → `Pages`
