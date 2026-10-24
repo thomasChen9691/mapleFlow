@@ -1251,7 +1251,22 @@ main:has(.post-entry + .post-entry) > .post-entry,
   justify-content: center;
   padding: 8vh 1rem 1rem;
 }
-.mf-search-overlay[hidden] { display: none; }
+/* 退出过场（2026-10-24 E 批）：`display … allow-discrete` 让 display:none 的
+   生效延后到过渡结束——退出从「瞬闪」变「淡出 + 轻抬」。进入过场仍是下方
+   keyframes（全浏览器一致），两者不打架：进入时 display 从 none 翻转变即生效，
+   opacity 由 keyframes 驱动；退出时 opacity/transform 走这条 transition。
+   注意 [hidden] 规则必须继续显式压过上面的 display:flex（no-js 基线破口）。 */
+.mf-search-overlay {
+  transition: opacity var(--dur-1) var(--ease-in),
+              display var(--dur-1) allow-discrete;
+}
+.mf-search-overlay[hidden] { display: none; opacity: 0; }
+.mf-search-panel { transition: transform var(--dur-1) var(--ease-in); }
+.mf-search-overlay[hidden] .mf-search-panel { transform: translateY(-8px) scale(.98); }
+@media (prefers-reduced-motion: reduce) {
+  .mf-search-overlay,
+  .mf-search-panel { transition: none !important; }
+}
 .mf-search-backdrop {
   position: absolute;
   inset: 0;
@@ -1401,4 +1416,44 @@ main:has(.post-entry + .post-entry) > .post-entry,
   .mf-spec { grid-template-columns: 1fr; }
   .mf-spec-item { border-right: 0; border-bottom: 1px solid var(--border); }
   .mf-spec-item:last-child { border-bottom: 0; }
+}
+
+/* ---------- 18. 布局与动效现代化补强（2026-10-24 视觉批 E） ----------
+   本节只做「加法」，不动既有契约：
+   · 三条既有纪律不变——只动 transform/opacity/颜色（1b）、全站一套曲线、
+     减弱动效偏好下自动播放一律定格（6 节）；
+   · 每项都是渐进增强：不支持的浏览器忽略对应声明，退回当前行为。
+   ① 视口单位 vh → dvh：移动端地址栏收放会改 vh，footer 随之跳
+     （浮层退出过场并入 16h——`allow-discrete` 让消失延后到过渡结束）；
+   ② 滚动稳定性：scrollbar-gutter 预留滚动条槽（浮层锁滚时内容不横跳）、
+      overscroll-behavior / touch-action 防滚动链与 iOS 双击缩放；
+   ③ 排版微进阶：标题 balance、正文 pretty（中文孤字控制）、
+      ::selection 用 color-mix（带 rgba 兜底）；
+   ④ 触屏点按 polish：去 iOS 点击灰闪。
+*/
+@supports (height: 100dvh) {
+  /* 与主题 main.css:3 同选择器同声明，站点层在后 → 覆盖生效；
+     vh 行由主题保留为兜底，无需在此重复。 */
+  .main { min-height: calc(100dvh - var(--header-height) - var(--footer-height)); }
+  .mf-search-panel { max-height: 100dvh; }
+}
+
+/* ② 滚动稳定性 */
+html { scrollbar-gutter: stable; }           /* 滚动条槽常驻：锁滚/去锁滚不横跳 */
+.mf-search-panel { overscroll-behavior: contain; }  /* 结果滚到底不带动背后页面 */
+.mf-search-backdrop { touch-action: none; }   /* 背后页面不跟着触摸滚动（iOS） */
+
+/* ④ 排版微进阶 */
+.mf-hero h1,
+.post-single .post-title,
+.post-entry .entry-header h2,
+.mf-post .entry-header h2 { text-wrap: balance; }   /* 多行标题均衡断行 */
+.post-content p { text-wrap: pretty; }              /* 减少末行孤字（中文长段落） */
+::selection { background: rgba(63, 86, 201, .22); } /* 兜底：浅色主色 22% */
+::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }
+
+/* ⑤ 触屏点按 polish */
+a, button {
+  -webkit-tap-highlight-color: transparent;  /* 去 iOS 点击灰闪 */
+  touch-action: manipulation;                /* 去双击缩放 300ms 延迟（滚动照常） */
 }
