@@ -25,6 +25,14 @@ theme = "maplemod"
 # 页脚版权（footer.html 优先用 site.Copyright，覆盖默认的 © now.Year）
 copyright = "© 2019 - 2026 thomasChen"
 
+# 目录深度：只收 h2（2026-10-24 阅读体验批 A1）。SOP 笔记是「## 1. 简介 /
+# ### 2.1 Docker 快速启动」两级结构——收 h3 会让目录膨胀成第二篇要读的东西。
+# 空态由主题 partial toc.html 判定（含 `<a ` 才渲染；无标题时 Hugo 返回空 <nav>
+# 而非空串，故不能靠 with 判真值——详见该 partial 的 docstring）。
+[markup.tableOfContents]
+startLevel = 2
+endLevel = 2
+
 # ================= 服务设置 =================
 # [services]
 #   [services.disqus]

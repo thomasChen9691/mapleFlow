@@ -23,7 +23,8 @@
 | `layouts/partials/head.html` · `header.html` · `footer.html` | 文档头、导航、页脚 |
 | `layouts/partials/extend_head.html` | no-js→js 的**内联** class swap（保持内联，勿外置） |
 | `layouts/partials/extend_footer.html` | reveal 协议引擎的 js.Build 加载点（源码在站点 `assets/js/mf-reveal/`） |
-| `layouts/partials/post_meta.html` | 文章元信息；title 属性用显式时区格式（构建机时区不决定字节） |
+| `layouts/partials/post_meta.html` | 文章元信息；title 属性用显式时区格式（构建机时区不决定字节）；支持 `compact` 形态（卡片省略字数） |
+| `layouts/partials/toc.html` | 文章目录（文内顶部，只收 h2；契约定义处 = 文件头 docstring；2026-10-24 阅读体验批 A1 重新引入——0029 曾删掉上游的 toc partial） |
 | `layouts/partials/{author,anchored_headings,cover}.html` | 作者、标题锚点、封面 |
 | `layouts/partials/templates/{opengraph,twitter_cards,schema_json,_funcs/get-page-images}.html` | 社交与结构化数据（含 ogImage 兜底） |
 | `assets/css/**` · `assets/js/**` | 主题样式与 fastsearch/fuse |
@@ -45,6 +46,8 @@
   6 个零引用短代码、`archives.html`、`robots.txt` 模板、上游 `.github/`、45 个非中文 i18n；
   保留 assets 全量、`LICENSE`、`theme.toml`、`go.mod`、`images/`。`head.html` 里对
   `google_analytics.html` 的调用是上游遗留钩子（渲染为空；CI 0.164 实证不报错），保留。
+  **注**：其中 `toc` 已于 2026-10-24 以第一方实现重新引入（`partials/toc.html`，文内顶部
+  目录，只收 h2）——不是恢复上游那份，上游版带 `<details>` 折叠与 JS 同步。
 - **合并（0030）**：5 个原站点覆盖文件已并入本主题——`baseof.html`（no-js 类）、
   `extend_head.html`（class swap）、`extend_footer.html`（js.Build）、`post_meta.html`
   （时区格式）、`templates/opengraph.html`（ogImage 兜底）。

@@ -1,0 +1,35 @@
+{{- /*
+  toc.html —— 文章目录（文内顶部目录；契约定义处）
+  ============================================================
+  2026-10-24 阅读体验批 A1。三个目的地（已定）：
+    ① 位置 = 文内顶部。不做常驻侧栏——正文内容宽 970px、SOP 代码块密集，
+       加侧栏要么压正文到 ~700px（长命令换行变多），要么只在 ≥1440px 可见。
+    ② 移动端 = 同一标记，仅列数变化（桌面两列 / 移动一列），不折叠：
+       `<details>` 要么桌面也折叠（多一次点击，CSS 无法按视口强制展开），
+       要么需要 JS 同步（新增交互面）——两者都比统一展开差。
+    ③ 无滚动高亮——顶部目录随内容滚走，高亮只对常驻目录有意义；
+       将来若上常驻侧栏，scroll-spy 作为那个决策的一部分一起做。
+
+  DOM 契约：
+    写  <div class="post-toc"><p class="post-toc-title">目录</p>{.TableOfContents}</div>
+    读  .TableOfContents（Hugo 内置；深度由 hugo.toml 的
+        [markup.tableOfContents] startLevel=2 endLevel=2 控制——只收 h2，
+        理由见配置注释）
+    空态 判据 = .TableOfContents 里是否含 `<a `（不是 `with .TableOfContents`，
+        也不是 `.Fragments.Headings` 的 Level 过滤——前者判真值会渲染空目录框，
+        后者在 Hugo 0.164 的 Heading 结构上无 Level 字段、恒为空）。
+        无标题时 Hugo 返回**空 `<nav id="TableOfContents"></nav>` 而非空串**；
+        含链接即证明有 h2 条目。不写「无目录」占位文案（与精选区/网格同一空态纪律）。
+
+  编号：SOP 笔记的 h2 标题自带「1. 简介」式序号，故目录**不另加 CSS 计数器**
+  （否则 01 + 1. 双重编号）。视觉值在站点层 custom.css 的目录节。
+
+  断言：assert_post_toc（真实 SOP 页：目录条目与正文 h2 数量/文本/顺序全等；
+  无标题 fixture 页：不渲染 .post-toc）。
+*/ -}}
+{{- if strings.Contains .TableOfContents "<a " }}
+<div class="post-toc">
+  <p class="post-toc-title">目录</p>
+  {{ .TableOfContents }}
+</div>
+{{- end }}

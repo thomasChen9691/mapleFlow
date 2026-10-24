@@ -513,6 +513,14 @@ a.mf-tag:active { transform: translateY(0) scale(.97); transition-duration: var(
   font-size: .74rem;
   color: var(--secondary);
 }
+/* 显式着色的次级文本不随 body 的 color 过渡继承（继承只对未着色的文本生效），
+   不单独挂 color 过渡则主题切换时跳色。集中一处声明，避免逐个抄写。
+   2026-10-24 D2 补；断言 assert_theme_transition。 */
+.mf-row-sum,
+.mf-row-meta,
+.post-toc-title {
+  transition: color var(--dur-2) var(--ease-std);
+}
 .mf-row-side {
   display: flex;
   align-items: center;
@@ -882,9 +890,13 @@ main:has(.post-entry:only-of-type),
      （实测单篇分类页 398px 高、正文 49px）。等高对齐改由下面
      「多列场景」的规则按需开启，不再全局继承。 */
   box-shadow: var(--shadow-sm);
-  transition: transform var(--dur-2) var(--ease-in),
-              box-shadow var(--dur-2) var(--ease-in),
-              border-color var(--dur-1) var(--ease-in);
+  /* 卡片动效列表的唯一真源（--card-motion）：16d 的主题切换过渡要用
+     `var(--card-motion), 颜色项` 组合，避免把这三项再抄一份（抄一份就会漂移）。
+     改这里的时长/曲线 = 同时改 16d 的过渡组成，但**只改这一处定义**。 */
+  --card-motion: transform var(--dur-2) var(--ease-in),
+                 box-shadow var(--dur-2) var(--ease-in),
+                 border-color var(--dur-1) var(--ease-in);
+  transition: var(--card-motion);
 }
 
 /* 同行等高：仅在「同一行有多于一张卡」时才需要拉伸。
@@ -1018,19 +1030,20 @@ main:has(.post-entry + .post-entry) > .post-entry,
      transform / opacity——不与 reveal 协议抢属性；
    · 包在 prefers-reduced-motion: no-preference 内：减弱动效偏好下瞬时切换
      （与 1b 动效语言「减弱动效下定格最终画面」一致）；
-   · 卡片（.post-entry / .mf-post）必须重写整份 transition 列表：transition
-     是单属性、后写整份覆盖，故把 section 15 原有的 transform / box-shadow /
-     border-color 三项原样保留、只追加颜色两项。**改 section 15 的卡片动效时
-     同步改这里**（已知重复，换取零 JS 与零协议扩张；code review 记录在案）；
-   · 不覆盖、切换时瞬时变色的元素（已知取舍）：.mf-row（自带 background-color
-     过渡给悬停用）、.mf-btn / .mf-tag / .mf-cta / .mf-filter（控件自有交互过渡）、
-     .reveal（进场动效归协议）、.top-link（visibility / opacity 过渡）。
+   · 卡片（.post-entry / .mf-post）的动效列表来自 section 15 的 --card-motion
+     变量（单一真源），这里只组合颜色两项——不再整份抄写，避免 15↔16d 漂移；
+     reduce 下本段不生效时，section 15 的 var(--card-motion) 仍保住按压反馈；
+   · 不覆盖、切换时瞬时变色的元素（已知取舍）：.mf-btn / .mf-tag / .mf-cta /
+     .mf-filter 已自带颜色过渡；.reveal 的进场动效归协议、.top-link 的
+     visibility/opacity 过渡归主题——这三类不动。显式着色的次级文本
+     （.mf-row-sum / .mf-row-meta）在各自规则里单独挂 color 过渡。
    断言：assert_theme_transition（body 颜色过渡 + 卡片保留 transform +
-   reduced-motion 守卫）。
+   次级文本 color 过渡 + reduced-motion 守卫）。
 */
 @media (prefers-reduced-motion: no-preference) {
   body,
   .post-single,
+  .post-toc,
   .mf-spec,
   .mf-cta-band,
   .mf-index,
@@ -1044,16 +1057,58 @@ main:has(.post-entry + .post-entry) > .post-entry,
                 color var(--dur-2) var(--ease-std),
                 border-color var(--dur-2) var(--ease-std);
   }
-  /* 卡片：保留原三项动效（时长/曲线与 section 15 一致），追加颜色两项 */
+  /* 卡片：动效列表来自 section 15 的 --card-motion（单一真源），此处只组合颜色项；
+     reduce 下本段不生效，section 15 的 var(--card-motion) 仍保住按压反馈 */
   .post-entry,
   .mf-post {
-    transition: transform var(--dur-2) var(--ease-in),
-                box-shadow var(--dur-2) var(--ease-in),
-                border-color var(--dur-1) var(--ease-in),
+    transition: var(--card-motion),
                 background-color var(--dur-2) var(--ease-std),
                 color var(--dur-2) var(--ease-std);
   }
 }
+
+/* ---------- 16e. 文章目录（A1：文内顶部目录） ----------
+   契约与三个目的地见主题层 partial `toc.html` 的文件头 docstring；本节只负视觉值：
+   · 浅填充 + 细边 + 圆角——与代码块 / 引用同族，是「阅读辅助」不是第二个导航栏
+   · 桌面两列 / 移动一列（列数收口在 section 17）；break-inside 防止条目跨列断开
+   · 不另加序号：SOP 笔记的 h2 自带「1. 简介」式编号，再加计数器会双重编号
+   · 链接色走 --content（目录是正文的索引，不是强调），悬停转 --primary
+   断言：assert_post_toc（条目与正文 h2 全等 / 空态不渲染）
+*/
+.post-toc {
+  margin: 1.1rem 0 1.6rem;
+  padding: .9rem 1.15rem;
+  background: var(--tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.post-toc-title {
+  margin: 0 0 .55rem;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .14em;
+  color: var(--secondary);
+}
+.post-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 2.2rem;
+}
+.post-toc li {
+  break-inside: avoid;
+  margin: 0 0 .3rem;
+  font-size: .9rem;
+  line-height: 1.55;
+}
+.post-toc a {
+  color: var(--content);
+  text-decoration: none;
+  transition: color var(--dur-1) var(--ease-in);
+}
+.post-toc a:hover,
+.post-toc a:focus-visible { color: var(--primary); }
 
 /* ---------- 17. 响应式（平板 / 手机，按 768 / 480 两档收口） ---------- */
 @media (max-width: 1024px) {
@@ -1071,6 +1126,8 @@ main:has(.post-entry + .post-entry) > .post-entry,
   .mf-hero { padding: 1.75rem 0 1.25rem; }
   .mf-hero h1 { max-width: none; }
   .post-single { padding: 1.4rem 1.4rem; }
+  /* 目录在窄屏收成单列（同一标记，仅列数变化；不折叠，理由见 toc.html docstring） */
+  .post-toc ul { columns: 1; }
   .projects { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
   /* 索引行在窄屏改为两行式：编号并入标题上方，侧栏换行铺开 */
   .mf-row { grid-template-columns: 1fr; gap: .5rem; }

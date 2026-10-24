@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖十类职责：
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖十一类职责：
 产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B14（ADR-0008；
 B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构建）
 · reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
@@ -10,7 +10,9 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
 决议⑧：构件交付面 / URL 子路径 / 全站恒加载 / 第二个消费方反向守门）
 · 阅读辅助 meta（2026-10-24 阅读体验批 A2：文章页含时长+字数、卡片 compact
 只留时长、SOP 派生页含两者）· 主题切换过渡（2026-10-24 视觉批 D2：body 颜色
-过渡 / 卡片保留 transform / reduced-motion 守卫）。
+过渡 / 卡片 --card-motion 单一真源 / 次级文本 color 过渡 / reduced-motion 守卫）
+· 文章目录（2026-10-24 阅读体验批 A1：条目与正文 h2 数量/文本/顺序全等；无 h2
+的页面整块不渲染）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -21,8 +23,10 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
     三面呈现（文章页 / 列表卡片 / 首页网格）与首页精选行负向**（ADR-0012）
   · 阅读辅助 seam —— 同一 posts fixture 的文章页 .post-meta 与 /posts/ 卡片
     entry-footer（两种调用形态）+ 真实构建的 SOP 派生页（site 级参数可达派生文）
-  · 主题切换过渡 seam —— fixture 构建产物 CSS 的 body / 卡片 transition 规则
-    与 prefers-reduced-motion 守卫（视觉值非契约，只守规则在场）
+  · 文章目录 seam —— 真实构建的 SOP 派生页（目录条目 == 正文 h2 序列）+ fixture
+    无标题文章页（空态整块不渲染）
+  · 主题切换过渡 seam —— fixture 构建产物 CSS 的 body / 卡片 / 次级文本 transition
+    规则与 prefers-reduced-motion 守卫（视觉值非契约，只守规则在场）
   · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
     逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）、
     产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
@@ -556,13 +560,32 @@ def assert_theme_transition(report, dest):
     report.check("产物 CSS 含 body 背景色过渡（主题切换不硬闪）",
                  re.search(r"body[^{]*\{transition:[^}]*background-color", css_text) is not None,
                  "missing body background-color transition in built CSS")
-    report.check("卡片过渡保留 transform 并追加 background-color（按下反馈不丢）",
-                 re.search(r"\.post-entry[^{]*\{transition:[^}]*transform[^}]*background-color",
-                           css_text) is not None,
-                 "card transition lost transform or background-color")
+    # 卡片的动效列表是单一真源（--card-motion 定义在 section 15 的卡片规则里），
+    # 16d 用 var() 组合颜色项——这里同时守「变量含 transform（按压反馈）」与
+    # 「卡片 transition 由变量 + background-color 组成」（结构即契约：变量存在
+    # 是为了消除 15↔16d 的整份抄写，抄回去就红）。
+    report.check("卡片动效走 --card-motion 单一真源且追加 background-color",
+                 re.search(r"\.post-entry[^{]*\{[^}]*--card-motion:[^}]*transform[^}]*\}",
+                           css_text) is not None
+                 and re.search(r"\.post-entry[^{]*\{transition:var\(--card-motion\)[^}]*background-color",
+                               css_text) is not None,
+                 "card motion variable or composed transition missing")
     report.check("主题切换过渡包在 prefers-reduced-motion 守卫内",
                  re.search(r"prefers-reduced-motion:\s*(no-preference|reduce)", css_text) is not None,
                  "missing prefers-reduced-motion guard around theme transition")
+    # 行内次级文本与目录标签显式着色 var(--secondary)，不会随 body 的 color
+    # 过渡继承——不单独给它们加 color 过渡，切换时会跳色。允许合成一条规则
+    # 或分散声明（只要求「每个选择器都有 transition + color」）。
+    def _has_color_transition(selector):
+        for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", css_text):
+            if selector in m.group(1) and "transition:" in m.group(2) and "color" in m.group(2):
+                return True
+        return False
+
+    missing = [s for s in (".mf-row-sum", ".mf-row-meta", ".post-toc-title")
+               if not _has_color_transition(s)]
+    report.check("显式着色的次级文本含 color 过渡（切换不跳色）", not missing,
+                 f"missing color transition: {missing}")
 
 
 def assert_post_featured(report):
@@ -737,6 +760,69 @@ def assert_post_reading_meta(report):
     report.check("卡片 meta 不含字数（compact 形态，避免窄卡孤字换行）",
                  re.search(r"\d+\s*字", card_meta) is None,
                  f"card meta={card_meta[:160]!r}")
+
+
+def assert_post_toc(report):
+    """文章目录（2026-10-24 阅读体验批 A1）：文内顶部目录，只收 h2。
+
+    契约（三个目的地已定）：
+      ① 位置 = 文内顶部（不做常驻侧栏——内容宽 970px，代码块密集）；
+      ② 移动端 = 同一标记仅列数变化（桌面两列 / ≤768px 一列，不折叠）；
+      ③ 无滚动高亮（顶部目录随内容滚走，高亮只对常驻目录有意义）——
+         由「零 JS」实现保证：本批不引入任何脚本，故无高亮可断。
+    四条落地牙（本函数锚真实构建，故只在完整套件执行；空态另见
+    assert_post_toc_empty——那里 fixture 即可，--quick 也跑）：
+      · TOC 条目 == **源笔记的 h2 序列**——期望值取自 docs/sop/ANSIBLE_SOP.md
+        的 `## ` 行（内容事实，独立于模板与产物），不是拿页面正文反算自己；
+        多收 h3、漏收 h2、顺序漂移都会红；
+      · 目录不使用 `<details>` 折叠（② 的「不折叠」落地牙）；
+      · 桌面 `columns:2`、≤768px 媒体查询内 `columns:1`（② 的列数落地牙）。
+    """
+    dest = TMP / "real"
+    if not dest.is_dir():
+        report.check("目录：真实构建产物存在", False, "missing tests/tmp/real（先跑完整套件）")
+        return
+    sop_page = dest / "posts" / "sop-ansible-automation-guide.html"
+    if not sop_page.is_file():
+        report.check("目录：真实 SOP 派生页存在", False, f"missing {sop_page}")
+        return
+    html = sop_page.read_text(encoding="utf-8")
+    toc = re.search(r'<div class="post-toc">(.*?)</div>\s*<div class="post-content">', html, re.S)
+    if not toc:
+        report.check("SOP 文章页渲染 .post-toc 目录", False, "no .post-toc block")
+        return
+    toc_html = toc.group(1)
+    toc_titles = [x.strip() for x in re.findall(r"<li><a[^>]*>(.*?)</a></li>", toc_html, re.S)]
+    # 独立字面量：源笔记的 h2 行（去掉 "## " 前缀），不从产物重算
+    note = REPO / "docs" / "sop" / "ANSIBLE_SOP.md"
+    note_h2 = [ln[3:].strip() for ln in note.read_text(encoding="utf-8").splitlines()
+               if ln.startswith("## ")]
+    report.check("TOC 条目 == 源笔记 h2 序列（数量/文本/顺序全等）",
+                 toc_titles == note_h2, f"toc={toc_titles} note_h2={note_h2}")
+    report.check("目录不使用 details 折叠（移动端同标记展开）",
+                 "<details" not in toc_html, "details found in .post-toc")
+    css_text = "\n".join(x.read_text(encoding="utf-8") for x in dest.rglob("*.css"))
+    report.check("目录桌面两列、≤768px 单列（列数收口）",
+                 re.search(r"\.post-toc ul\{[^}]*columns:2", css_text) is not None
+                 and re.search(r"@media\(max-width:768px\)\{[^@]*columns:1", css_text) is not None,
+                 "column count missing (desktop 2 / mobile 1)")
+
+
+def assert_post_toc_empty(report):
+    """目录空态（A1）：无 h2 的页面整块不渲染（与精选区/网格同一空态纪律）。
+
+    锚 fixture 构建（assert_post_reading_meta 已建；本函数在 --quick 下也执行，
+    因为空态不依赖真实数据）。fixture 文章正文只有一句话、无任何标题。
+    """
+    fixture_dest = TMP / "posts-fixture-reading"
+    plain_page = fixture_dest / "posts" / f"{POSTS_BADGE_PLAIN[0]}.html"
+    if not plain_page.is_file():
+        report.check("目录空态：fixture 文章页存在", False,
+                     f"missing {plain_page}（应先用 POSTS_FIXTURE_CONFIG 构建）")
+        return
+    report.check("无标题文章不渲染目录（空态整块不渲染）",
+                 'class="post-toc"' not in plain_page.read_text(encoding="utf-8"),
+                 "post-toc rendered on a page without headings")
 
 
 def assert_search_fixture(report):
@@ -1174,6 +1260,8 @@ def main():
     assert_post_grid_empty(report)
     assert_featured_badge(report)
     assert_post_reading_meta(report)
+    # 目录空态只依赖 fixture 构建，--quick 也跑（空态是 A1 的明确要求）
+    assert_post_toc_empty(report)
     assert_search_fixture(report)
     assert_empty_state(report)
     assert_bad_cases(report)
@@ -1182,6 +1270,8 @@ def main():
     assert_bad_caller_missing_uid(report)
     if not args.quick:
         assert_real(report)
+        # 目录正面锚真实构建产物（--quick 不建 real，故跟随 assert_real 一起跳过）
+        assert_post_toc(report)
 
     width = max(len(name) for _, name, _ in report.items)
     for ok, name, detail in report.items:
