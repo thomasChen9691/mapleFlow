@@ -22,7 +22,7 @@
 - 日常流程：`git checkout -b <type>/<topic>` → 提交 → `git push origin <branch>` → 开 PR（`pull_request` 触发即跑完整门禁）→ 验证绿 → **Squash and merge** → 合并动作触发部署（push main → verify → deploy）。本地合入前可用 `git fetch origin && git rebase origin/main` 同步。
 
 - CI/CD 流水线见 `.github/workflows/ci-cd.yml`（2026-10-24 由 `deploy.yml` 重建为双 job；历史文档里的 `deploy.yml` 指同一文件）：
-  - **verify job**（PR → main、push → main、手动触发都跑）：`npm test`（reveal + 搜索前端行为断言）→ 生产构建（**零 WARN 守门**）→ `assert_site_contracts.py` → `assert_sop_pipeline.py` → **localhost 泄漏守门**（坑点 5b）；
+  - **verify job**（PR → main、push → main、手动触发都跑）：`npm test`（harness 自测 + reveal + 搜索前端行为断言）→ 生产构建（**零 WARN 守门**）→ `python3 tests/assert_harness.py` → `assert_site_contracts.py` → `assert_sop_pipeline.py` → **localhost 泄漏守门**（坑点 5b）；
   - **deploy job**（`needs: verify`，仅 main 的 push / 手动触发）：重建 → `peaceiris/actions-gh-pages` 推 `gh-pages`。
   - 即：**PR 阶段就有完整门禁**（此前只在 push 后验证，红提交先落 main 再失败）；且规则集把门禁变成硬约束——检查不绿的 PR 合不进去，验证不过的合并不可能发生。
 - 切勿直接编辑 `gh-pages` 或本地 `public/`（构建产物会覆盖）。
@@ -128,7 +128,7 @@ python3 tests/assert_site_contracts.py
 
 15. **i18n 文件名必须与语言键一致（2026-10-24 实测踩坑）**：`hugo.toml` 的 `defaultContentLanguage = "zh-cn"` ⇒ Hugo 只加载 `i18n/zh-cn.yaml`；文件名写成 `zh.yaml` **不会报错、静默不加载**，`i18n "read_time"` 等全部回落到模板里的 `default` 分支。症状是「中文站上出现 `3 min` / `4 words` / 分页只剩 `»` 没有文字」——静默失效，构建零 WARN。2026-10-24 已改名修复（`themes/maplemod/i18n/zh-cn.yaml`）。**新增语言键或改语言配置时，先 `grep -r "i18n \""` 找出消费点，再核对文件名**。
 
-16. **测试基建纪律（harness，工单 0061–0070 全决议）**：测试运行基建收敛为 **harness 一个概念、两个文件**——`tests/harness.py`（Python 侧：Report / 入口仪式 / tmp 分根 / build 旗标档位 / fixture 配置写入）+ `tests/dom.mjs`（Node 侧：check / jsdom 页面装配 / 汇总退出）；契约定义处 = 两份文件头 docstring；`tests/assert_harness.{py,mjs}` 是 harness 自测（牙临界行为，先于契约断言——harness 红时失败定位前移）。五条硬约束：① **seam 之后只有机制**——harness 禁存任何契约期望值 / fixture 数据 / 被测模块词表，字面量留在各套件（三层文档契约，ADR-0007）；② **坏用例 fixture 按模块子根**（`tests/fixtures/bad/products/` 与 `bad/sop/`），错放即本根卫生断言红（所有权从约定变为结构）；③ **tmp 按套件分根**（`tests/tmp/site`、`sop`、`capture`），串行约束已废、结构上可并行但 CI 暂不并行；④ **构建档位**（site-contracts 故意不 minify——断言解析带引号属性；sop-pipeline 与 CI 生产命令逐字一致——golden 按 minify 产物捕获）与 **配置写入四轴**（dataDir / contentDir / sopNotesDir / refLinksErrorLevel，全显式无缺省）的完整纪律在 harness.py docstring；⑤ **harness 自测独立记账**（不复用被测的 Report/check——复用即同义反复），每条以变异检验证牙。改 harness 先跑 `python3 tests/assert_harness.py` 与 `npm test`。
+16. **测试基建纪律（harness，ADR-0014；工单 0061–0070 全决议）**：测试运行基建收敛为 **harness 一个概念、两个文件**——`tests/harness.py`（Python 侧：Report / 入口仪式 / tmp 分根 / build 旗标档位 / fixture 配置写入）+ `tests/dom.mjs`（Node 侧：check / jsdom 页面装配 / 汇总退出）；契约定义处 = 两份文件头 docstring；`tests/assert_harness.{py,mjs}` 是 harness 自测（牙临界行为，先于契约断言——harness 红时失败定位前移）。五条硬约束：① **seam 之后只有机制**——harness 禁存任何契约期望值 / fixture 数据 / 被测模块词表，字面量留在各套件（三层文档契约，ADR-0007）；② **坏用例 fixture 按模块子根**（`tests/fixtures/bad/products/` 与 `bad/sop/`），错放即本根卫生断言红（所有权从约定变为结构）；③ **tmp 按套件分根**（`tests/tmp/site`、`sop`、`capture`），串行约束已废、结构上可并行但 CI 暂不并行；④ **构建档位**（site-contracts 故意不 minify——断言解析带引号属性；sop-pipeline 与 CI 生产命令逐字一致——golden 按 minify 产物捕获）与 **配置写入四轴**（dataDir / contentDir / sopNotesDir / refLinksErrorLevel，全显式无缺省）的完整纪律在 harness.py docstring；⑤ **harness 自测独立记账**（不复用被测的 Report/check——复用即同义反复），每条以变异检验证牙。改 harness 先跑 `python3 tests/assert_harness.py` 与 `npm test`。
 
 ## 5. 内容规范
 
