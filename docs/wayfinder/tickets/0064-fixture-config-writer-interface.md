@@ -2,10 +2,13 @@ id: "0064"
 title: fixture 配置写入的统一面
 type: grilling
 mode: HITL
-status: open
+status: closed
+assignee: agent
 blocked_by: ["0062"]
 map: map-test-harness-convergence.md
 created: 2026-10-25
+claimed: 2026-10-25
+closed: 2026-10-25
 ---
 
 ## Question
@@ -22,3 +25,17 @@ fixture TOML 配置的写入在全仓手写了约六处：SOP 套件两处（fix
 边界（不开票）：配置写入的产物（tmp 下 .toml 文件）归 tmp 工单管；写入内容消费的构建旗标归构建工单。
 
 事实前提：六处行号锚点见边界工单正文（同一盘点）；SOP 套件 fixture_config 的 docstring（:218-236 上方）记录了 dataDir/notes 隔离与 refLinksErrorLevel=WARNING 的理由，是「理由随实现走」的现成范例。
+
+## Resolution
+
+2026-10-25 · grilling（HITL，项目负责人三问定案；六票同场例外见地图 Notes）：
+
+**轴心盘点（质询前的事实核查）**：六处手写写入的实际变化轴 = **dataDir / contentDir / sopNotesDir / refLinksErrorLevel 四轴**；SOP 两处是 root→{data,notes,content} 派生，站点四处是平铺路径；真实构建不走写入器（`REAL_CONFIG` 常量）——写入器消费者全是 fixture 构建。
+
+**root 映射归属（Q1）**：**留 SOP 套件**。`root → root/data + root/notes` 是 SOP fixture 布局约定（套件知识）；harness 入口只收四个平铺轴——harness 不懂内容布局，与 0061「seam 后只有机制」一致；站点侧消费方不用 root 形态，入口不为一半消费方撑宽。
+
+**入口形态（Q2）**：**一个入口、四轴、全显式无缺省**（ADR-0006 决策 2：不留缺省回落）。「坏用例配置 / 行为 fixture 配置」不是两种入口，是同四轴的不同取值——站点坏用例只设 dataDir 就是最小调用；`refLinksErrorLevel` 由 SOP 调用方显式给 WARNING（站点四处不设，即 Hugo 默认 ERROR 级）。
+
+**宽度上限与坑内聚（Q3）**：宽度上限 = 四个 inventoried 轴；新轴须带新消费者并过 deletion test。两条既有坑随入口内聚为一处文档、全仓写入者共享：① 路径必须 `relative_to(REPO).as_posix()`（Windows 反斜杠嵌 TOML 会被当转义序列 → 假红）；② dataDir 只含数据文件，.md 混入即 unmarshal 崩溃（notes 平级隔离的原因）。入口落成后做 deletion test 自查：删掉它，复杂度应集中回六处（证明该收）而非搬家。
+
+**对下游的输入**：入口随 0069 迁移批落地；SOP 的 `fixture_config` 退化为 root→四轴的适配器（保留其布局约定与坑注释的套件侧引用）。

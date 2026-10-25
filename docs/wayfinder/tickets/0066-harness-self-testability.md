@@ -2,10 +2,13 @@ id: "0066"
 title: harness 自身如何被测试
 type: grilling
 mode: HITL
-status: open
+status: closed
+assignee: agent
 blocked_by: ["0062"]
 map: map-test-harness-convergence.md
 created: 2026-10-25
+claimed: 2026-10-25
+closed: 2026-10-25
 ---
 
 ## Question
@@ -22,3 +25,15 @@ Destination 要求 harness 模块**可测试**。现状里 harness 的各个副�
 边界（不开票）：harness 的模块形态归形态工单（本票以其决议为输入）；具体测试内容随形态定，本票只定「测不测、测什么形态、入口在哪、边界何在」。
 
 事实前提：架构评审候选①（harness 副本全部未经直接测试的现状）；sop_golden.py 先例（共享模块被两个消费方间接覆盖——这是「间接覆盖足够」的现存论点，需评估是否适用于 harness 全部行为）。
+
+## Resolution
+
+2026-10-25 · grilling（HITL，项目负责人三问定案；六票同场例外见地图 Notes）：
+
+**测什么（Q1）**：**只测牙临界行为**——Node 侧 check 的 verdict 记录与 finish 的退出码；Python 侧 Report 的记账与 failed 判定、dest 的路径拼装、reset_tmp 的套件隔离。间接覆盖判据 = **破坏该行为时，现有套件是否以可定位的方式红**：dest / reset_tmp 达标（施工批变异时 6 红）；**check 不达标——已实证**（`if (true)` 变异下断言全记通过、套件静默假绿，无人能自知）。argparse / hugo 检查 / GITHUB_ACTIONS 注解等间接覆盖达标者不立直接断言。
+
+**形态与入口（Q2）**：**tests/assert_harness.py + tests/assert_harness.mjs 独立双文件**；`npm test` 串联扩入 mjs 自测（package.json 一行）；CI verify 加一步 `python3 tests/assert_harness.py`——harness 有自己的家，自测红在契约断言之前先红，失败定位前移。拒绝：并入现有套件首组（混报、定位优势减半）、只本地不挂 CI（advisory 化重蹈 preflight 覆辙）。
+
+**断言边界（Q3）**：自测断言**行为**（退出码 / 路径拼装 / verdict 记录），期望值用独立字面量（如拼装结果写死 `tests/tmp/site/real`），**不重算 harness 逻辑**（ADR-0004 枪毙的第二实现模式）；每条自测以变异检验证牙（破坏 harness→自测红→还原）；自测文件禁止出现任何被测模块的契约字面量（0061 禁项在自测侧同样生效）。
+
+**对下游的输入**：自测入口随施工批落地时 AGENTS.md §3 同步（0067 Q3 已约）；CI 加一步属入口面的正当扩展（0062「入口不变」约束的显式变更，记于本票）。

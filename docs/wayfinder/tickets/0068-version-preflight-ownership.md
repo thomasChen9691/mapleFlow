@@ -2,10 +2,13 @@ id: "0068"
 title: 版本预检是否进 harness
 type: grilling
 mode: HITL
-status: open
+status: closed
+assignee: agent
 blocked_by: ["0062"]
 map: map-test-harness-convergence.md
 created: 2026-10-25
+claimed: 2026-10-25
+closed: 2026-10-25
 ---
 
 ## Question
@@ -22,3 +25,15 @@ created: 2026-10-25
 边界（不开票）：候选⑤其余死面（socialIcons / IsHome 分支 / 死 CSS）不随本票；CI 流水线本身的结构不动。
 
 事实前提：`assert_site_contracts.py:75`（CI_WORKFLOW 常量指向 deploy.yml）、:81-106（preflight_hugo_version 全文）、:90-91（OSError 静默分支）；`assert_sop_pipeline.py:457`（glob workflows 先例）；架构评审候选①与候选⑤对该点的记录。
+
+## Resolution
+
+2026-10-25 · grilling（HITL，项目负责人三问定案；六票同场例外见地图 Notes）：
+
+**修撤留（Q1）**：**修——workflow 发现改 glob，预检复活**。事实底座：`CI_WORKFLOW` 常量指向已改名的 `deploy.yml`（现为 `ci-cd.yml`），read_text 走 OSError 分支静默返回——预检**已死**。修法照 `assert_sop_pipeline.py` 的 `assert_ci_wiring` 先例（glob 全部工作流；钉文件名曾是隐性耦合：流水线改名就红且红因与 SOP 无关）。不撤（失去「提交前提醒 0.166+ 写法陷阱」的软牙——ADR-0004 的本地过 CI 红正是它防的）；不推候选⑤（它在测试基建内，与候选⑤其余死面不同域、不同动作）。
+
+**落点（Q2）**：**留站点套件**（main 里 harness.run 之前的现状位置），只修 glob——SOP 套件断言只消费构建产物、与 Hugo 版本无关（其头部自证），WARN 对它无信息量；harness 收它等于给零信息量消费方加宽接口，违 0062 双门槛。拒绝：进 harness 全套件、进 harness 加按套件开关（预留病）。
+
+**效果（Q3）**：**维持 advisory WARN**（不进断言计数、不影响退出码）——ADR-0004 原逻辑：skew 不等于产物错，断言仍有效、只是证明不了 CI 会绿；硬失败误伤用新版 hugo 的开发者，且挡不住真正的问题（CI 自己用钉版跑）。
+
+**施工形态**：`CI_WORKFLOW` 常量删除，改 glob `.github/workflows/*.yml` 抽 `hugo-version`；docstring 的「钉版真源」表述随改。
