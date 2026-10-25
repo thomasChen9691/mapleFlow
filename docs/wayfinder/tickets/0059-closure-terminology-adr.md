@@ -1,3 +1,4 @@
+---
 id: "0059"
 title: 收口：术语、导航与 ADR 耐久化
 type: grilling

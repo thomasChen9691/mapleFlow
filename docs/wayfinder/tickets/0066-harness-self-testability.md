@@ -1,3 +1,4 @@
+---
 id: "0066"
 title: harness 自身如何被测试
 type: grilling

@@ -1,3 +1,4 @@
+---
 id: "0070"
 title: golden seam 与 harness 的关系
 type: grilling

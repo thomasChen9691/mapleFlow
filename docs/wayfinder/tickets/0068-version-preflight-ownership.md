@@ -1,3 +1,4 @@
+---
 id: "0068"
 title: 版本预检是否进 harness
 type: grilling

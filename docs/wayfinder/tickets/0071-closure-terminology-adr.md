@@ -1,3 +1,4 @@
+---
 id: "0071"
 title: 收口：harness 收敛的耐久化与地图关闭
 type: grilling

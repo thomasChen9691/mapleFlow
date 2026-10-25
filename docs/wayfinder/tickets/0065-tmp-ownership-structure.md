@@ -1,3 +1,4 @@
+---
 id: "0065"
 title: 共享 tmp 的所有权：分根还是共用
 type: grilling

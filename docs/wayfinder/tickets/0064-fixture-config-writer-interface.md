@@ -1,3 +1,4 @@
+---
 id: "0064"
 title: fixture 配置写入的统一面
 type: grilling

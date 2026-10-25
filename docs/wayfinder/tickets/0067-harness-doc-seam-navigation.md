@@ -1,3 +1,4 @@
+---
 id: "0067"
 title: harness 的文档 seam 与导航入口
 type: grilling

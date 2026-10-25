@@ -1,3 +1,4 @@
+---
 id: "0069"
 title: 迁移顺序与风险
 type: grilling
