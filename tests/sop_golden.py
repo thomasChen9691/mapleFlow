@@ -5,6 +5,11 @@
 捕获脚本（tests/capture_sop_golden.py）与断言脚本（tests/assert_sop_pipeline.py）
 共用本模块——两边抽取规则漂移是 golden 机制的隐形死法（捕获「成功」而断言仍红）。
 只放与 golden 相关的部分；结构断言用的 markdown 工具留在断言脚本内。
+
+与测试 harness 的关系（工单 0070 追认的并列三模块）：本模块是内容 fixture 工具
+（golden 抽取 / 规范化 / 生产构建捕获），与 tests/harness.py + tests/dom.mjs
+（测试运行基建）**并列、不互相并入**——harness 不懂内容语义，本模块不做测试
+运行；防未来的合并冲动（harness docstring 有反向互指）。
 """
 
 import re

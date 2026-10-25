@@ -53,7 +53,9 @@ hugo --gc --minify --cleanDestinationDir --config hugo.toml,config.production.to
 python3 auto_push.py                       # 自动 add/commit/push 到 main
 
 # reveal 协议与搜索入口行为断言（jsdom；依赖声明见 package.json，首次先 npm ci）
-# 双套件：assert_reveal.mjs（23 条，含 D1 阅读进度条 RGR-9/10/11）+ assert_search.mjs
+# 三套件（package.json 串联，入口不变）：assert_harness.mjs（harness Node 侧
+# 自测，0066——先跑，harness 红先于契约红）+ assert_reveal.mjs
+#        （23 条，含 D1 阅读进度条 RGR-9/10/11）+ assert_search.mjs
 #        （41 条：快捷键入口 14 + 搜索浮层 27，含 iOS 双机制滚锁 / inert 分支 / 困排兜底）
 npm test
 
@@ -126,6 +128,8 @@ python3 tests/assert_site_contracts.py
 
 15. **i18n 文件名必须与语言键一致（2026-10-24 实测踩坑）**：`hugo.toml` 的 `defaultContentLanguage = "zh-cn"` ⇒ Hugo 只加载 `i18n/zh-cn.yaml`；文件名写成 `zh.yaml` **不会报错、静默不加载**，`i18n "read_time"` 等全部回落到模板里的 `default` 分支。症状是「中文站上出现 `3 min` / `4 words` / 分页只剩 `»` 没有文字」——静默失效，构建零 WARN。2026-10-24 已改名修复（`themes/maplemod/i18n/zh-cn.yaml`）。**新增语言键或改语言配置时，先 `grep -r "i18n \""` 找出消费点，再核对文件名**。
 
+16. **测试基建纪律（harness，工单 0061–0070 全决议）**：测试运行基建收敛为 **harness 一个概念、两个文件**——`tests/harness.py`（Python 侧：Report / 入口仪式 / tmp 分根 / build 旗标档位 / fixture 配置写入）+ `tests/dom.mjs`（Node 侧：check / jsdom 页面装配 / 汇总退出）；契约定义处 = 两份文件头 docstring；`tests/assert_harness.{py,mjs}` 是 harness 自测（牙临界行为，先于契约断言——harness 红时失败定位前移）。五条硬约束：① **seam 之后只有机制**——harness 禁存任何契约期望值 / fixture 数据 / 被测模块词表，字面量留在各套件（三层文档契约，ADR-0007）；② **坏用例 fixture 按模块子根**（`tests/fixtures/bad/products/` 与 `bad/sop/`），错放即本根卫生断言红（所有权从约定变为结构）；③ **tmp 按套件分根**（`tests/tmp/site`、`sop`、`capture`），串行约束已废、结构上可并行但 CI 暂不并行；④ **构建档位**（site-contracts 故意不 minify——断言解析带引号属性；sop-pipeline 与 CI 生产命令逐字一致——golden 按 minify 产物捕获）与 **配置写入四轴**（dataDir / contentDir / sopNotesDir / refLinksErrorLevel，全显式无缺省）的完整纪律在 harness.py docstring；⑤ **harness 自测独立记账**（不复用被测的 Report/check——复用即同义反复），每条以变异检验证牙。改 harness 先跑 `python3 tests/assert_harness.py` 与 `npm test`。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
@@ -174,6 +178,8 @@ python3 tests/assert_site_contracts.py
 | `content/posts/_content.gotmpl` | SOP 发布管线 seam：`data/sop.yaml` 注册表 + `docs/sop/` 源笔记 → 构建期派生文章（ADR-0005；契约 errorf 执法；测试 `tests/assert_sop_pipeline.py`，改动前先跑） |
 | `data/sop.yaml` | SOP 发布注册表：slug/note/date/categories 必填，tags 可缺省，`draft: true` = 已注册的草稿，`featured` 可选（缺省即非精选、非布尔即构建失败） |
 | `docs/sop/README.md` | 源笔记索引（与注册表双向漂移断言守护；`MAPLEFLOW_BLOG_SOP.md` 不发布） |
+| `tests/harness.py` | 测试 harness·Python 侧（**契约定义处**）：Report / 入口仪式 / tmp 分根 / build 旗标档位 / fixture 配置写入四轴；seam 之后只有机制，禁存契约字面量（工单 0061–0064；消费方 = 站点与 SOP 两个 Python 套件，经 harness.run；自测 `tests/assert_harness.py`，改动前先跑） |
+| `tests/dom.mjs` | 测试 harness·Node 侧（**契约定义处**）：check / finish / installDom / installPage / loadFresh（工单 0062；消费方 = `assert_reveal.mjs` 与 `assert_search.mjs`；自测 `tests/assert_harness.mjs`，随 `npm test` 先跑） |
 
 ## 8. 工程纪律（realeng）
 

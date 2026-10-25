@@ -2,11 +2,10 @@
  * dom.mjs —— 测试 harness 的 Node 侧（工单 0062 决议）
  * ============================================================
  * 「harness」是一个概念：Python 侧 tests/harness.py（Report / 入口仪式 /
- * tmp 分根；构建与 fixture 配置写入待工单 0063 / 0064 接入）+ 本文件
- * （jsdom 页面装配 / check / 汇总退出）——按职责命名，语言边界强制两个
- * 文件，概念是一个模块。sop_golden.py 是并列的第三个共享模块（内容
- * fixture 工具），不并入本概念——防未来的合并冲动，详见 harness.py
- * docstring。
+ * tmp 分根 / build 旗标档位 / fixture 配置写入四轴）+ 本文件（jsdom 页面
+ * 装配 / check / 汇总退出）——按职责命名，语言边界强制两个文件，概念是
+ * 一个模块。sop_golden.py 是并列的第三个共享模块（内容 fixture 工具），
+ * 不并入本概念——防未来的合并冲动，详见 harness.py docstring。
  *
  * seam 纪律（0061 裁定，0062 确认）：seam 之后只有机制——本文件不持有
  * 任何契约期望值；样本 HTML 与断言字面量留在各套件（三层文档契约的
@@ -28,8 +27,6 @@
  *                              import 副作用只跑一次，测试间必须重新求值）
  *
  * 消费方：tests/assert_reveal.mjs / tests/assert_search.mjs（npm test）。
- * 待接缝（不在本文件）：构建旗标档位归工单 0063、fixture 配置写入参数面归
- * 工单 0064——两能力未决前由 Python 套件各自持有。
  */
 import { JSDOM } from 'jsdom';
 import { pathToFileURL, fileURLToPath } from 'node:url';

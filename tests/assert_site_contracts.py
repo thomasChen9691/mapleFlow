@@ -56,7 +56,7 @@ search 页）· 搜索浮层（2026-10-24 ADR-0013：mf-search-overlay 构件全
 Hugo 版本纪律：模块必须保持 0.164 语义（单变量 + 根级单条 return）。本机 hugo
 可能为 0.167 而 CI 钉 0.164——0.164 风格代码两端一致，但 0.166+ 的条件多
 return 写法本地过、CI 红。**断言只消费构建产物；版本比对是 preflight WARN**
-（不进断言计数、不影响退出码），钉版真源是 `.github/workflows/deploy.yml`。
+（不进断言计数、不影响退出码），钉版真源是 `.github/workflows/*.yml` 的 glob。
 
 期望值均为独立字面量（决策规则的直写），不是对实现的重算——防止同义反复测试。
 """
@@ -74,7 +74,7 @@ import harness  # 测试 harness 的 Python 侧（工单 0062）：入口仪式 
 
 REPO = Path(__file__).resolve().parent.parent
 TMP = harness.tmp_root("site")
-CI_WORKFLOW = REPO / ".github" / "workflows" / "deploy.yml"
+CI_WORKFLOWS = sorted((REPO / ".github" / "workflows").glob("*.yml"))  # 0068：glob 化，不钉文件名
 
 FIXTURE_CONFIG = "hugo.toml,tests/hugo.test.toml"
 REAL_CONFIG = "hugo.toml,config.production.toml"
@@ -83,28 +83,31 @@ REAL_CONFIG = "hugo.toml,config.production.toml"
 def preflight_hugo_version():
     """Hugo 版本 skew 的 advisory 提醒——**不进断言计数、不影响退出码**。
 
-    钉版真源是 deploy.yml 的 hugo-version（不在本文件写第二份）。不一致时只 WARN：
-    本机服从 CI 是纪律，但「本机版本不同」不等于「本机产物错」——断言仍然有效，
-    只是它证明不了 CI 会绿。依据 ADR-0004：0.166+ 的条件多 return 写法本地过、CI 红。
+    钉版真源 = 工作流 glob 里的 hugo-version（0068：`.github/workflows/*.yml`
+    全部扫，不在本文件写第二份；glob 化前钉的是 deploy.yml——流水线改名后
+    静默失效，预检已死过一轮）。不一致时只 WARN：本机服从 CI 是纪律，但
+    「本机版本不同」不等于「本机产物错」——断言仍然有效，只是它证明不了
+    CI 会绿。依据 ADR-0004：0.166+ 的条件多 return 写法本地过、CI 红。
     """
-    try:
-        found = re.search(r"hugo-version:\s*'([^']+)'", CI_WORKFLOW.read_text(encoding="utf-8"))
-    except OSError:
+    # 收集全部工作流的钉版为一个集合——多工作流钉不同版本时不静默取第一
+    # （评审处置：本机不在集合内即 WARN，集合内容全部列出）。
+    pinned = set()
+    for wf in CI_WORKFLOWS:
+        for m in re.finditer(r"hugo-version:\s*'([^']+)'", wf.read_text(encoding="utf-8")):
+            pinned.add(m.group(1))
+    if not pinned:
         return
-    if not found:
-        return
-    pinned = found.group(1)
     try:
         out = subprocess.run(["hugo", "version"], capture_output=True, text=True, timeout=20).stdout
     except (OSError, subprocess.SubprocessError):
-        print(f"[WARN] 读不到本机 hugo 版本；CI 钉版 {pinned}。跳过版本比对。\n")
+        print(f"[WARN] 读不到本机 hugo 版本；CI 钉版 {sorted(pinned)}。跳过版本比对。\n")
         return
     local = re.search(r"v(\d+\.\d+\.\d+)", out)
     if not local:
-        print(f"[WARN] 本机 hugo 版本串不可解析；CI 钉版 {pinned}。跳过版本比对。\n")
+        print(f"[WARN] 本机 hugo 版本串不可解析；CI 钉版 {sorted(pinned)}。跳过版本比对。\n")
         return
-    if local.group(1) != pinned:
-        print(f"[WARN] 本机 hugo {local.group(1)} != CI 钉版 {pinned}（deploy.yml）")
+    if local.group(1) not in pinned:
+        print(f"[WARN] 本机 hugo {local.group(1)} 不在 CI 钉版集合 {sorted(pinned)}（工作流 glob）")
         print("       0.166+ 的部分写法本地过、CI 红（ADR-0004）；提交前以 CI 钉版为准。\n")
 
 # ---- 期望值：决策规则的字面量，独立于实现 ----
@@ -366,13 +369,10 @@ def parse_card_badges(html, article_class):
     return cards
 
 
-def run(cmd):
-    return subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
-
-
 def build(config, dest, flags=None):
-    return run(["hugo", "--cleanDestinationDir", "--config", config, "-d", str(dest)]
-               + (flags or []))
+    """站点套件的构建适配器：绑定 site-contracts 档（0063——档位是套件的属性，
+    绑定一次而非在每个调用点重复；逐调用差异走 flags）。"""
+    return harness.build(config, dest, "site-contracts", flags)
 
 
 def assert_search_index(report, dest):
@@ -1297,9 +1297,8 @@ def assert_empty_state(report):
     empty = TMP / "empty-data"
     empty.mkdir(parents=True, exist_ok=True)
     shutil.copy(REPO / "tests" / "fixtures" / "data" / "sop.yaml", empty / "sop.yaml")
-    cfg = TMP / "empty-state.toml"
-    cfg.write_text('dataDir = "%s"\n' % empty.relative_to(REPO).as_posix(), encoding="utf-8")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest("empty-state"))
+    config = harness.write_config("empty-state", dataDir=empty)
+    proc = build(config, harness.dest("empty-state"))
     if proc.returncode != 0:
         report.check("空态构建成功", False, proc.stderr[-300:])
         return
@@ -1328,10 +1327,9 @@ def assert_bad_cases(report):
         report.check("存在契约坏用例", False, "tests/fixtures/bad/products/ 下没有用例")
         return
     for case in cases:
-        cfg = TMP / f"bad-{case}.toml"
-        cfg.parent.mkdir(parents=True, exist_ok=True)
-        cfg.write_text('dataDir = "tests/fixtures/bad/products/%s"\n' % case, encoding="utf-8")
-        proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest(f"bad-{case}"))
+        config = harness.write_config(f"bad-{case}",
+                                      dataDir=REPO / "tests" / "fixtures" / "bad" / "products" / case)
+        proc = build(config, harness.dest(f"bad-{case}"))
         expect = BAD_CASE_EXPECT.get(case, "产品状态")
         report_build_failure(report, f"契约[{case}]", proc, expect)
 
@@ -1356,10 +1354,10 @@ def assert_bad_caller_limit(report):
     (content / "limit-negative.md").write_text(
         "+++\ntitle = \"fixture-limit-negative\"\ndraft = false\n+++\n\n"
         '{{< product-index limit="-1" >}}\n', encoding="utf-8")
-    cfg = TMP / "caller-limit-negative.toml"
-    cfg.write_text('dataDir = "tests/fixtures/data"\n'
-                   'contentDir = "%s"\n' % content.relative_to(REPO).as_posix(), encoding="utf-8")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest("caller-limit-negative"))
+    config = harness.write_config("caller-limit-negative",
+                                  dataDir=REPO / "tests" / "fixtures" / "data",
+                                  contentDir=content)
+    proc = build(config, harness.dest("caller-limit-negative"))
     report_build_failure(report, "调用方[limit=-1]", proc, CALLER_LIMIT_NEGATIVE_EXPECT)
 
 
@@ -1382,9 +1380,8 @@ def assert_bad_caller_direct(report, case, label, expect, single_html):
     content = TMP / f"content-{case}"
     content.mkdir(parents=True, exist_ok=True)
     (content / "page.md").write_text('+++\ntitle = "t"\ndraft = false\n+++\n', encoding="utf-8")
-    cfg = TMP / f"caller-{case}.toml"
-    cfg.write_text('dataDir = "tests/fixtures/data"\n', encoding="utf-8")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest(f"caller-{case}"),
+    config = harness.write_config(f"caller-{case}", dataDir=REPO / "tests" / "fixtures" / "data")
+    proc = build(config, harness.dest(f"caller-{case}"),
                  ["--layoutDir", str(layout_root), "--contentDir", str(content)])
     report_build_failure(report, f"调用方[{label}]", proc, expect)
 
@@ -1629,7 +1626,7 @@ def checks(report, quick):
 
 
 def main():
-    preflight_hugo_version()  # 版本预检归工单 0068（未决），暂留套件
+    preflight_hugo_version()  # 版本预检归站点套件（0068 定案：留套件 + glob 修正 + advisory）
     return harness.run("site", checks)
 
 

@@ -67,6 +67,12 @@ jobs:
         # （已删除文章对应的页面留在 public/ 被推上线，2026-09-20 审计的
         #  posts/aiop.html 即此类残留）。
 
+      - name: Assert harness self-test
+        # harness 自测（工单 0066）：Report/finish/dest/reset_tmp/write_config 与
+        # dom.mjs 的 check/finish/installDom/installPage/loadFresh 的牙临界行为。
+        # 先于契约断言——harness 红时失败定位前移，不淹没在契约失败里。
+        run: python3 tests/assert_harness.py
+
       - name: Assert site contracts
         # 站点契约的产物断言（十五类，见套件头注释）：产品状态 / 产品索引 /
         # 主题契约 / reveal 产物 / 文章精选 / 搜索索引投影 / 搜索交付面 /

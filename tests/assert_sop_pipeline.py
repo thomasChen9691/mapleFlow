@@ -36,7 +36,6 @@ categories/tags、description 顶层）。本机 hugo 可能为 0.167 而 CI 钉
 
 import json
 import re
-import subprocess
 import sys
 from datetime import datetime
 from html import unescape
@@ -47,7 +46,6 @@ import sop_golden as sg  # golden 抽取与捕获脚本共用，防规则漂移
 import harness  # 测试 harness 的 Python 侧（工单 0062）：入口仪式 / Report / tmp 分根
 
 REPO = Path(__file__).resolve().parent.parent
-TMP = harness.tmp_root("sop")
 REGISTRY = REPO / "data" / "sop.yaml"
 BAD_ROOT = REPO / "tests" / "fixtures" / "bad" / "sop"
 DRAFT_ROOT = REPO / "tests" / "fixtures" / "draft"
@@ -109,18 +107,10 @@ def parse_registry(path):
     return entries
 
 
-def run(cmd):
-    return subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
-
-
-def build(config, dest, drafts=False):
-    # 与 CI 的生产命令逐字一致（--gc --minify --cleanDestinationDir）：
-    # golden 按 minify 后的线上产物捕获，构建条件不一致则逐字节比对无意义。
-    cmd = ["hugo", "--gc", "--minify", "--cleanDestinationDir"]
-    if drafts:
-        cmd.append("-D")
-    cmd += ["--config", config, "-d", str(dest)]
-    return run(cmd)
+def build(config, dest, flags=None):
+    """SOP 套件的构建适配器：绑定 sop-pipeline 档（0063——档位是套件的属性；
+    drafts 语义糖已拆，-D 走 flags）。"""
+    return harness.build(config, dest, "sop-pipeline", flags)
 
 
 def note_text(note_file):
@@ -199,24 +189,19 @@ def hugo_date_text(iso):
 
 
 def fixture_config(name, root):
-    """坏用例 / 行为 fixture 的构建配置：dataDir 与 sopNotesDir 双覆盖。
+    """SOP fixture 布局约定的 root→轴适配器（0064 裁定：映射留套件——harness
+    不懂内容布局，seam 之后只有机制）。
 
-    dataDir 只含数据文件（sop.yaml），notes/ 平级隔离——Hugo 数据加载器
-    会递归解析 dataDir 下所有文件，.md 混入即「unmarshal of format」崩溃。
-    路径用 as_posix：Windows 上 relative_to 产反斜杠，嵌进 TOML 会被当
-    转义序列解析，坏用例将因路径失败而非契约失败（假红）。
-
+    root 下 data/（纯数据文件）与 notes/（源笔记）平级隔离——.md 混入
+    dataDir 即 Hugo unmarshal 崩溃（0064 坑二，完整文档在 harness.write_config）。
     refLinksErrorLevel = WARNING：fixture 注册表不含 6 个真实 slug，
-    sop-ops-tools-index 的 ref 会落空——那是预期内的环境差异，
-    不应掩蔽本模块的契约错误（真实构建保持默认 ERROR 级）。
+    sop-ops-tools-index 的 ref 会落空——预期内的环境差异，不应掩蔽本模块的
+    契约错误（真实构建保持默认 ERROR 级）。
     """
-    cfg = TMP / f"{name}.toml"
-    cfg.parent.mkdir(parents=True, exist_ok=True)
-    cfg.write_text(
-        'dataDir = "%s/data"\nrefLinksErrorLevel = "WARNING"\n[params]\nsopNotesDir = "%s/notes"\n'
-        % (root.relative_to(REPO).as_posix(), root.relative_to(REPO).as_posix()),
-        encoding="utf-8")
-    return "hugo.toml,%s" % cfg.relative_to(REPO).as_posix()
+    return harness.write_config(name,
+                                dataDir=root / "data",
+                                sopNotesDir=root / "notes",
+                                refLinksErrorLevel="WARNING")
 
 
 def assert_derived(report):
@@ -350,7 +335,7 @@ def assert_draft(report):
         hidden = (harness.dest("draft-prod") / "posts" / "draft-hidden-entry.html").exists()
         report.check("draft: true 条目不进生产构建（对照组进）", live and not hidden,
                      f"live={live} hidden={hidden}")
-    withd = build(config, harness.dest("draft-d"), drafts=True)
+    withd = build(config, harness.dest("draft-d"), ["-D"])
     report.check("draft fixture -D 构建成功", withd.returncode == 0,
                  withd.stderr[-300:] if withd.returncode else "")
     if withd.returncode == 0:
@@ -389,17 +374,13 @@ def assert_featured_passthrough(report):
     report.check("fixture 适配器副本与真实 seam 逐字节一致（防漂移）",
                  copy.is_file() and copy.read_bytes() == seam.read_bytes(),
                  "副本漂移：请重新 cp content/posts/_content.gotmpl 到 fixture")
-    cfg = TMP / "featured.toml"
-    cfg.parent.mkdir(parents=True, exist_ok=True)
-    cfg.write_text(
-        'dataDir = "%s/data"\ncontentDir = "%s/content"\nrefLinksErrorLevel = "WARNING"\n'
-        '[params]\nsopNotesDir = "%s/notes"\n'
-        % (FEATURED_ROOT.relative_to(REPO).as_posix(),
-           FEATURED_ROOT.relative_to(REPO).as_posix(),
-           FEATURED_ROOT.relative_to(REPO).as_posix()),
-        encoding="utf-8")
+    config = harness.write_config("featured",
+                                  dataDir=FEATURED_ROOT / "data",
+                                  contentDir=FEATURED_ROOT / "content",
+                                  sopNotesDir=FEATURED_ROOT / "notes",
+                                  refLinksErrorLevel="WARNING")
     dest = harness.dest("featured")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO).as_posix(), dest)
+    proc = build(config, dest)
     report.check("featured 透传 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-300:] if proc.returncode else "")
     if proc.returncode != 0:
