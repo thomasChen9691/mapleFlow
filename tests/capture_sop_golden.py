@@ -25,8 +25,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sop_golden as sg
+import harness  # tmp 根归 harness（0065：capture 有自己的根）
 
-TMP = sg.REPO / "tests" / "tmp" / "capture"
+TMP = harness.tmp_root("capture")
 
 
 def main():
@@ -42,7 +43,7 @@ def main():
     if shutil.which("hugo") is None:
         print("ERROR: hugo 不在 PATH")
         return 2
-    shutil.rmtree(TMP, ignore_errors=True)
+    harness.reset_tmp("capture")
     proc = sg.build_real(TMP)
     if proc.returncode != 0:
         print("ERROR: 生产构建失败——golden 只能从成功构建捕获\n" + proc.stderr[-500:])

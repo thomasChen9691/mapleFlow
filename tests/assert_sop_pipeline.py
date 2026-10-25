@@ -32,16 +32,10 @@ categories/tags、description 顶层）。本机 hugo 可能为 0.167 而 CI 钉
 期望值独立于实现：标题直读源笔记；日期由注册表 date 独立格式化；golden
 为迁移前线上页面的直捕（出处见 tests/fixtures/sop-golden/README.md）。
 均非对适配器逻辑的重算，防同义反复测试。
-
-tests/tmp 为本脚本独占（启动即清空）；与 assert_site_contracts.py 共享
-该目录，两脚本须顺序运行（CI 即顺序），勿并发。
 """
 
-import argparse
 import json
-import os
 import re
-import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -50,9 +44,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sop_golden as sg  # golden 抽取与捕获脚本共用，防规则漂移
+import harness  # 测试 harness 的 Python 侧（工单 0062）：入口仪式 / Report / tmp 分根
 
 REPO = Path(__file__).resolve().parent.parent
-TMP = REPO / "tests" / "tmp"
+TMP = harness.tmp_root("sop")
 REGISTRY = REPO / "data" / "sop.yaml"
 BAD_ROOT = REPO / "tests" / "fixtures" / "bad" / "sop"
 DRAFT_ROOT = REPO / "tests" / "fixtures" / "draft"
@@ -203,18 +198,6 @@ def hugo_date_text(iso):
     return "%s %d, %d" % (dt.strftime("%B"), dt.day, dt.year)
 
 
-class Report:
-    def __init__(self):
-        self.items = []
-
-    def check(self, name, ok, detail=""):
-        self.items.append((bool(ok), name, detail))
-
-    @property
-    def failed(self):
-        return [i for i in self.items if not i[0]]
-
-
 def fixture_config(name, root):
     """坏用例 / 行为 fixture 的构建配置：dataDir 与 sopNotesDir 双覆盖。
 
@@ -243,7 +226,7 @@ def assert_derived(report):
         return
     entries = parse_registry(REGISTRY)
     report.check("注册表非空", len(entries) > 0, f"got {len(entries)}")
-    dest = TMP / "real"
+    dest = harness.dest("real")
     proc = build(REAL_CONFIG, dest)
     report.check("真实数据构建成功（生产配置）", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -349,7 +332,7 @@ def assert_bad_cases(report):
             report.check(f"契约[{case}] 有期望错误子串登记", False, "BAD_CASE_EXPECT 缺该用例")
             continue
         config = fixture_config(f"bad-{case}", BAD_ROOT / case)
-        proc = build(config, TMP / f"bad-{case}")
+        proc = build(config, harness.dest(f"bad-{case}"))
         out = proc.stderr + proc.stdout
         ok = proc.returncode != 0 and PIPELINE_MARKER in out and expect in out
         report.check(f"契约[{case}] → 构建失败且错误指向该契约", ok,
@@ -359,20 +342,20 @@ def assert_bad_cases(report):
 def assert_draft(report):
     """draft: true = 已注册的草稿（0009 目录契约）：不进生产构建，-D 出现。"""
     config = fixture_config("draft", DRAFT_ROOT)
-    prod = build(config, TMP / "draft-prod")
+    prod = build(config, harness.dest("draft-prod"))
     report.check("draft fixture 生产构建成功", prod.returncode == 0,
                  prod.stderr[-300:] if prod.returncode else "")
     if prod.returncode == 0:
-        live = (TMP / "draft-prod" / "posts" / "draft-live-entry.html").is_file()
-        hidden = (TMP / "draft-prod" / "posts" / "draft-hidden-entry.html").exists()
+        live = (harness.dest("draft-prod") / "posts" / "draft-live-entry.html").is_file()
+        hidden = (harness.dest("draft-prod") / "posts" / "draft-hidden-entry.html").exists()
         report.check("draft: true 条目不进生产构建（对照组进）", live and not hidden,
                      f"live={live} hidden={hidden}")
-    withd = build(config, TMP / "draft-d", drafts=True)
+    withd = build(config, harness.dest("draft-d"), drafts=True)
     report.check("draft fixture -D 构建成功", withd.returncode == 0,
                  withd.stderr[-300:] if withd.returncode else "")
     if withd.returncode == 0:
         report.check("draft: true 条目在 -D 构建出现",
-                     (TMP / "draft-d" / "posts" / "draft-hidden-entry.html").is_file())
+                     (harness.dest("draft-d") / "posts" / "draft-hidden-entry.html").is_file())
 
 
 def assert_readme(report):
@@ -415,7 +398,7 @@ def assert_featured_passthrough(report):
            FEATURED_ROOT.relative_to(REPO).as_posix(),
            FEATURED_ROOT.relative_to(REPO).as_posix()),
         encoding="utf-8")
-    dest = TMP / "featured"
+    dest = harness.dest("featured")
     proc = build("hugo.toml,%s" % cfg.relative_to(REPO).as_posix(), dest)
     report.check("featured 透传 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-300:] if proc.returncode else "")
@@ -433,7 +416,7 @@ def assert_featured_passthrough(report):
 
 def assert_ref_links(report):
     """索引文章的 ref 解析到冻结 URL，且目标页面真实构建（0009 连带裁定）。"""
-    page = TMP / "real" / "posts" / "sop-ops-tools-index.html"
+    page = harness.dest("real") / "posts" / "sop-ops-tools-index.html"
     if not page.is_file():
         report.check("索引文章产物存在", False, str(page))
         return
@@ -442,12 +425,12 @@ def assert_ref_links(report):
         target = "/mapleFlow/posts/%s.html" % e["slug"]
         report.check(f"索引文章 ref → {target}", target in html)
         report.check(f"ref 目标已构建 {e['slug']}.html",
-                     (TMP / "real" / "posts" / f"{e['slug']}.html").is_file())
+                     (harness.dest("real") / "posts" / f"{e['slug']}.html").is_file())
 
 
 def assert_search_index(report):
     """搜索索引含全部派生条目（雾区结论的实施期验证：生成页是真页面）。"""
-    index_path = TMP / "real" / "index.json"
+    index_path = harness.dest("real") / "index.json"
     if not index_path.is_file():
         report.check("index.json 产物存在", False, str(index_path))
         return
@@ -476,20 +459,8 @@ def assert_ci_wiring(report):
                  f"checked: {[w.name for w in workflows]}")
 
 
-def main():
-    parser = argparse.ArgumentParser(description="SOP 发布管线产物断言")
-    parser.add_argument("--quick", action="store_true", help="跳过真实数据构建")
-    args = parser.parse_args()
-
-    if shutil.which("hugo") is None:
-        print("ERROR: hugo 不在 PATH（CI 由 peaceiris/actions-hugo 提供）")
-        return 2
-
-    shutil.rmtree(TMP, ignore_errors=True)
-    TMP.mkdir(parents=True, exist_ok=True)
-
-    report = Report()
-    if not args.quick:
+def checks(report, quick):
+    if not quick:
         assert_derived(report)
         assert_readme(report)
         assert_ref_links(report)
@@ -499,22 +470,9 @@ def main():
     assert_featured_passthrough(report)
     assert_ci_wiring(report)
 
-    width = max(len(name) for _, name, _ in report.items)
-    for ok, name, detail in report.items:
-        mark = "PASS" if ok else "FAIL"
-        print(f"[{mark}] {name.ljust(width)}" + (f"  {detail}" if detail and not ok else ""))
-    failed = report.failed
-    # GitHub 工作流注解：CI 日志需认证才能取，注解在 run 页直接可见——
-    # 失败项与细节由此可诊断，无需拉取日志（2026-10-16 CI 首红时无法读日志的教训）。
-    if os.environ.get("GITHUB_ACTIONS") == "true":
-        for _, name, detail in failed:
-            print(f"::error title=SOP pipeline assertion::{name} - {detail}")
-    print(f"\n{len(report.items) - len(failed)}/{len(report.items)} passed")
-    if failed:
-        print("RED — %d 个行为未满足" % len(failed))
-        return 1
-    print("GREEN")
-    return 0
+
+def main():
+    return harness.run("sop", checks)
 
 
 if __name__ == "__main__":

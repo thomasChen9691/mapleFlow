@@ -27,33 +27,20 @@
 import { JSDOM } from 'jsdom';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { check, finish, installPage } from './dom.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ENGINE = path.join(REPO, 'assets/js/mf-search-entry-engine.js');
 const SEARCH_URL = '/mapleFlow/search.html'; // 独立字面量：生产子路径形态（config.production.toml 的 baseURL）
 const ARTICLE_HREF = 'http://localhost/posts/foo.html';
 
-let passed = 0;
-let failed = 0;
-
-function check(name, cond, detail) {
-    if (cond) {
-        passed++;
-        console.log(`  ok  ${name}`);
-    } else {
-        failed++;
-        console.log(`FAIL  ${name}${detail ? `\n      ${detail}` : ''}`);
-    }
-}
-
 /** 装一个样本页面：非 search 页（文章页），无表单焦点 */
 function installArticlePage() {
-    const dom = new JSDOM('<!DOCTYPE html><html><body><article><p>正文</p></article></body></html>',
-        { url: 'http://localhost/posts/foo.html' });
-    return {
-        document: dom.window.document,
-        location: { href: ARTICLE_HREF, pathname: '/posts/foo.html' },
-    };
+    return installPage({
+        html: '<!DOCTYPE html><html><body><article><p>正文</p></article></body></html>',
+        href: ARTICLE_HREF,
+        pathname: '/posts/foo.html',
+    });
 }
 
 /** 派发一次 `/` keydown；返回事件对象（供 defaultPrevented 断言） */
@@ -90,12 +77,11 @@ const { registerSearchEntry } = await import(pathToFileURL(ENGINE).href);
 
 // ---- 行为 2：焦点在表单元素时按 `/` 不拦截（`/` 是合法输入字符；决议④门控）
 {
-    const dom = new JSDOM('<!DOCTYPE html><html><body><input id="q" type="text"></body></html>',
-        { url: 'http://localhost/posts/foo.html' });
-    const env = {
-        document: dom.window.document,
-        location: { href: ARTICLE_HREF, pathname: '/posts/foo.html' },
-    };
+    const env = installPage({
+        html: '<!DOCTYPE html><html><body><input id="q" type="text"></body></html>',
+        href: ARTICLE_HREF,
+        pathname: '/posts/foo.html',
+    });
     registerSearchEntry({ searchUrl: SEARCH_URL }, env);
     const ev = pressSlash(env, { on: env.document.getElementById('q') });
     check('焦点在 input 按 / 不跳转',
@@ -125,13 +111,12 @@ const { registerSearchEntry } = await import(pathToFileURL(ENGINE).href);
 
 // ---- 行为 4：当前即 search 页时按 `/` 只聚焦 #searchInput，不跳转不刷新（决议③附带细节）
 {
-    const dom = new JSDOM('<!DOCTYPE html><html><body><div id="searchbox">'
-        + '<input id="searchInput" type="search"></div><ul id="searchResults"></ul></body></html>',
-        { url: 'http://localhost/mapleFlow/search.html' });
-    const env = {
-        document: dom.window.document,
-        location: { href: 'http://localhost/mapleFlow/search.html', pathname: '/mapleFlow/search.html' },
-    };
+    const env = installPage({
+        html: '<!DOCTYPE html><html><body><div id="searchbox">'
+            + '<input id="searchInput" type="search"></div><ul id="searchResults"></ul></body></html>',
+        href: 'http://localhost/mapleFlow/search.html',
+        pathname: '/mapleFlow/search.html',
+    });
     registerSearchEntry({ searchUrl: SEARCH_URL }, env);
     const ev = pressSlash(env);
     const input = env.document.getElementById('searchInput');
@@ -445,8 +430,4 @@ async function typeQuery(doc, value) {
         `got ${x.doc.activeElement && (x.doc.activeElement.id || x.doc.activeElement.className)}`);
 }
 
-console.log(`\n${passed}/${passed + failed} passed`);
-if (failed) {
-    console.log('RED — %d 个行为未满足', failed);
-    process.exit(1);
-}
+finish();

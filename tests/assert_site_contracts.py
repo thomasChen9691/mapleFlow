@@ -61,7 +61,6 @@ return 写法本地过、CI 红。**断言只消费构建产物；版本比对�
 期望值均为独立字面量（决策规则的直写），不是对实现的重算——防止同义反复测试。
 """
 
-import argparse
 import json
 import re
 import shutil
@@ -70,8 +69,11 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import harness  # 测试 harness 的 Python 侧（工单 0062）：入口仪式 / Report / tmp 分根
+
 REPO = Path(__file__).resolve().parent.parent
-TMP = REPO / "tests" / "tmp"
+TMP = harness.tmp_root("site")
 CI_WORKFLOW = REPO / ".github" / "workflows" / "deploy.yml"
 
 FIXTURE_CONFIG = "hugo.toml,tests/hugo.test.toml"
@@ -373,18 +375,6 @@ def build(config, dest, flags=None):
                + (flags or []))
 
 
-class Report:
-    def __init__(self):
-        self.items = []
-
-    def check(self, name, ok, detail=""):
-        self.items.append((bool(ok), name, detail))
-
-    @property
-    def failed(self):
-        return [i for i in self.items if not i[0]]
-
-
 def assert_search_index(report, dest):
     """产品搜索索引的 tag 必须用标准术语「产品」（CONTEXT.md；资源为禁用词）。"""
     index = json.loads((dest / "index.json").read_text(encoding="utf-8"))
@@ -520,7 +510,7 @@ def assert_reveal_artifacts(report, dest):
 
 
 def assert_fixture(report):
-    dest = TMP / "fixture"
+    dest = harness.dest("fixture")
     proc = build(FIXTURE_CONFIG, dest)
     report.check("fixture 构建成功", proc.returncode == 0, proc.stderr[-400:] if proc.returncode else "")
     if proc.returncode != 0:
@@ -622,7 +612,7 @@ def assert_image_dimensions(report):
         （本 fixture 的图不写作者属性，测的是注入路径）。
     锚 fixture content-img（页面包 + 真 120x60 PNG，尺寸是独立字面量）。
     """
-    dest = TMP / "posts-fixture-img"
+    dest = harness.dest("posts-fixture-img")
     proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", "tests/fixtures/content-img"])
     report.check("图片 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -726,7 +716,7 @@ def assert_post_featured(report):
 
     期望值为独立字面量（fixture 的 slug 与日期是手写事实），不从实现重算。
     """
-    dest = TMP / "posts-fixture"
+    dest = harness.dest("posts-fixture")
     proc = build(POSTS_FIXTURE_CONFIG, dest)
     report.check("精选 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -750,7 +740,7 @@ def assert_post_featured(report):
 
 def assert_post_featured_empty(report):
     """0 篇 featured 时精选区整块不渲染（0037 决议：不写空态文案）。"""
-    dest = TMP / "posts-fixture-none"
+    dest = harness.dest("posts-fixture-none")
     proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", POSTS_EMPTY_CONTENT])
     report.check("无 featured fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -764,21 +754,21 @@ def assert_post_featured_empty(report):
 
 def assert_post_featured_bad(report):
     """featured 写成非布尔 → 构建失败（0036 决议：静默排除属静默失效类）。"""
-    proc = build(POSTS_FIXTURE_CONFIG, TMP / "posts-fixture-bad",
+    proc = build(POSTS_FIXTURE_CONFIG, harness.dest("posts-fixture-bad"),
                  ["--contentDir", POSTS_BAD_CONTENT])
     report_build_failure(report, "文章精选[featured 非布尔·字符串]", proc, POSTS_BAD_FEATURED_EXPECT)
 
 
 def assert_post_featured_bad_int(report):
     """同上，整数坏值单开一例（0039 必锚④点名「字符串/整数」两类）。"""
-    proc = build(POSTS_FIXTURE_CONFIG, TMP / "posts-fixture-bad-int",
+    proc = build(POSTS_FIXTURE_CONFIG, harness.dest("posts-fixture-bad-int"),
                  ["--contentDir", POSTS_BAD_INT_CONTENT])
     report_build_failure(report, "文章精选[featured 非布尔·整数]", proc, POSTS_BAD_FEATURED_EXPECT)
 
 
 def assert_post_grid_empty(report):
     """全部文章均入选时，「最近更新」网格整块不渲染（0037 决议第 1 条边界）。"""
-    dest = TMP / "posts-fixture-all"
+    dest = harness.dest("posts-fixture-all")
     proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", POSTS_ALL_FEATURED_CONTENT])
     report.check("全 featured fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -804,7 +794,7 @@ def assert_featured_badge(report):
     真实构建不锚（ADR-0009「真实精选清单不锚」原则——真实 featured 由项目负责人掌控）。
     期望值为独立字面量；变异检验逐面做过（去条件 / 去调用点 / 精选行误加）。
     """
-    dest = TMP / "posts-fixture-badge"
+    dest = harness.dest("posts-fixture-badge")
     proc = build(POSTS_FIXTURE_CONFIG, dest)
     report.check("徽标 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -859,7 +849,7 @@ def assert_post_reading_meta(report):
     期望值为独立字面量：中文单位串「分钟」「字」来自 i18n 契约，不从实现重算。
     锚 fixture 构建（POSTS_FIXTURE_CONFIG，与精选/徽标同套 fixture）。
     """
-    dest = TMP / "posts-fixture-reading"
+    dest = harness.dest("posts-fixture-reading")
     proc = build(POSTS_FIXTURE_CONFIG, dest)
     report.check("阅读辅助 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -911,9 +901,9 @@ def assert_post_toc(report):
       · 目录不使用 `<details>` 折叠（② 的「不折叠」落地牙）；
       · 桌面 `columns:2`、≤768px 媒体查询内 `columns:1`（② 的列数落地牙）。
     """
-    dest = TMP / "real"
+    dest = harness.dest("real")
     if not dest.is_dir():
-        report.check("目录：真实构建产物存在", False, "missing tests/tmp/real（先跑完整套件）")
+        report.check("目录：真实构建产物存在", False, "missing tests/tmp/site/real（先跑完整套件）")
         return
     sop_page = dest / "posts" / "sop-ansible-automation-guide.html"
     if not sop_page.is_file():
@@ -960,7 +950,7 @@ def assert_post_nav(report):
       · 真实构建：about.html 不出 .post-nav（section 守卫）。
     期望值为 fixture 日期序 / 单篇事实的直写（独立字面量）。
     """
-    dest = TMP / "posts-fixture-nav"
+    dest = harness.dest("posts-fixture-nav")
     proc = build(POSTS_FIXTURE_CONFIG, dest)
     report.check("上下篇 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -1016,7 +1006,7 @@ def assert_post_nav(report):
                      f"next={link_slug(oldest.group(1), 'post-nav-next')}")
 
     # 单篇文章：两侧都无 → 整块不渲染
-    solo = TMP / "posts-fixture-nav-solo"
+    solo = harness.dest("posts-fixture-nav-solo")
     proc = build(POSTS_FIXTURE_CONFIG, solo, ["--contentDir", "tests/fixtures/content-one"])
     if proc.returncode != 0:
         report.check("单篇 fixture 构建成功", False, proc.stderr[-400:])
@@ -1038,7 +1028,7 @@ def assert_post_nav_scope(report):
     单独成函数是因为它依赖 assert_real 的产物，必须在其后执行——放在
     assert_post_nav 里用 `if about.is_file()` 兜底会变成静默跳过。
     """
-    real = TMP / "real"
+    real = harness.dest("real")
     for name in ("about.html", "products.html", "search.html"):
         page = real / name
         if not page.is_file():
@@ -1060,9 +1050,9 @@ def assert_pagination(report):
     与 fixture 构建（6 篇 → 恰好 1 页，不出分页器）。
     期望值为配置事实（pagerSize=6 + 文章数），不从 paginator 实现重算。
     """
-    real = TMP / "real"
+    real = harness.dest("real")
     if not real.is_dir():
-        report.check("分页：真实构建产物存在", False, "missing tests/tmp/real")
+        report.check("分页：真实构建产物存在", False, "missing tests/tmp/site/real")
         return
     for label, path, cur in (("/posts/ 第 1 页", real / "posts" / "index.html", "1"),
                              ("/posts/ 第 2 页", real / "posts" / "page" / "2" / "index.html", "2")):
@@ -1092,7 +1082,7 @@ def assert_pagination(report):
                      and re.findall(r'class="page-num(?: is-current)?"[^>]*>(\d+)<', hb.group(1)) == ["1", "2"],
                      "home pagination missing or wrong numbers")
 
-    fixture = TMP / "posts-fixture-reading"
+    fixture = harness.dest("posts-fixture-reading")
     one_page = fixture / "posts" / "index.html"
     if one_page.is_file():
         report.check("单页列表不出分页器（6 篇 = 1 页）",
@@ -1102,7 +1092,7 @@ def assert_pagination(report):
     # 分页窗口：pagerSize=1 的标量覆盖让 6 篇 fixture 产出 6 页，走到窗口分支
     # （真实配置 2 页时窗口恒全显、page-gap 永不出现——没有这条断言，删掉整段
     #  窗口逻辑套件仍绿）。cur=1 → 1,2,3,…,6；cur=6 → 1,…,4,5,6；每段只补一次省略号。
-    win_dest = TMP / "pager-window"
+    win_dest = harness.dest("pager-window")
     proc = build("hugo.toml,tests/hugo.test.posts.toml,tests/hugo.test.pager.toml", win_dest)
     report.check("分页窗口 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -1131,7 +1121,7 @@ def assert_post_toc_empty(report):
     锚 fixture 构建（assert_post_reading_meta 已建；本函数在 --quick 下也执行，
     因为空态不依赖真实数据）。fixture 文章正文只有一句话、无任何标题。
     """
-    fixture_dest = TMP / "posts-fixture-reading"
+    fixture_dest = harness.dest("posts-fixture-reading")
     plain_page = fixture_dest / "posts" / f"{POSTS_BADGE_PLAIN[0]}.html"
     if not plain_page.is_file():
         report.check("目录空态：fixture 文章页存在", False,
@@ -1154,7 +1144,7 @@ def assert_search_fixture(report):
     故索引只应含文章条目——若将来给 fixture 加 products 页，「仅含 2 篇」
     断言须同步改，否则会以「got N 条」误导排除规则的排障方向。
     """
-    dest = TMP / "search-fixture"
+    dest = harness.dest("search-fixture")
     proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", "tests/fixtures/content-search"])
     report.check("搜索投影 fixture 构建成功", proc.returncode == 0,
                  proc.stderr[-400:] if proc.returncode else "")
@@ -1308,12 +1298,12 @@ def assert_empty_state(report):
     empty.mkdir(parents=True, exist_ok=True)
     shutil.copy(REPO / "tests" / "fixtures" / "data" / "sop.yaml", empty / "sop.yaml")
     cfg = TMP / "empty-state.toml"
-    cfg.write_text('dataDir = "tests/tmp/empty-data"\n', encoding="utf-8")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / "empty-state")
+    cfg.write_text('dataDir = "%s"\n' % empty.relative_to(REPO).as_posix(), encoding="utf-8")
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest("empty-state"))
     if proc.returncode != 0:
         report.check("空态构建成功", False, proc.stderr[-300:])
         return
-    html = (TMP / "empty-state" / "products.html").read_text(encoding="utf-8")
+    html = (harness.dest("empty-state") / "products.html").read_text(encoding="utf-8")
     report.check(f"空态渲染「{EMPTY_STATE_TEXT}」", EMPTY_STATE_TEXT in html, "")
 
 
@@ -1341,7 +1331,7 @@ def assert_bad_cases(report):
         cfg = TMP / f"bad-{case}.toml"
         cfg.parent.mkdir(parents=True, exist_ok=True)
         cfg.write_text('dataDir = "tests/fixtures/bad/products/%s"\n' % case, encoding="utf-8")
-        proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / f"bad-{case}")
+        proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest(f"bad-{case}"))
         expect = BAD_CASE_EXPECT.get(case, "产品状态")
         report_build_failure(report, f"契约[{case}]", proc, expect)
 
@@ -1356,7 +1346,7 @@ def report_build_failure(report, label, proc, expect):
 def assert_bad_caller_limit(report):
     """调用方级坏用例：页面经短代码传 limit=-1，构建必须失败。
 
-    构造 tests/tmp/content-limit-negative/ 作为 contentDir 覆盖，
+    构造 tests/tmp/site/content-limit-negative/ 作为 contentDir 覆盖，
     其中的页面 {{< product-index limit="-1" >}} 走完整调用链
     （短代码 → product-items → errorf）。只覆盖 dataDir/contentDir，
     layouts/其余配置用真实站点。契约落点：layouts/partials/product-items.html。
@@ -1368,8 +1358,8 @@ def assert_bad_caller_limit(report):
         '{{< product-index limit="-1" >}}\n', encoding="utf-8")
     cfg = TMP / "caller-limit-negative.toml"
     cfg.write_text('dataDir = "tests/fixtures/data"\n'
-                   'contentDir = "tests/tmp/content-limit-negative"\n', encoding="utf-8")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / "caller-limit-negative")
+                   'contentDir = "%s"\n' % content.relative_to(REPO).as_posix(), encoding="utf-8")
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest("caller-limit-negative"))
     report_build_failure(report, "调用方[limit=-1]", proc, CALLER_LIMIT_NEGATIVE_EXPECT)
 
 
@@ -1394,7 +1384,7 @@ def assert_bad_caller_direct(report, case, label, expect, single_html):
     (content / "page.md").write_text('+++\ntitle = "t"\ndraft = false\n+++\n', encoding="utf-8")
     cfg = TMP / f"caller-{case}.toml"
     cfg.write_text('dataDir = "tests/fixtures/data"\n', encoding="utf-8")
-    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / f"caller-{case}",
+    proc = build("hugo.toml,%s" % cfg.relative_to(REPO), harness.dest(f"caller-{case}"),
                  ["--layoutDir", str(layout_root), "--contentDir", str(content)])
     report_build_failure(report, f"调用方[{label}]", proc, expect)
 
@@ -1413,7 +1403,7 @@ def assert_bad_caller_missing_uid(report):
 
 
 def assert_real(report):
-    dest = TMP / "real"
+    dest = harness.dest("real")
     proc = build(REAL_CONFIG, dest)
     report.check("真实数据构建成功（生产配置）", proc.returncode == 0, proc.stderr[-400:] if proc.returncode else "")
     if proc.returncode != 0:
@@ -1610,21 +1600,7 @@ def assert_single_copy(report):
     report.check("站点层与主题层无同相对路径文件（覆盖层已消除）", not dup, f"重复: {dup}")
 
 
-def main():
-    parser = argparse.ArgumentParser(description="产品状态模块产物断言")
-    parser.add_argument("--quick", action="store_true", help="跳过真实数据构建")
-    args = parser.parse_args()
-
-    if shutil.which("hugo") is None:
-        print("ERROR: hugo 不在 PATH（CI 由 peaceiris/actions-hugo 提供）")
-        return 2
-
-    preflight_hugo_version()
-
-    shutil.rmtree(TMP, ignore_errors=True)
-    TMP.mkdir(parents=True, exist_ok=True)
-
-    report = Report()
+def checks(report, quick):
     assert_single_copy(report)
     assert_fixture(report)
     assert_post_featured(report)
@@ -1644,24 +1620,17 @@ def main():
     assert_bad_caller_limit(report)
     assert_bad_caller_missing_items(report)
     assert_bad_caller_missing_uid(report)
-    if not args.quick:
+    if not quick:
         assert_real(report)
         # 目录正面锚真实构建产物（--quick 不建 real，故跟随 assert_real 一起跳过）
         assert_post_toc(report)
         assert_post_nav_scope(report)
         assert_pagination(report)
 
-    width = max(len(name) for _, name, _ in report.items)
-    for ok, name, detail in report.items:
-        mark = "PASS" if ok else "FAIL"
-        print(f"[{mark}] {name.ljust(width)}" + (f"  {detail}" if detail and not ok else ""))
-    failed = report.failed
-    print(f"\n{len(report.items) - len(failed)}/{len(report.items)} passed")
-    if failed:
-        print("RED — %d 个行为未满足" % len(failed))
-        return 1
-    print("GREEN")
-    return 0
+
+def main():
+    preflight_hugo_version()  # 版本预检归工单 0068（未决），暂留套件
+    return harness.run("site", checks)
 
 
 if __name__ == "__main__":

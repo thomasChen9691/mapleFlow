@@ -19,39 +19,7 @@
  * 跑法：
  *   npm ci && node tests/assert_reveal.mjs
  */
-import { JSDOM } from 'jsdom';
-import { pathToFileURL, fileURLToPath } from 'node:url';
-import path from 'node:path';
-
-const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-let passed = 0;
-let failed = 0;
-let bust = 0;
-
-function check(name, cond, detail) {
-  if (cond) {
-    passed++;
-    console.log(`  ok  ${name}`);
-  } else {
-    failed++;
-    console.log(`FAIL  ${name}${detail ? `\n      ${detail}` : ''}`);
-  }
-}
-
-/** 重新求值引擎模块（ESM 缓存会让 import 副作用只跑一次，测试间必须 cache-bust） */
-async function loadFresh(rel) {
-  const url = pathToFileURL(path.join(REPO, rel)).href + `?t=${++bust}`;
-  return import(url);
-}
-
-/** 绑定 jsdom 全局（引擎以 document/window 全局为宿主） */
-function installDom(html) {
-  const dom = new JSDOM(html, { url: 'http://localhost/' });
-  globalThis.window = dom.window;
-  globalThis.document = dom.window.document;
-  return dom;
-}
-
+import { check, finish, installDom, loadFresh } from './dom.mjs';
 /** 筛选控件条：镜像 product-index.html 渲染 seam 的 DOM 契约（词汇归 ADR-0006） */
 function filtersBar() {
   return `<div class="mf-filters">
@@ -362,5 +330,4 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
   check('RGR-11 缺挂点时不抛错（非文章页静默降级）', !threw);
 }
 
-console.log(`\n${passed} passed, ${failed} failed`);
-process.exit(failed > 0 ? 1 : 0);
+finish();
