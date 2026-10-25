@@ -16,7 +16,8 @@ created: 2026-10-25
 
 - **出处**：架构评审候选①（improve-codebase-architecture，2026-10-25；报告在 OS 临时目录，属 epoch 性资产——关键行号锚点已抄写进各工单正文，不依赖该文件存活）。
 - **工单纪律（项目负责人开图时明确）**：每张工单是**待决策问题**、不是施工任务；一次会话最多解决一张（research 除外）；地图是索引不是仓库，决策只存在于工单。
-- **例外记录（2026-10-25）**：经项目负责人明确指示，0062 与 0065 同场 grill 并同场闭环；同日更进一步，0063 / 0064 / 0066 / 0067 / 0068 / 0070 六票同场 grill 并同场闭环（「一会话一票」纪律的两次例外，均由负责人指示）；各票 Resolution 均已记明。同场不降质：每票仍一次一问、推荐答案先行、事实自查后问决策。
+- **推送状态（2026-10-25，显著记录）**：本图全部施工与决议在本地分支 `refactor/harness-convergence`（共 5 笔：`42ba094` bad/ 拆子根 → `90a46e4` 两票决议 → `e08eb06` harness 模块 → `4adc239` 六票决议 → `cd531ea` 六票施工）连同基点的 4 笔可视批提交**共 9 笔未推、PR 未开**（GitHub auth-required）。收口不等 CI——分支规则集已把 verify 设为 PR 硬门禁，开 PR 时自然产生证据；恢复授权后推分支开 PR 即下一步（0071 决议）。
+- **例外记录（2026-10-25）**：经项目负责人明确指示，0062 与 0065 同场 grill 并同场闭环；同日更进一步，0063 / 0064 / 0066 / 0067 / 0068 / 0070 六票同场 grill 并同场闭环；第三场，0069 与 0071 同场闭环（「一会话一票」纪律的三次例外，均由负责人指示）；各票 Resolution 均已记明。同场不降质：每票仍一次一问、推荐答案先行、事实自查后问决策。
 - **入口不变是约束不是决策**：`npm test`（assert_reveal.mjs + assert_search.mjs）、`python3 tests/assert_site_contracts.py`、`python3 tests/assert_sop_pipeline.py`、CI `.github/workflows/ci-cd.yml` verify job 的调用方式不因本图改变；harness 收敛的是套件内部，不是入口面。
 - **闭卷 ADR**：0006（Considered Options 已枪毙「拆独立脚本」——fixture 基建复制即第二实现；本图是该原则的完成式：基建单份、套件多数）、0007（三层文档契约：CONTEXT.md 概念 / 引擎 docstring / 测试期望字面量**互相独立**——字面量重复是承重设计，不是本图合并对象）、0009（变异检验纪律：每条断言以「破坏实现→断言红→还原」证实有牙；迁移不得削掉牙）、0010（投影契约与测试期望独立字面量）、0013（parity 断言纪律：两处配置同改，防静默分叉）。
 - **测试总原则**：Hugo 无模板单测，静态产物只能 build-then-assert；fixture 基建单份；fixture 日期一律过去日（未来内容不发布 → 假绿）；Hugo 0.164 语义编写（CI 钉版，0.166+ 条件多 return 本地过、CI 红）。
@@ -38,6 +39,8 @@ created: 2026-10-25
 - [harness 的文档 seam 与导航入口](tickets/0067-harness-doc-seam-navigation.md) — **批准现行两份文件头 docstring 为契约唯一定义处**（ADR-0007 三层模式的 harness 侧落地）。**「harness」不入 CONTEXT.md**（术语表对外；定型于 harness.py docstring 首段 + AGENTS.md §7）。AGENTS.md 三处**随施工批同步落地**：§7 两行（两模块）+ §3 随 0066 自测同步 + §4 坑点补一条（坏用例子根 / tmp 分根 / 无串行约束）；收口记录未落地项防丢。
 - [版本预检是否进 harness](tickets/0068-version-preflight-ownership.md) — **修：workflow 发现改 glob，预检复活**（CI_WORKFLOW 钉已改名的 deploy.yml → 静默失效，已死；照 assert_ci_wiring glob 先例）。**留站点套件**（SOP 断言与 Hugo 版本无关，WARN 对它无信息量；harness 收它违双门槛）。**维持 advisory WARN**（skew ≠ 产物错，硬失败误伤新版 hugo 用户）。
 - [golden seam 与 harness 的关系](tickets/0070-golden-seam-relation.md) — **追认并列三模块**（harness.py / dom.mjs / sop_golden.py）；接缝 = docstring 互指 + capture 只走 tmp_root；build_real 留 sop_golden（生产配置直捕是内容工具关注点）。**--check 不接 CI**：覆盖与 SOP 套件 golden 比对重叠、独特覆盖对共享模块 bug 双盲，记录为已知限制（ADR-0010 先例）。三票一致闭环；sop_golden docstring 补对称互防一行。
+- [迁移顺序与风险](tickets/0069-migration-order-risk.md) — 切法已被三批施工实质回答：**追认「按基建能力分层横切」**（Report/入口仪式 → DOM/check → tmp 分根/dest → bad/ 子根 → build 档位 → 配置写入 → 自测），批批全绿中间态、旧副本同批删除；六票决议后施工是执行非越位。完整性答案 = 逐批「计数持平 + 当期触碰缝变异检验」，收口只作文书核对；雾区「重组粒度」负向了结（无重组）。
+- [收口：harness 收敛的耐久化与地图关闭](tickets/0071-closure-terminology-adr.md) — **一份总纲 ADR-0014**（决策集十一条各注工单号，Resolution 留过程记录）；「已决未建」登记为空集（六项已于 cd531ea 全部落地）；**不等 CI**（PR 规则集即硬门禁），9 笔未推状态显著记录；收口随完整 handoff（状态/决策/下一步/环境坑）。收口施工（ADR + handoff + 地图置 closed）待负责人指示。
 
 ## Not yet specified
 
@@ -45,7 +48,7 @@ created: 2026-10-25
 
 - **已消解**（[0061](tickets/0061-harness-boundary-infra-vs-contract.md) 决议）：「跨套件契约执法点的归属」——BAD_CASE_EXPECT 判契约（各套件独立，循环因两侧真实差异留各套件）、fuse pair 判互补维持现状（源对源比对与硬编码字面量覆盖不同漂移方向），均无 harness 可收部分。
 - **已消解（负向）**（[0065](tickets/0065-tmp-ownership-structure.md) 决议）：「并行执行的代价面」——并行定为目标 = **否**（分根结构已备好、CI 暂不并行；无真实时长需求）。若将来并行成为目标，本雾区复活并连同 CI 改造一并评估。
-- **既有断言随 harness 落地的重组粒度**：横切迁移时哪些断言随基建移动、哪些原样不动、移动后期望字面量与 fixture 的对应关系如何维持——取决于迁移顺序工单选定的迁移策略。
+- **已消解（负向）**（[0069](tickets/0069-migration-order-risk.md) 决议）：「既有断言随 harness 落地的重组粒度」——实测答案：**无重组**。断言原样搬家、期望字面量独立不动、计数三批持平（site 159 · sop 104 · npm 23+41）、变异等价逐批证实；不存在「哪些动哪些不动」的选择面。
 
 ## Out of scope
 
