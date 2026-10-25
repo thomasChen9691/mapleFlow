@@ -2,10 +2,13 @@ id: "0062"
 title: harness 模块形态：Python 侧与 Node 侧各是什么、落在哪
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: ["0061"]
+assignee: agent
 map: map-test-harness-convergence.md
 created: 2026-10-25
+claimed: 2026-10-25
+closed: 2026-10-25
 ---
 
 ## Question
@@ -22,3 +25,26 @@ created: 2026-10-25
 边界（不开票）：构建旗标分歧的表达归构建工单；配置写入的参数面归写入工单；harness 文档 seam 归导航工单——本票只定「有几个模块、各在哪、入口变什么形」。
 
 事实前提：以边界工单决议为准（未决时本票阻塞）；架构评审候选①的重复盘点（行号锚点见边界工单）。
+
+## Resolution
+
+2026-10-25 · grilling（HITL，项目负责人四问定案；与 0065 同场——经负责人指示的一次会话两票例外，例外已记入地图 Notes）：
+
+**模块数量、落点与命名（Q1）**：语言边界（Python ×2 + Node ×2）强制至少两个文件，「一个 harness 模块」作为**概念**覆盖，不为单文件幻觉拆队。落点与命名 = **`tests/harness.py` + `tests/dom.mjs`，按职责命名**：
+
+- `tests/harness.py`（Python 侧）：Report 类 + 打印 / 汇总 / 退出码 + hugo PATH 检查 + tmp 重置 + build（旗标档位归 0063）+ fixture 配置写入（参数面归 0064）
+- `tests/dom.mjs`（Node 侧）：check + 计数 / 汇总 / 退出 + installDom / loadFresh
+
+拒绝：同干命名 `harness.py` + `harness.mjs`（暗示两侧契约对称，实际不对称——Python 侧吸收入口仪式六件、Node 侧只有 check / 计数 / 装配）；Node 侧不立模块（违背目的地；第三个 jsdom 套件出现即复制第三份）。
+
+**入口剩余形状（Q2）**：四个入口文件收敛后**只剩「取参数 + 有序断言清单」**。入口仪式——argparse `--quick` / hugo 检查 / rmtree+mkdir / Report 构造 / **打印块（当前两套件逐字重复，评审未点名的第三处副本）** / 汇总与退出码——全进 harness。排序依赖注释留调用点（站点 main :1639-1644 的注释证明顺序承重：清单顺序是套件知识，不是基建）。拒绝：入口自拼装（拼装代码仍是两份逐字重复，收敛只做一半）；声明式断言注册表（清单是编排逻辑，把 seam 变成配置 = ADR-0006 决策 2 枪毙的模式）。
+
+**纳入判据与宽度防护（Q3）**：双门槛——每个纳入物须同时满足 **≥2 个消费者（leverage）+ deletion test（删掉它，复杂度是集中而不是搬家）**；无消费者预期的入口不留（ADR-0006 决策 2 同款）。明确在外：契约字面量与 fixture 数据（0061）、预检（归 0068 未决）、golden 工具链（归 0070 未决——`sop_golden.py` 自带 `build_real` 是 golden 捕获用的生产配置构建风味，进 harness 等于让 harness 懂内容语义，正是 0061 禁过的浑浊）。
+
+**seam 契约与测试存活（Q4，全部确认）**：
+
+- **seam 之后只有机制**：harness 对四个消费方承诺五件事——跑构建 / 收报告 / 写 fixture 配置 / 装 DOM 页面 / 管 tmp 根；禁止三件事——知道任何模块的词表、存任何期望值、存任何 fixture 数据（0061 约束① 在本票形状下的具体化）。四套件的契约字面量原样独立。
+- **「harness」词范围 = 测试运行基建**；sop_golden 为并列第三模块（工具关系归 0070）；harness docstring 须提及 sop_golden 的存在（防未来合并冲动）。
+- **测试存活**：本票不合任何行为，现存断言全存活、无搬家；harness 自身如何被测归 0066。
+
+**对下游的输入**：0063（旗标档位落在 harness 的 build 内）、0064（配置写入的参数面）、0065（tmp 分根后重置归 harness）、0066（自测对象 = 本票五承诺）、0067（导航两行 + docstring 提及 golden）、0068（预检若接管则进 harness.py）。
