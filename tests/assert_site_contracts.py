@@ -39,7 +39,7 @@ search 页）· 搜索浮层（2026-10-24 ADR-0013：mf-search-overlay 构件全
     在场与 href 终点
   · 阅读进度条 seam —— fixture 构建的文章页有 .mf-progress、列表页与独立页
     （about/products/search）均无、产物 CSS 含规则与 no-js 隐藏
-  · 契约 seam —— tests/fixtures/bad/ 下每个用例的构建必须失败；
+  · 契约 seam —— tests/fixtures/bad/products/ 下每个用例的构建必须失败；
     逐用例钉错误子串（BAD_CASE_EXPECT）：产品状态模块（「产品状态：」前缀）、
     产品索引数据门禁（「产品索引数据：」前缀，含产品 id 与坏值）
   · 调用方 seam —— 经真实调用链（短代码 / 直接调 partial）触发的契约失败
@@ -1320,19 +1320,27 @@ def assert_empty_state(report):
 def assert_bad_cases(report):
     """每个坏 fixture 的构建必须失败——契约执法（模块内 errorf）。
 
-    只发现本模块的用例：目录内含 products.yaml。tests/fixtures/bad/ 是
-    共享空间（SOP 管线的 sop-* 用例同住），按内容归属过滤，防止互相扫入。
+    根卫生（0061 决议）：bad/products/ 下每个目录必须含 products.yaml——本根
+    只住本模块用例，错放别模块用例大声失败，取代旧的「平铺共享 + 按内容标记过滤」。
     """
-    bad_root = REPO / "tests" / "fixtures" / "bad"
-    cases = sorted(p.name for p in bad_root.iterdir()
-                   if p.is_dir() and (p / "products.yaml").is_file()) if bad_root.is_dir() else []
+    bad_root = REPO / "tests" / "fixtures" / "bad" / "products"
+    if not bad_root.is_dir():
+        report.check("存在契约坏用例", False, "tests/fixtures/bad/products/ 下没有用例")
+        return
+    strays = sorted(p.name for p in bad_root.iterdir()
+                    if p.is_dir() and not (p / "products.yaml").is_file())
+    if strays:
+        report.check("坏用例根卫生：bad/products/ 下每个用例含 products.yaml", False,
+                     "错放用例（无 products.yaml）：%s" % strays)
+        return
+    cases = sorted(p.name for p in bad_root.iterdir() if p.is_dir())
     if not cases:
-        report.check("存在契约坏用例", False, "tests/fixtures/bad/ 下没有用例")
+        report.check("存在契约坏用例", False, "tests/fixtures/bad/products/ 下没有用例")
         return
     for case in cases:
         cfg = TMP / f"bad-{case}.toml"
         cfg.parent.mkdir(parents=True, exist_ok=True)
-        cfg.write_text('dataDir = "tests/fixtures/bad/%s"\n' % case, encoding="utf-8")
+        cfg.write_text('dataDir = "tests/fixtures/bad/products/%s"\n' % case, encoding="utf-8")
         proc = build("hugo.toml,%s" % cfg.relative_to(REPO), TMP / f"bad-{case}")
         expect = BAD_CASE_EXPECT.get(case, "产品状态")
         report_build_failure(report, f"契约[{case}]", proc, expect)

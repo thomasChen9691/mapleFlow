@@ -13,7 +13,7 @@
     断言，不红（新增流程：写笔记 + 加注册条目）。
   · 残留 seam —— content/posts/ 下 6 个派生 slug 不得有手写 .md；
     posts/ 页面集合 == 派生 slug + 手写非草稿文章（孤儿笔记零页面）
-  · 契约 seam —— tests/fixtures/bad/sop-*/ 每个用例的构建必须失败，
+  · 契约 seam —— tests/fixtures/bad/sop/ 下每个用例的构建必须失败，
     且错误信息含本管线标记与各用例的契约子串
   · draft seam —— tests/fixtures/draft/：draft: true = 已注册的草稿，
     不进生产构建，-D 构建出现（0009 目录契约）
@@ -54,7 +54,7 @@ import sop_golden as sg  # golden 抽取与捕获脚本共用，防规则漂移
 REPO = Path(__file__).resolve().parent.parent
 TMP = REPO / "tests" / "tmp"
 REGISTRY = REPO / "data" / "sop.yaml"
-BAD_ROOT = REPO / "tests" / "fixtures" / "bad"
+BAD_ROOT = REPO / "tests" / "fixtures" / "bad" / "sop"
 DRAFT_ROOT = REPO / "tests" / "fixtures" / "draft"
 FEATURED_ROOT = REPO / "tests" / "fixtures" / "featured"
 NOTES_DIR = REPO / "docs" / "sop"  # 镜像 hugo.toml 的 params.sopNotesDir 缺省值
@@ -325,11 +325,23 @@ def assert_derived(report):
 
 
 def assert_bad_cases(report):
-    """契约坏用例：构建必须失败，错误含管线标记 + 该用例的契约子串。"""
-    cases = sorted(p.name for p in BAD_ROOT.iterdir()
-                   if p.is_dir() and (p / "data" / "sop.yaml").is_file()) if BAD_ROOT.is_dir() else []
+    """契约坏用例：构建必须失败，错误含管线标记 + 该用例的契约子串。
+
+    根卫生（0061 决议）：bad/sop/ 下每个目录必须含 data/sop.yaml——本根只住
+    本模块用例，错放别模块用例大声失败，取代旧的「平铺共享 + 按内容标记过滤」。
+    """
+    if not BAD_ROOT.is_dir():
+        report.check("存在契约坏用例", False, "tests/fixtures/bad/sop/ 下没有用例")
+        return
+    strays = sorted(p.name for p in BAD_ROOT.iterdir()
+                    if p.is_dir() and not (p / "data" / "sop.yaml").is_file())
+    if strays:
+        report.check("坏用例根卫生：bad/sop/ 下每个用例含 data/sop.yaml", False,
+                     "错放用例（无 data/sop.yaml）：%s" % strays)
+        return
+    cases = sorted(p.name for p in BAD_ROOT.iterdir() if p.is_dir())
     if not cases:
-        report.check("存在契约坏用例", False, "tests/fixtures/bad/sop-*/data 下没有用例")
+        report.check("存在契约坏用例", False, "tests/fixtures/bad/sop/ 下没有用例")
         return
     for case in cases:
         expect = BAD_CASE_EXPECT.get(case)
