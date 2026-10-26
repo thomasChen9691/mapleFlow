@@ -3,11 +3,13 @@ id: "0075"
 title: 守卫模块的落点与分层：站点层还是主题层
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: ["0073"]
-assignee: ""
+assignee: agent
 map: map-featured-type-guard.md
 created: 2026-10-25
+claimed: 2026-10-26
+closed: 2026-10-26
 ---
 
 ## Question
@@ -22,3 +24,13 @@ created: 2026-10-25
 4. **Hugo partial 查找序（站点层优先、主题层兜底）下，两层互调的实际约束**与既有先例清点（以 0072 事实为准）。
 
 边界（不开票）：接口形态归 0074；消息归 0076；测试归 0077；ADR-0012 已锁部分不重开。
+
+## Resolution
+
+2026-10-26 · grilling（HITL，项目负责人两问定案）：
+
+**Q1 落点 = 站点层 `layouts/partials/`**：ADR-0008 判据「因数据结构 / 契约而变 → 站点层」；三消费方全在站点层；徽标已定不消费（0073 Q1）→ **不引入任何 theme→site 新先例**，主题层保持自洽（不持站点数据契约）。主题层方案会把数据契约下沉到呈现层，方向反了。
+
+**Q2 重开触发 = 记**：模块 docstring 记明三要素——触发条件（徽标谓词收敛或出现主题层消费方）、重开对象（重开分层决策）、否定的上下文特定性（ADR-0012 的 theme→site 否决不是永久禁令）。与 ADR-0012 决策 3/4「重开触发 = …」同款纪律。
+
+**施工**：模块 docstring 加「落点与重开触发」段；ADR 耐久化归 0078。

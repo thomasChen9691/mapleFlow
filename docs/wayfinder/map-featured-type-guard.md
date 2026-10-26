@@ -30,14 +30,18 @@ created: 2026-10-25
 
 - [featured 类型守卫现状事实底座（盘点）](tickets/0072-featured-guard-facts.md) — 守卫四件套（isset + %T + ne bool + errorf）三处**逐字同构**，差异仅在数据访问路径、遍历模式与消息前缀；谓词三形态各有真实差异（无条件 where / 条件 where / 单页 eq）；坏值覆盖文章 2 例 + 产品 1 例，**SOP 侧零 fixture 零钉子串**；`.Params` 键小写化（官方声明）vs 数据 map 键原样，本仓三源全小写故当前不可观测；partial 可 return / 可 errorf、查找序站点层优先，站点→主题调用有先例、**theme→site 零先例**。缺口 8 条（SOP 坏例 / SOP 消息钉子 / 徽标坏值无直接断言 / where 行为差异无守门 / 键大小写 / 遍历形态 / dict nil 陷阱 / 徽标跨层归属）。frontier = 0073。
 - [守卫单模块的职责边界：只做类型校验，还是校验与谓词合一](tickets/0073-guard-module-scope-boundary.md) — **谓词判契约（各有其主：ADR-0009 精选链 / ADR-0006 条件过滤 / ADR-0012 渲染判定）、边界 (a) 只做类型校验**（合并 = 为三种真实差异参数化，0061 枪毙的「搬家」）；文档 = **双向互指**（模块 docstring 为执行契约唯一定义处，badge 与两处数据准备各留指针）；边界文本 = **校验器不是选择器/取数器**（不拥有取数/选择/渲染/消息措辞；遍历归 0074）；测试 = **零增减零改写**（三断言原样存活、模块无专属断言、SOP 缺口留 0077；验收含变异等价）。连锁：0075 张力消解（降级确认票）、雾区「谓词合一开销」负向了结、0074 收窄。frontier = 0074 + 0075。
+- [守卫模块的形态与接口：入参形态、未声明归属、返回语义](tickets/0074-guard-module-interface-form.md) — **条目语义**（调用方传容器、四件套全收敛、遍历留调用方）；**不自校验**（内部模板接口、三处字面量，docstring 声明必填）；**无返回**（纯执法）。与已落地实现一致，零代码改动。frontier = 0075 + 0076。
+- [守卫模块的落点与分层：站点层还是主题层](tickets/0075-guard-module-layer-placement.md) — **站点层**（ADR-0008 判据；三消费方全站点层；徽标不消费 → 零 theme→site 新先例，主题层保持自洽）；**记重开触发**（徽标谓词收敛或主题层消费方 → 重开分层决策；ADR-0012 的否决是上下文特定的）。docstring 已落。frontier = 0076。
+- [守卫的错误消息与命名契约：三前缀统一还是参数化](tickets/0076-guard-message-and-naming-contract.md) — **保留 origin 三前缀**（逐字、测试零 churn、链身份不丢）；**label 归调用方格式化**（定位值不是措辞，「条目」留在 SOP 链）；**`featured-guard.html`** 定案、术语表不收「守卫」词条、CONTEXT.md 精选条加 guard 指针。零代码改动（指针已落）。frontier = 0077。
+- [守卫模块的测试缝：单模块如何被 build-then-assert](tickets/0077-guard-test-seam.md) — **各消费链**（测公开行为，不建模块探针）；**补 SOP 坏值 fixture**（`bad/sop/sop-featured-not-bool` + BAD_CASE_EXPECT 钉 origin+label+契约，套件 104→105）；**ADR-0014 自测模式不适用**（模板侧无等价 seam，记已知差异）。红绿：fixture 先红（缺期望）→ 期望转绿；变异 → 四条坏值断言同红（site 156/159 + sop 104/105）。frontier = 0078。
 
 ## Not yet specified
 
 <!-- 雾区：在目的地内、但还无法精确表述的问题。随 frontier 推进毕业为工单。 -->
 
 - **已消解（负向）**（[0073](tickets/0073-guard-module-scope-boundary.md) 决议）：「谓词与守卫合一后的构建期开销面」——谓词判契约、不合并，开销面不存在。
-- **Page.Params 键小写化 vs 数据 map 键原样的接口影响**：Hugo 的 `.Params` 会把 front matter 键小写化（`Featured:` → `.Params.featured`），而 `hugo.Data.products` / `hugo.Data.sop` 的 map 键保持 YAML 原样——「条目 + 键」式统一接口跨三种数据源时 `isset`/`index` 行为差异待实测；影响面取决于 0074 定的接口形态。
-- **第四类 featured 数据源出现时的接口扩展性**：目的地未要求预留扩展位；是否值得留视 0074 的形态答案而定，暂不可表述。
+- **已消解**（[0074](tickets/0074-guard-module-interface-form.md) 决议）：「Page.Params 键小写化 vs 数据 map 键原样的接口影响」——接口取 item 容器 + 键名固定 `"featured"`，三源全小写书写 → 差异不构成问题面；未来出现大写键源按新数据源重评。
+- **已消解**（[0074](tickets/0074-guard-module-interface-form.md) 决议）：「第四类 featured 数据源出现时的接口扩展性」——条目语义对第四源天然开放（传容器即可），无需预留扩展位。
 
 ## Out of scope
 
