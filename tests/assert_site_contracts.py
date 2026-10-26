@@ -1374,7 +1374,8 @@ def assert_bad_caller_direct(report, case, label, expect, single_html):
     layout_root = TMP / f"layouts-{case}"
     (layout_root / "partials").mkdir(parents=True, exist_ok=True)
     (layout_root / "_default").mkdir(parents=True, exist_ok=True)
-    for name in ("product-index.html", "product-state.html", "product-items.html"):
+    for name in ("product-index.html", "product-state.html", "product-items.html",
+                 "featured-guard.html"):
         shutil.copy(REPO / "layouts" / "partials" / name, layout_root / "partials" / name)
     (layout_root / "_default" / "single.html").write_text(single_html, encoding="utf-8")
     content = TMP / f"content-{case}"

@@ -59,14 +59,13 @@
 {{- $restNoPara := replaceRE "\\A\\n[^\\n]*\\n\\n" "" $rest 1 -}}
 {{- $body := printf "%s\n\n%s" (trim $head "\n") (trim $restNoPara "\n") -}}
 {{- $content := printf "%s\n\n---\n\n%s" $entry.intro $body -}}
-{{- /* featured 可选（工单 0040 决议）：只认布尔；字段存在但非 bool 即 errorf。
+{{- /* featured 可选（工单 0040 决议）；类型执法归
+       layouts/partials/featured-guard.html（唯一定义处，0073 决议：双向互指）。
        必须**条件传键**——dict 里塞 nil 会让 isset 为真，下游的「非 bool 即失败」
        会对每条未标条目误报（实测）。 */ -}}
 {{- $params := dict "categories" $entry.categories "tags" $entry.tags -}}
+{{- partial "featured-guard.html" (dict "item" $entry "origin" "SOP 发布管线：" "label" (printf "条目 %s" $entry.slug)) -}}
 {{- if isset $entry "featured" -}}
-  {{- if ne (printf "%T" $entry.featured) "bool" -}}
-    {{- errorf "SOP 发布管线：条目 %s 的 featured 必须是布尔值（got %T=%v）" $entry.slug $entry.featured $entry.featured -}}
-  {{- end -}}
   {{- $params = merge $params (dict "featured" $entry.featured) -}}
 {{- end -}}
 {{- $.AddPage (dict

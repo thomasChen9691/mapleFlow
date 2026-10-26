@@ -1,0 +1,48 @@
+{{- /*
+  featured-guard（partial）—— featured 类型执行契约的唯一定义处
+  ============================================================
+  工单 0073 决议（2026-10-25）：边界 = (a) 只做类型校验。本文件是
+  featured「只认布尔」这一执行契约的**唯一定义处**；三处消费方各留指针
+  （双向互指，ADR-0012「谓词同源、契约各自独立」的落地形态）。
+
+  边界文本：**校验器，不是选择器/取数器**——只回答「这个 featured 值合法吗」。
+  不拥有：
+    · 数据获取（site.RegularPages / hugo.Data.products / hugo.Data.sop）
+    · 选择语义（where / eq——谓词判契约，各有其主：ADR-0009 精选链 /
+      ADR-0006 条件过滤 / ADR-0012 渲染判定）
+    · 渲染呈现（徽标 DOM 归 featured-badge.html）
+    · 消息前缀措辞（origin 由调用方逐字传入；模块只承担 errorf 骨架）
+
+  契约（ADR-0009 决策 1；构建期 errorf，不给缺省兜底）：
+    · featured 只认布尔 true；**未声明合法**（= 非精选，静默跳过）
+    · 字段存在但类型非 bool → errorf 构建失败
+      （where 严格匹配对字符串/整数会静默排除，属静默失效类；
+        if .Params.featured 会把字符串 "false" 当真值，禁止使用）
+
+  入参（dict，全必填）：
+    item    map     键值容器（Page.Params / 产品条目 / SOP 注册条目）
+    origin  string  消息前缀（调用方原前缀，逐字保留——措辞归工单 0076）
+    label   string  定位描述（调用方拼好：permalink / %q 引号 id / 条目 slug）
+  键名固定为 "featured"——本模块即 featured 守卫，不留键名注入位
+  （ADR-0006 决策 2「不留注入位」同款纪律）。
+
+  行为：isset item key 为假 → 静默返回（未声明合法）；
+        为真且非 bool → errorf；为真且 bool → 静默返回。
+  返回：无（纯执法 partial，不 return 值）。
+
+  调用方（三处，各留指针）：
+    · layouts/partials/post-items.html（文章侧，遍历全部文章）
+    · layouts/partials/product-items.html（产品侧，与 kind 门禁同循环）
+    · content/posts/_content.gotmpl（SOP 注册表条目）
+  语义共享、实现独立：themes/maplemod/layouts/partials/featured-badge.html
+  的谓词 eq .Params.featured true——同一契约的另一侧（ADR-0012 决策 2）。
+
+  测试：零新增断言（0073 决议 Q4）——三条现有坏值断言经消费链间接覆盖
+  （文章 string/int + 产品 string）；SOP 侧缺口归工单 0077。
+*/ -}}
+{{- if isset .item "featured" -}}
+  {{- $v := index .item "featured" -}}
+  {{- if ne (printf "%T" $v) "bool" -}}
+    {{- errorf "%s%s 的 featured 必须是布尔值（got %T=%v）" .origin .label $v $v -}}
+  {{- end -}}
+{{- end -}}

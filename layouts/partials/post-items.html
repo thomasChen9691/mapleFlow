@@ -15,10 +15,9 @@
     all       slice  全量可发布文章，按日期倒序（计数用，不参与分页）
 
   契约（工单 0036 决议；构建期 errorf，不给缺省兜底）：
-    · featured 只认布尔 true。字段存在但类型非 bool → errorf
-      （实测：where "Params.featured" true 对字符串 "true"/"false"、yes、1
-       全不匹配——静默排除属静默失效类，故显式执法；而 if .Params.featured
-       会把字符串 "false" 当真值，禁止使用。）
+    · featured 只认布尔 true；类型执法归 layouts/partials/featured-guard.html
+      （featured 执行契约唯一定义处，0073 决议：双向互指）——本文件只负责
+      遍历与选择。`where` 对字符串/整数的静默排除与 `if` 真值陷阱见该文件。
     · limit 为负数 → errorf（产品侧 0015 决议同款；负数静默全量属静默失效）
 
   边界：本 partial **只服务首页精选链**（ADR-0012 决策 4 负向锁边）——
@@ -36,11 +35,7 @@
 {{- $pages = $pages.ByDate.Reverse -}}
 
 {{- range $pages -}}
-  {{- if isset .Params "featured" -}}
-    {{- if ne (printf "%T" .Params.featured) "bool" -}}
-      {{- errorf "文章精选数据：%s 的 featured 必须是布尔值（got %T=%v）" .RelPermalink .Params.featured .Params.featured -}}
-    {{- end -}}
-  {{- end -}}
+  {{- partial "featured-guard.html" (dict "item" .Params "origin" "文章精选数据：" "label" .RelPermalink) -}}
 {{- end -}}
 
 {{- if lt (int $limit) 0 -}}

@@ -6,9 +6,10 @@
   （index.html）。**首页精选行不加**（区块标题「精选文章」已表达）。
 
   谓词：eq .Params.featured true——只认布尔 true（未声明/字符串/整数
-  均不渲染）。坏值执法不归本文件：post-items.html 的 errorf 循环遍历
-  全部文章，非布尔 featured 在首页构建时即失败（ADR-0009 决策 1），
-  本谓词与该守卫同源。
+  均不渲染）。坏值执法不归本文件：归站点层
+  layouts/partials/featured-guard.html（featured 执行契约的唯一定义处，
+  0073 决议：双向互指）——非布尔 featured 在构建期即失败（ADR-0009
+  决策 1），本谓词与该守卫**语义共享、实现独立**（ADR-0012 决策 2）。
 
   调用方（传页面上下文，不得内联拷贝本标记——三处拷贝即第二实现）：
     · themes/maplemod/layouts/_default/single.html（文章页标题旁）
