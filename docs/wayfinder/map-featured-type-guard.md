@@ -2,8 +2,9 @@
 id: map-featured-type-guard
 title: 精选类型守卫图（候选 2）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-25
+closed: 2026-10-26
 ---
 
 # 精选类型守卫图（候选 2）
@@ -16,7 +17,9 @@ created: 2026-10-25
 
 - **出处**：架构评审候选②（improve-codebase-architecture，2026-10-25；报告在 OS 临时目录属 epoch 性资产——关键锚点已抄写进本图与工单正文，不依赖该文件存活）。harness 图（`map-test-harness-convergence.md`）Out of scope 条已把「featured 类型守卫」记为独立目的地——本图是其展开；候选①（harness）已由 ADR-0014 收口。
 - **工单纪律（项目负责人开图时明确，2026-10-25）**：每张工单是**待决策问题**、不是施工任务；一次会话最多解决一张（research 除外）；地图是索引不是仓库，决策只存在于工单。
-- **现状事实锚点（排图日自查，待 0072 研究工单正式盘点确认）**：守卫三份拷贝——`layouts/partials/post-items.html:38-44`（前缀「文章精选数据：」，遍历全部文章）、`layouts/partials/product-items.html:36-42`（前缀「产品索引数据：」，遍历产品）、`content/posts/_content.gotmpl:62-71`（前缀「SOP 发布管线：」，注册条目，条件传键避 dict nil 陷阱）；谓词三形态——`where $pages "Params.featured" true`（post-items）、`where $items "featured" true`（product-items）、`eq .Params.featured true`（主题层 `featured-badge.html`，docstring 自称与守卫「同源」）；坏值测试覆盖——文章两例（`content-posts-bad` 字符串 / `content-posts-bad-int` 整数，期望子串「文章精选数据：」）、产品一例（`bad/products/featured-not-bool`）、**SOP 侧零 fixture**（排图日自查：`bad/sop/` 下六个用例无 featured 坏例）。
+- **例外记录（2026-10-26）**：经项目负责人指示，0074 / 0075 / 0076 / 0077 四票同场 grill 并同场闭环（「一会话一票」纪律的例外）；每票仍一次一问、推荐先行、事实自查后问决策。0073 亦为「决议先落、同场进入施工」。
+- **收口（2026-10-26）**：**7/7 票 closed（0072–0078；含 1 张 research 事实票）**，frontier 空 = 目的地到达；决策集耐久化于 **ADR-0015**（15 条决策各注工单号），ADR-0009 / ADR-0012 各加指针行；收口 handoff 见 `docs/handoffs/2026-10-26-featured-guard-closure.md`；backlog 不追加条目（候选②非 backlog 来源，与候选①先例一致）。
+- **现状事实锚点（排图日自查，已由 0072 研究工单确认）**：守卫三份拷贝——`layouts/partials/post-items.html:38-44`（前缀「文章精选数据：」，遍历全部文章）、`layouts/partials/product-items.html:36-42`（前缀「产品索引数据：」，遍历产品）、`content/posts/_content.gotmpl:62-71`（前缀「SOP 发布管线：」，注册条目，条件传键避 dict nil 陷阱）；谓词三形态——`where $pages "Params.featured" true`（post-items）、`where $items "featured" true`（product-items）、`eq .Params.featured true`（主题层 `featured-badge.html`，docstring 自称与守卫「同源」）；坏值测试覆盖——文章两例（`content-posts-bad` 字符串 / `content-posts-bad-int` 整数，期望子串「文章精选数据：」）、产品一例（`bad/products/featured-not-bool`）、**SOP 侧零 fixture**（排图日自查：`bad/sop/` 下六个用例无 featured 坏例）。
 - **闭卷 ADR**：0009（字段契约：未声明 = 非精选、只认布尔 `true`、非 bool 即 errorf；产品侧补同款校验是「执行已声明类型」非重开；真实精选清单不锚）、0012（徽标三面 + `featured-badge.html` 单一实现；谓词与守卫同源但分开实现；坏值执法继承 post-items 全局循环、徽标面无需新执法点；theme→site 调用曾被否决）、0006（产品侧 featured 过滤语义与缺省值）、0010（搜索索引不投影 featured）、0008（分层判据）、0007（三层文档契约模式）、0014（harness 自测先于契约红的先例）。
 - **纳入判据先例**（0061 所有权测试）：机制在全部消费方中应只有一个所有者 → 基建收敛；各有其主 → 契约独立；平分判契约。本图对象（守卫执法机制）倾向收敛，但最终边界归 0073 质询，排图期不预设。
 - **测试总原则**：Hugo 无模板单测，静态产物只能 build-then-assert；fixture 基建单份（不新开第四套构建）；fixture 日期一律过去日（未来内容不发布 → 假绿）；Hugo 0.164 语义编写（CI 钉版，0.166+ 条件多 return 本地过、CI 红）。
@@ -28,12 +31,12 @@ created: 2026-10-25
 
 <!-- 索引：每个已决工单一行 gist + 链接；决策详情只存在于工单，此处不重述。 -->
 
-- [featured 类型守卫现状事实底座（盘点）](tickets/0072-featured-guard-facts.md) — 守卫四件套（isset + %T + ne bool + errorf）三处**逐字同构**，差异仅在数据访问路径、遍历模式与消息前缀；谓词三形态各有真实差异（无条件 where / 条件 where / 单页 eq）；坏值覆盖文章 2 例 + 产品 1 例，**SOP 侧零 fixture 零钉子串**；`.Params` 键小写化（官方声明）vs 数据 map 键原样，本仓三源全小写故当前不可观测；partial 可 return / 可 errorf、查找序站点层优先，站点→主题调用有先例、**theme→site 零先例**。缺口 8 条（SOP 坏例 / SOP 消息钉子 / 徽标坏值无直接断言 / where 行为差异无守门 / 键大小写 / 遍历形态 / dict nil 陷阱 / 徽标跨层归属）。frontier = 0073。
-- [守卫单模块的职责边界：只做类型校验，还是校验与谓词合一](tickets/0073-guard-module-scope-boundary.md) — **谓词判契约（各有其主：ADR-0009 精选链 / ADR-0006 条件过滤 / ADR-0012 渲染判定）、边界 (a) 只做类型校验**（合并 = 为三种真实差异参数化，0061 枪毙的「搬家」）；文档 = **双向互指**（模块 docstring 为执行契约唯一定义处，badge 与两处数据准备各留指针）；边界文本 = **校验器不是选择器/取数器**（不拥有取数/选择/渲染/消息措辞；遍历归 0074）；测试 = **零增减零改写**（三断言原样存活、模块无专属断言、SOP 缺口留 0077；验收含变异等价）。连锁：0075 张力消解（降级确认票）、雾区「谓词合一开销」负向了结、0074 收窄。frontier = 0074 + 0075。
-- [守卫模块的形态与接口：入参形态、未声明归属、返回语义](tickets/0074-guard-module-interface-form.md) — **条目语义**（调用方传容器、四件套全收敛、遍历留调用方）；**不自校验**（内部模板接口、三处字面量，docstring 声明必填）；**无返回**（纯执法）。与已落地实现一致，零代码改动。frontier = 0075 + 0076。
-- [守卫模块的落点与分层：站点层还是主题层](tickets/0075-guard-module-layer-placement.md) — **站点层**（ADR-0008 判据；三消费方全站点层；徽标不消费 → 零 theme→site 新先例，主题层保持自洽）；**记重开触发**（徽标谓词收敛或主题层消费方 → 重开分层决策；ADR-0012 的否决是上下文特定的）。docstring 已落。frontier = 0076。
-- [守卫的错误消息与命名契约：三前缀统一还是参数化](tickets/0076-guard-message-and-naming-contract.md) — **保留 origin 三前缀**（逐字、测试零 churn、链身份不丢）；**label 归调用方格式化**（定位值不是措辞，「条目」留在 SOP 链）；**`featured-guard.html`** 定案、术语表不收「守卫」词条、CONTEXT.md 精选条加 guard 指针。零代码改动（指针已落）。frontier = 0077。
-- [守卫模块的测试缝：单模块如何被 build-then-assert](tickets/0077-guard-test-seam.md) — **各消费链**（测公开行为，不建模块探针）；**补 SOP 坏值 fixture**（`bad/sop/sop-featured-not-bool` + BAD_CASE_EXPECT 钉 origin+label+契约，套件 104→105）；**ADR-0014 自测模式不适用**（模板侧无等价 seam，记已知差异）。红绿：fixture 先红（缺期望）→ 期望转绿；变异 → 四条坏值断言同红（site 156/159 + sop 104/105）。frontier = 0078。
+- [featured 类型守卫现状事实底座（盘点）](tickets/0072-featured-guard-facts.md) — 守卫四件套（isset + %T + ne bool + errorf）三处**逐字同构**，差异仅在数据访问路径、遍历模式与消息前缀；谓词三形态各有真实差异（无条件 where / 条件 where / 单页 eq）；坏值覆盖文章 2 例 + 产品 1 例，**SOP 侧零 fixture 零钉子串**；`.Params` 键小写化（官方声明）vs 数据 map 键原样，本仓三源全小写故当前不可观测；partial 可 return / 可 errorf、查找序站点层优先，站点→主题调用有先例、**theme→site 零先例**。缺口 8 条（SOP 坏例 / SOP 消息钉子 / 徽标坏值无直接断言 / where 行为差异无守门 / 键大小写 / 遍历形态 / dict nil 陷阱 / 徽标跨层归属）。
+- [守卫单模块的职责边界：只做类型校验，还是校验与谓词合一](tickets/0073-guard-module-scope-boundary.md) — **谓词判契约（各有其主：ADR-0009 精选链 / ADR-0006 条件过滤 / ADR-0012 渲染判定）、边界 (a) 只做类型校验**（合并 = 为三种真实差异参数化，0061 枪毙的「搬家」）；文档 = **双向互指**（模块 docstring 为执行契约唯一定义处，badge 与两处数据准备各留指针）；边界文本 = **校验器不是选择器/取数器**（不拥有取数/选择/渲染/消息措辞；遍历归 0074）；测试 = **零增减零改写**（三断言原样存活、模块无专属断言、SOP 缺口留 0077；验收含变异等价）。连锁：0075 张力消解（降级确认票）、雾区「谓词合一开销」负向了结、0074 收窄。→ **ADR-0015 决策 1–4**。
+- [守卫模块的形态与接口：入参形态、未声明归属、返回语义](tickets/0074-guard-module-interface-form.md) — **条目语义**（调用方传容器、四件套全收敛、遍历留调用方）；**不自校验**（内部模板接口、三处字面量，docstring 声明必填）；**无返回**（纯执法）。与已落地实现一致，零代码改动。→ **ADR-0015 决策 5–7**。
+- [守卫模块的落点与分层：站点层还是主题层](tickets/0075-guard-module-layer-placement.md) — **站点层**（ADR-0008 判据；三消费方全站点层；徽标不消费 → 零 theme→site 新先例，主题层保持自洽）；**记重开触发**（徽标谓词收敛或主题层消费方 → 重开分层决策；ADR-0012 的否决是上下文特定的）。docstring 已落。→ **ADR-0015 决策 8–9**。
+- [守卫的错误消息与命名契约：三前缀统一还是参数化](tickets/0076-guard-message-and-naming-contract.md) — **保留 origin 三前缀**（逐字、测试零 churn、链身份不丢）；**label 归调用方格式化**（定位值不是措辞，「条目」留在 SOP 链）；**`featured-guard.html`** 定案、术语表不收「守卫」词条、CONTEXT.md 精选条加 guard 指针。零代码改动（指针已落）。→ **ADR-0015 决策 10–12**。
+- [守卫模块的测试缝：单模块如何被 build-then-assert](tickets/0077-guard-test-seam.md) — **各消费链**（测公开行为，不建模块探针）；**补 SOP 坏值 fixture**（`bad/sop/sop-featured-not-bool` + BAD_CASE_EXPECT 钉 origin+label+契约，套件 104→105）；**ADR-0014 自测模式不适用**（模板侧无等价 seam，记已知差异）。红绿：fixture 先红（缺期望）→ 期望转绿；变异 → 四条坏值断言同红（site 156/159 + sop 104/105）。→ **ADR-0015 决策 13–15**。
 
 ## Not yet specified
 

@@ -34,3 +34,5 @@ ADR-0009 把文章侧 featured 做成首页精选块后，在 Consequences 边�
 - 术语：`CONTEXT.md`「精选 (Featured)」条扩一句（三面呈现 + `featured-badge.html` 指针）；导航：`AGENTS.md` 坑点 11 补四条纪律（seam 只服务首页 / 坏值执法全局托管 / 徽标唯一实现处 / 两条负向边界）+ §7 速查表加 `featured-badge.html` 行。
 - **施工批（待项目负责人指示）**：`featured-badge.html` partial + 三处调用 + fixture 三面断言（挂 `tests/assert_site_contracts.py` 文章精选类）+ 变异检验；**视觉值（颜色 / 字号 / 图标）归视觉层，不在本 ADR**。`post-items.html` docstring 收紧随本 ADR 收口批已落地。
 - 边界：数据条 / 分类·标签页 / meta 层三条负向随本 ADR 耐久化，重开触发条件见各决策条；精选的跨类契约（文章 + 产品同名同义）不变（ADR-0009）。
+
+**2026-10-26 指针**：本 ADR 决策 2 的「坏值执法继承 `post-items.html:32-38` 的全局 errorf 循环」已收敛——类型执法现归 `layouts/partials/featured-guard.html`（**ADR-0015**，工单 0073–0077）；徽标谓词与该守卫的关系按「语义共享、实现独立」执行。本 ADR 正文不改（历史记录）。

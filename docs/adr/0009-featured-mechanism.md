@@ -37,3 +37,5 @@
 **2026-10-22 指针**：本 ADR Consequences 边界条「搜索索引（index.json）是否投影 featured」已由 **ADR-0010** 定案——**不投影**（无消费方：fastsearch keys 不含、结果 UI 只渲染标题；精选归首页编排的本 ADR 语义不变）。本 ADR 正文不改（历史记录）。
 
 **2026-10-23 指针**：本 ADR Consequences 边界条留的三条雾区（「精选」徽标内容层呈现 / 首页数据条区分精选 / 分类页消费精选）已由 **ADR-0012** 定案——徽标**做**（三面 + `featured-badge.html` 契约 + fixture 三面锚定）、数据条与分类·标签页**负向**、meta 层**不投影**、`post-items.html` seam 收紧为「只服务首页精选链」。本 ADR 正文不改（历史记录）。
+
+**2026-10-26 指针**：本 ADR 决策 1 的「非布尔即 errorf」执法与决策 5 的 `_content.gotmpl` 条件传键已收敛为单模块 `layouts/partials/featured-guard.html`（**ADR-0015**，工单 0073–0077）——Consequences「改精选 = 改 `post-items.html` + `index.html` 调用点」相应扩展为「+ `featured-guard.html`」。本 ADR 正文不改（历史记录）。
