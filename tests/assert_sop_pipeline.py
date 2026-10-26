@@ -69,6 +69,7 @@ FROZEN_SLUGS = [
 # 失败也绿灯」（如 missing-slug 其实死于缺 note）。
 BAD_CASE_EXPECT = {
     "sop-dead-entry": "死条目",
+    "sop-featured-not-bool": "SOP 发布管线：条目 featured-not-bool-test 的 featured 必须是布尔值",
     "sop-missing-date": "缺必填字段",
     "sop-missing-slug": "缺必填字段",
     "sop-missing-categories": "缺必填字段",

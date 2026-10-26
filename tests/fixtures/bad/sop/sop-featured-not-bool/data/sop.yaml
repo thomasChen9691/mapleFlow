@@ -1,0 +1,6 @@
+# 契约坏用例：featured 写成字符串（非布尔）→ 构建必须失败（工单 0077）
+- slug: featured-not-bool-test
+  note: FEAT_BAD.md
+  date: 2026-01-01T00:00:00+08:00
+  categories: [运维]
+  featured: "true"

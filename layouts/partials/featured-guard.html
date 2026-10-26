@@ -13,6 +13,11 @@
     · 渲染呈现（徽标 DOM 归 featured-badge.html）
     · 消息前缀措辞（origin 由调用方逐字传入；模块只承担 errorf 骨架）
 
+  落点与重开触发（工单 0075 决议）：**站点层**——契约执法因数据结构而变
+  （ADR-0008 判据），三消费方全在站点层、徽标不消费 → 零 theme→site 新先例。
+  **重开触发**：徽标谓词收敛或出现主题层消费方 → 重开分层决策（ADR-0012
+  的 theme→site 否决是上下文特定的，不是永久禁令）。
+
   契约（ADR-0009 决策 1；构建期 errorf，不给缺省兜底）：
     · featured 只认布尔 true；**未声明合法**（= 非精选，静默跳过）
     · 字段存在但类型非 bool → errorf 构建失败
@@ -37,8 +42,10 @@
   语义共享、实现独立：themes/maplemod/layouts/partials/featured-badge.html
   的谓词 eq .Params.featured true——同一契约的另一侧（ADR-0012 决策 2）。
 
-  测试：零新增断言（0073 决议 Q4）——三条现有坏值断言经消费链间接覆盖
-  （文章 string/int + 产品 string）；SOP 侧缺口归工单 0077。
+  测试（工单 0077 决议）：**各消费链**——三条链的构建失败即本模块行为，
+  不建模块探针（测公开行为，不测 partial 内部 API）。坏值断言四条：文章
+  string/int + 产品 string + SOP string（`assert_sop_pipeline.py` 的 bad 用例，
+  0077 补）；变异口径 = 禁用本文件的类型检查 → 四条同时红。
 */ -}}
 {{- if isset .item "featured" -}}
   {{- $v := index .item "featured" -}}
