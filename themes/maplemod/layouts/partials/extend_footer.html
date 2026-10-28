@@ -3,7 +3,8 @@
   ============================================================
   引擎源码在 assets/js/mf-reveal/：
     · scroll-in.js  滚动进场（.reveal → is-in 的 IO 写入方）
-    · filter.js     产品索引筛选（自动注册 .mf-index roots）
+    · filter.js     产品索引筛选（mountFilter 扫 .mf-index roots）
+  注册缝唯一在 app.js（工单 0083 决议）：引擎 import 无副作用，由入口显式挂载；
   本文件只做 js.Build 打包与引用，不承载行为逻辑；
   DOM 契约的定义处是各引擎文件头 docstring（工单 0022 决议②）。
   测试：tests/assert_reveal.mjs（行为）+ tests/assert_product_states.py（产物）。

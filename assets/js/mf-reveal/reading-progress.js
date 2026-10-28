@@ -67,10 +67,5 @@ export function initReadingProgress(doc) {
   update();
 }
 
-/** import 时自动注册（浏览器与 jsdom 均以全局 document 为宿主） */
-export function autoInit() {
-  if (typeof document === 'undefined') { return; }
-  initReadingProgress(document);
-}
-
-autoInit();
+/* 注册缝在 assets/js/mf-reveal/app.js（工单 0083 决议）：
+   本模块 import 无副作用，挂载由入口显式调用。 */

@@ -1,0 +1,67 @@
+{{- /*
+  post-card.html —— 文章卡片（工单 0080 / 0081 决议）
+  ============================================================
+  单一实现、单一类名、**零参数**：卡片只收一个 Page，输出固定骨架。
+
+  入参：Page（直接传，与 featured-badge.html 同风格）。
+
+  DOM 契约（本 docstring 是定义处）：
+    article.post-card
+      figure.entry-cover?        有 cover.image 且未隐藏时（cover.html 自守）
+      header.entry-header
+        h2.entry-hint-parent     标题 + 草稿标记? + 精选徽标?
+      div.entry-content?         hideSummary 非真时（摘要；Truncated 才补省略号）
+      footer.entry-footer?       hideMeta 非真时（post_meta compact）
+      a.entry-link               整卡点击层（aria-label + href）
+
+  父容器契约（0081 决议，**载重**）：
+    · 卡片**不自带布局**——网格由父容器提供；
+    · 卡片必须是网格容器的**直接子元素**：列表页挂在 main 下、首页挂在
+      .mf-posts 下。两处 :has() 规则都用直接子选择器
+      （main:has(> .post-card) / .mf-posts:has(> .post-card)）区分面。
+      历史实现靠「两个不同类名」当面的判别器（custom.css 旧注释写着
+      「首页…类名不同，不会命中这里」）；类名统一后该判别器消失，改由
+      DOM 位置承担——**改动本契约前先读 custom.css 第 15 节**，否则
+      首页 main 会被误变成网格。
+
+  零参数（0080 / 0081 决议）：cover / 草稿标记 / hideMeta 三处不暴露开关，
+  统一「总是执行、条件自守」——三处差异在生产路径当前全不可观测
+  （全站无 cover、草稿不进生产构建、无人设 hideMeta）。草稿标记保留：
+  只在 hugo server -D 下可见，服务本地预览。
+
+  边界：本 partial 只渲染**单页**，不做选择 / 截断 / featured 判定 / 补集
+  （那些归 post-items.html，ADR-0009）。
+
+  测试：tests/assert_site_contracts.py 的 assert_post_card（结构契约 +
+  跨面等价）。
+*/ -}}
+{{- $p := . -}}
+<article class="post-card">
+  {{- $isHidden := ($p.Param "cover.hiddenInList") | default ($p.Param "cover.hidden") | default false }}
+  {{- partial "cover.html" (dict "cxt" $p "IsSingle" false "isHidden" $isHidden) }}
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">
+      {{- $p.Title }}
+      {{- if $p.Draft }}
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" fill="currentColor">
+          <path
+            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+      {{- end }}
+      {{- partial "featured-badge.html" $p }}
+    </h2>
+  </header>
+  {{- if ne ($p.Param "hideSummary") true }}
+  <div class="entry-content">
+    <p>{{ $p.Summary | plainify | htmlUnescape }}{{ if $p.Truncated }}...{{ end }}</p>
+  </div>
+  {{- end }}
+  {{- if not ($p.Param "hideMeta") }}
+  <footer class="entry-footer">
+    {{- partial "post_meta.html" (dict "page" $p "compact" true) -}}
+  </footer>
+  {{- end }}
+  <a class="entry-link" aria-label="post link to {{ $p.Title | plainify }}" href="{{ $p.Permalink }}"></a>
+</article>

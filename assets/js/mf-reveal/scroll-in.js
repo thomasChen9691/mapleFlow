@@ -29,28 +29,31 @@ export function initScrollIn(doc) {
   const els = doc.querySelectorAll('.reveal');
   if (!els.length) { return; }
 
-  const reduce = prefersReducedMotion(win);
-  if (reduce || !('IntersectionObserver' in win)) {
+  try {
+    const reduce = prefersReducedMotion(win);
+    if (reduce || !('IntersectionObserver' in win)) {
+      els.forEach((el) => el.classList.add('is-in'));
+      return;
+    }
+
+    const io = new win.IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+
+    els.forEach((el) => io.observe(el));
+  } catch (err) {
+    /* fail-open（0084 决议）：异常时走与「无 IO」同一条降级路径——内容
+       不得因引擎失败而消失（ADR-0002）。app.js 的 try/catch 只隔离其他
+       引擎，保不住这一条：本引擎一炸，.reveal 就永远停在 opacity:0。 */
     els.forEach((el) => el.classList.add('is-in'));
-    return;
+    console.error('[mf-reveal] scroll-in 降级为直落终态（内容可见优先）', err);
   }
-
-  const io = new win.IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-in');
-        io.unobserve(entry.target);
-      }
-    });
-  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
-
-  els.forEach((el) => io.observe(el));
 }
 
-/** import 时自动注册（浏览器与 jsdom 均以全局 document 为宿主） */
-export function autoInit() {
-  if (typeof document === 'undefined') { return; }
-  initScrollIn(document);
-}
-
-autoInit();
+/* 注册缝在 assets/js/mf-reveal/app.js（工单 0083 决议）：
+   本模块 import 无副作用，挂载由入口显式调用。 */

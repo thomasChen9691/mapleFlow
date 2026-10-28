@@ -122,6 +122,20 @@ function observeFinish(fn) {
         && a.prefersReducedMotion !== b.prefersReducedMotion);
 }
 
+// ---- loadMounted：加载 + 挂载一次完成（0084 决议：引擎去自注册后的统一入口）
+{
+    const dom = await freshDom();
+    let mounted = 0;
+    let got = null;
+    const mod = await dom.loadMounted('assets/js/mf-reveal/scroll-in.js', (m) => {
+        mounted += 1;
+        got = m;
+    });
+    check('loadMounted 加载后调用挂载函数恰好一次，并返回模块',
+        mounted === 1 && got === mod && typeof mod.initScrollIn === 'function',
+        `mounted=${mounted} sameModule=${got === mod}`);
+}
+
 console.log(`\n${passed}/${passed + failed} passed`);
 if (failed) {
     console.log('RED — %d 个行为未满足', failed);

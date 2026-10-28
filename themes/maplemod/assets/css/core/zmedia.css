@@ -43,10 +43,10 @@
 }
 
 @media (prefers-reduced-motion) {
-    /* terms; profile-mode; post-single; post-entry; post-entry; search; search */
+    /* terms; profile-mode; post-single; post-card; search; search */
     .terms-tags a:active,
     .button:active,
-    .post-entry:active,
+    .post-card:active,
     .top-link,
     #searchResults .focus,
     #searchResults li:active {

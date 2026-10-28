@@ -5,7 +5,9 @@
  * （`.reveal → is-in` 的契约定义处在 scroll-in.js；两文件合起来是 reveal 协议。
  *   product-index 渲染 seam 是消费者，只负责产出符合本契约的 DOM。）
  *
- * 注册方式（工单 0022 决议③）：import 时自动扫描 `.mf-index` roots 并各自绑定，
+ * 注册方式（工单 0022 决议③；注册缝 2026-10 下沉到 app.js，0083 决议）：
+ *   `mountFilter(doc)` 扫描 `.mf-index` roots 并各自绑定；本模块 **import 无副作用**，
+ *   由入口 `app.js` 显式调用。选择器留本文件（与契约同处），入口不持有选择器。
  *   不依赖 uid —— uid 仍是渲染 seam 的 DOM id 契约（必填、兼深链锚），
  *   但不再是本引擎的注册键。同页多实例各管各的按钮与计数。
  *
@@ -96,10 +98,14 @@ export function initFilter(root) {
   apply(false);
 }
 
-/** import 时自动注册（浏览器与 jsdom 均以全局 document 为宿主） */
-export function autoInit() {
-  if (typeof document === 'undefined') { return; }
-  document.querySelectorAll('.mf-index').forEach(initFilter);
-}
+/* 注册缝在 assets/js/mf-reveal/app.js（工单 0083 决议）：
+   本模块 import 无副作用，挂载由入口显式调用。 */
 
-autoInit();
+/**
+ * 挂载入口（注册缝在 app.js）：扫描当前 document 的全部 .mf-index roots。
+ * 选择器留本模块（与上面的 DOM 契约同文件），入口只负责调用——
+ * 「挂点发现权归引擎、注册点归 app.js」是 0083 决议的边界。
+ */
+export function mountFilter(doc) {
+  doc.querySelectorAll('.mf-index').forEach(initFilter);
+}

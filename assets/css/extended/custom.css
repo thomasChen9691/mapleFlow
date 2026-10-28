@@ -831,15 +831,18 @@ span.mf-cta[aria-disabled="true"] {
 .project-card p { margin: 0; font-size: .9rem; color: var(--secondary); }
 
 /* ---------- 15. 文章列表卡片 ---------- */
-/* 分类页 / 标签页 / 归档页：沿用主题结构，文章直接挂在 main 下，用 :has 把 main 变成网格。
-   首页走 layouts/index.html，文章包在 .mf-posts 里且类名不同，不会命中这里。
+/* 分类页 / 标签页 / 归档页：文章卡片直接挂在 main 下，用 :has 把 main 变成网格。
+   首页走 layouts/index.html，卡片包在 .mf-posts 里——**不是 main 的直接子元素**，
+   故下面的直接子选择器（main:has(> .post-card)）不会命中首页。
+   注：类名统一（工单 0080-0081 决议）之前靠「两个不同类名」当面的判别器；
+   现在判别器是 DOM 位置，改选择器时别退回后代选择器，否则首页 main 会被误变网格。
 
    单条场景的塌陷问题（实测 /categories/k8s.html 曾出现卡片 398px 高、正文仅 49px、
    空白占卡片 75%）——真实根因经过 CDP 逐层追查，**不是**网格列数：
 
      主题 main.css:3  .main { min-height: calc(100vh - header - footer) }
        → 900px 视口下 main 被强制撑到 780px
-     + 本文件 .post-entry { height: 100% }
+     + 本文件 .post-card { height: 100% }
        → 单条时网格只有 1 行，height:100% 解析到被 min-height 撑高的 main（780px）
        → 卡片被拉到 398px，内部大片空白
 
@@ -847,15 +850,15 @@ span.mf-cta[aria-disabled="true"] {
    ① 网格用 auto-fit（条目不足时折叠空轨道，避免预留空列）；
    ② height:100% 只保留给「真正需要同行等高」的多列场景，单条时显式取消。
    容器限宽（1 条时收缩到单列宽）作为视觉收口，避免卡片被 1fr 拉宽。 */
-main:has(.post-entry) {
+main:has(> .post-card) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
   align-items: start;
 }
-main:has(.post-entry) .home-info { grid-column: 1 / -1; }
-main:has(.post-entry) .page-header { grid-column: 1 / -1; }
-main:has(.post-entry) .page-footer { grid-column: 1 / -1; }
+main:has(> .post-card) .home-info { grid-column: 1 / -1; }
+main:has(> .post-card) .page-header { grid-column: 1 / -1; }
+main:has(> .post-card) .page-footer { grid-column: 1 / -1; }
 
 /* 首页文章网格 */
 .mf-posts {
@@ -865,20 +868,25 @@ main:has(.post-entry) .page-footer { grid-column: 1 / -1; }
   align-items: start;
 }
 
+/* 首页网格卡清掉主题的 margin-bottom：主题 .post-card 带 `margin-bottom: var(--gap)`
+   （列表页历史上靠它拉开间距），而首页容器用 gap 排版——类名统一后首页卡第一次
+   吃到这条，行间会多出 1rem。清零以保住收敛前的视觉（工单 0080「视觉零 diff」）。
+   两面的间距要统一是另一件事，另开视觉批，别在这里顺手改。 */
+.mf-posts > .post-card { margin-bottom: 0; }
+
 /* 只有 1 条时：容器收缩到单列宽（= 三列布局下的列宽），卡片不被 1fr 拉宽拉高 */
-main:has(.post-entry:only-of-type),
-.mf-posts:has(> .mf-post:only-child) {
+main:has(> .post-card:only-of-type),
+.mf-posts:has(> .post-card:only-child) {
   max-width: calc((100% - 2rem) / 3);
 }
 
 /* 窄屏本来就只有一列，不需要限宽 */
 @media (max-width: 768px) {
-  main:has(.post-entry:only-of-type),
-  .mf-posts:has(> .mf-post:only-child) { max-width: none; }
+  main:has(> .post-card:only-of-type),
+  .mf-posts:has(> .post-card:only-child) { max-width: none; }
 }
 
-.post-entry,
-.mf-post {
+.post-card {
   position: relative;
   background: var(--entry);
   border: 1px solid var(--border);
@@ -901,30 +909,25 @@ main:has(.post-entry:only-of-type),
 
 /* 同行等高：仅在「同一行有多于一张卡」时才需要拉伸。
    用 :has 判断容器内是否存在相邻兄弟卡片，单条时不生效。 */
-main:has(.post-entry + .post-entry) > .post-entry,
-.mf-posts:has(> .mf-post + .mf-post) > .mf-post {
+main:has(> .post-card + .post-card) > .post-card,
+.mf-posts:has(> .post-card + .post-card) > .post-card {
   height: 100%;
 }
-.post-entry:hover,
-.mf-post:hover,
-.post-entry:focus-within,
-.mf-post:focus-within {
+.post-card:hover,
+.post-card:focus-within {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
   border-color: var(--primary);
   transition-timing-function: var(--ease-out);
 }
 /* 整卡可点（.entry-link 覆盖层），按下时给出收缩反馈 */
-.post-entry:active,
-.mf-post:active {
+.post-card:active {
   transform: translateY(-1px) scale(.995);
   transition-duration: var(--dur-0);
   box-shadow: var(--shadow-sm);
 }
-.post-entry .entry-header h2,
-.mf-post .entry-header h2 { font-size: 1.05rem; }
-.post-entry .entry-content,
-.mf-post .entry-content { color: var(--secondary); font-size: .9rem; }
+.post-card .entry-header h2 { font-size: 1.05rem; }
+.post-card .entry-content { color: var(--secondary); font-size: .9rem; }
 
 /* ---------- 16. 文章详情页容器 ---------- */
 .post-single {
@@ -1051,7 +1054,7 @@ main:has(.post-entry + .post-entry) > .post-entry,
      transform / opacity——不与 reveal 协议抢属性；
    · 包在 prefers-reduced-motion: no-preference 内：减弱动效偏好下瞬时切换
      （与 1b 动效语言「减弱动效下定格最终画面」一致）；
-   · 卡片（.post-entry / .mf-post）的动效列表来自 section 15 的 --card-motion
+   · 卡片（.post-card）的动效列表来自 section 15 的 --card-motion
      变量（单一真源），这里只组合颜色两项——不再整份抄写，避免 15↔16d 漂移；
      reduce 下本段不生效时，section 15 的 var(--card-motion) 仍保住按压反馈；
    · 不覆盖、切换时瞬时变色的元素（已知取舍）：.mf-btn / .mf-tag / .mf-cta /
@@ -1080,8 +1083,7 @@ main:has(.post-entry + .post-entry) > .post-entry,
   }
   /* 卡片：动效列表来自 section 15 的 --card-motion（单一真源），此处只组合颜色项；
      reduce 下本段不生效，section 15 的 var(--card-motion) 仍保住按压反馈 */
-  .post-entry,
-  .mf-post {
+  .post-card {
     transition: var(--card-motion),
                 background-color var(--dur-2) var(--ease-std),
                 color var(--dur-2) var(--ease-std);
@@ -1484,8 +1486,7 @@ html { scrollbar-gutter: stable; }           /* 滚动条槽常驻：锁滚/去�
 /* ④ 排版微进阶 */
 .mf-hero h1,
 .post-single .post-title,
-.post-entry .entry-header h2,
-.mf-post .entry-header h2 { text-wrap: balance; }   /* 多行标题均衡断行 */
+.post-card .entry-header h2 { text-wrap: balance; }   /* 多行标题均衡断行 */
 .post-content p { text-wrap: pretty; }              /* 减少末行孤字（中文长段落） */
 ::selection { background: rgba(63, 86, 201, .22); } /* 兜底：浅色主色 22% */
 ::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }
@@ -1523,7 +1524,7 @@ img { height: auto; }
 
   html, body { background: #fff !important; }
   body { color: #000 !important; }
-  .post-single, .mf-post, .post-entry {
+  .post-single, .post-card {
     background: none !important;
     border: 0 !important;
     box-shadow: none !important;

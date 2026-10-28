@@ -19,7 +19,7 @@
  * 跑法：
  *   npm ci && node tests/assert_reveal.mjs
  */
-import { check, finish, installDom, loadFresh } from './dom.mjs';
+import { check, finish, installDom, loadFresh, loadMounted } from './dom.mjs';
 /** 筛选控件条：镜像 product-index.html 渲染 seam 的 DOM 契约（词汇归 ADR-0006） */
 function filtersBar() {
   return `<div class="mf-filters">
@@ -60,13 +60,34 @@ function clickFilter(dom, group, value) {
 
 console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 
+// ---- RGR-0：引擎 import 无副作用；注册缝在 app.js（0083 决议）----
+// 「注册点唯一」的可观测形态：加载引擎模块本身不改变 DOM；必须显式调用
+// 导出函数才生效。历史实现是 import 期 autoInit() 自注册——那让「谁挂了谁」
+// 散落在各引擎尾部，app.js 只剩三行 import。
+{
+  const dom = installDom('<div class="reveal" id="r0"></div>');
+  const mod = await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  const el = dom.window.document.getElementById('r0');
+  check(
+    'RGR-0a 引擎 import 不产生副作用（.reveal 未被自动点亮）',
+    !el.classList.contains('is-in'),
+    'import 期自注册仍在写 is-in',
+  );
+  mod.initScrollIn(dom.window.document);
+  check(
+    'RGR-0b 显式调用 initScrollIn 后才点亮（无 IO 降级直落终态）',
+    el.classList.contains('is-in'),
+    'explicit initScrollIn did not light up .reveal',
+  );
+}
+
 // ---- RGR-1：引擎存在且 import 时自动注册 roots，初始 apply(false) 写计数 ----
 {
   const dom = installDom(sampleIndex());
-  await loadFresh('assets/js/mf-reveal/filter.js');
+  await loadMounted('assets/js/mf-reveal/filter.js', (m) => m.mountFilter(document));
   const count = dom.window.document.querySelector('.mf-count');
   check(
-    'RGR-1 import 即自动注册 .mf-index roots，初始计数为「显示 3 / 3」',
+    'RGR-1 挂载即注册 .mf-index roots，初始计数为「显示 3 / 3」',
     count.textContent === '显示 3 / 3',
     `got count=${JSON.stringify(count.textContent)}`,
   );
@@ -75,7 +96,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 // ---- RGR-2：点击切换 state，同值再点回 all，组内 aria-pressed 互斥 ----
 {
   const dom = installDom(sampleIndex());
-  await loadFresh('assets/js/mf-reveal/filter.js');
+  await loadMounted('assets/js/mf-reveal/filter.js', (m) => m.mountFilter(document));
   const doc = dom.window.document;
   const allBtn = doc.querySelector('.mf-filter[data-group="kind"][data-value="all"]');
   const wfBtn = doc.querySelector('.mf-filter[data-group="kind"][data-value="workflow"]');
@@ -97,7 +118,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 // ---- RGR-3：is-hidden 切换、计数随过滤更新、空态显隐 ----
 {
   const dom = installDom(sampleIndex());
-  await loadFresh('assets/js/mf-reveal/filter.js');
+  await loadMounted('assets/js/mf-reveal/filter.js', (m) => m.mountFilter(document));
   const doc = dom.window.document;
   const row = (id) => doc.getElementById(id);
   const count = doc.querySelector('.mf-count');
@@ -132,7 +153,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 // ---- RGR-4：animate 路径直写 is-in，--mf-i 第 9 条起截断为 8 ----
 {
   const dom = installDom(sampleIndex(12));
-  await loadFresh('assets/js/mf-reveal/filter.js');
+  await loadMounted('assets/js/mf-reveal/filter.js', (m) => m.mountFilter(document));
   const doc = dom.window.document;
   const rows = [...doc.querySelectorAll('.mf-row')];
   clickFilter(dom, 'kind', 'all');
@@ -159,7 +180,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
   const timers = [];
   dom.window.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
   dom.window.clearTimeout = () => {};
-  await loadFresh('assets/js/mf-reveal/filter.js');
+  await loadMounted('assets/js/mf-reveal/filter.js', (m) => m.mountFilter(document));
 
   const doc = dom.window.document;
   const list = doc.querySelector('.mf-rows');
@@ -185,7 +206,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 {
   const dom = installDom(sampleIndex());
   dom.window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
-  await loadFresh('assets/js/mf-reveal/filter.js');
+  await loadMounted('assets/js/mf-reveal/filter.js', (m) => m.mountFilter(document));
   const doc = dom.window.document;
   const list = doc.querySelector('.mf-rows');
   const count = doc.querySelector('.mf-count');
@@ -207,7 +228,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 {
   /* 7a：无 IntersectionObserver（jsdom 默认缺席）→ 全量直写 is-in */
   const dom = installDom(`<div><p class="reveal" id="r1">a</p><p class="reveal" id="r2">b</p></div>`);
-  await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  await loadMounted('assets/js/mf-reveal/scroll-in.js', (m) => m.initScrollIn(document));
   check(
     'RGR-7a 无 IntersectionObserver：全部 .reveal 直写 is-in 终态',
     dom.window.document.getElementById('r1').classList.contains('is-in')
@@ -225,7 +246,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
     unobserve(el) { unobserved.push(el); }
     disconnect() {}
   };
-  await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  await loadMounted('assets/js/mf-reveal/scroll-in.js', (m) => m.initScrollIn(document));
   const doc = dom.window.document;
   check(
     'RGR-7b1 有 IO：两个 .reveal 都被 observe，初始不亮',
@@ -252,7 +273,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
     unobserve() {}
     disconnect() {}
   };
-  await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  await loadMounted('assets/js/mf-reveal/scroll-in.js', (m) => m.initScrollIn(document));
   const doc = dom.window.document;
   check(
     'RGR-7c 减弱动效：不构造 IO、全部直落 is-in',
@@ -266,7 +287,7 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
 // ---- RGR-8：同页多实例 roots 各自独立（state/计数/aria 不外溢）----
 {
   const dom = installDom(`<div>${sampleIndex(3, 'mf-idx-a')}${sampleIndex(3, 'mf-idx-b')}</div>`);
-  await loadFresh('assets/js/mf-reveal/filter.js');
+  await loadMounted('assets/js/mf-reveal/filter.js', (m) => m.mountFilter(document));
   const doc = dom.window.document;
   const rootA = doc.getElementById('mf-idx-a');
   const rootB = doc.getElementById('mf-idx-b');
@@ -315,9 +336,9 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
   content.getBoundingClientRect = () => ({ top: -600, height: 2000, bottom: 1400, left: 0, right: 0, width: 0 });
   Object.defineProperty(win, 'innerHeight', { value: 800, configurable: true });
   Object.defineProperty(win, 'scrollY', { value: 900, configurable: true, writable: true });
-  await loadFresh('assets/js/mf-reveal/reading-progress.js');
+  await loadMounted('assets/js/mf-reveal/reading-progress.js', (m) => m.initReadingProgress(document));
   const v = bar.style.getPropertyValue('--mf-progress');
-  check('RGR-10a import 即按当前位置写入 --mf-progress（900 滚 / 可滚 1200 → 0.500）',
+  check('RGR-10a 挂载即按当前位置写入 --mf-progress（900 滚 / 可滚 1200 → 0.500）',
     Math.abs(parseFloat(v) - 0.5) < 1e-3, `got "${v}"`);
 }
 
@@ -328,6 +349,49 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
   let threw = false;
   try { mod.initReadingProgress(dom.window.document); } catch { threw = true; }
   check('RGR-11 缺挂点时不抛错（非文章页静默降级）', !threw);
+}
+
+// ---- RGR-12：scroll-in 自身失败时 fail-open（0084 决议；ADR-0002）----
+// 隔离（app.js 的 try/catch）只保其余引擎，保不住「scroll-in 自己炸了，
+// 内容停在 opacity:0」。降级路径与「无 IntersectionObserver」同一条：
+// 全量直写 is-in。这里用 matchMedia 抛错来逼出异常分支。
+{
+  const dom = installDom('<div class="reveal" id="r12"></div>');
+  const mod = await loadFresh('assets/js/mf-reveal/scroll-in.js');
+  dom.window.matchMedia = () => { throw new Error('boom'); };
+  let threw = false;
+  try { mod.initScrollIn(dom.window.document); } catch { threw = true; }
+  const el = dom.window.document.getElementById('r12');
+  check('RGR-12a scroll-in 内部失败不外抛（不打断挂载点）', !threw, '异常逃逸到调用方');
+  check('RGR-12b 失败时内容仍可见（fail-open 直写 is-in）',
+    el.classList.contains('is-in'), '停在 opacity:0 = 内容消失');
+}
+
+// ---- RGR-13：app.js 装配完整性（0084 决议；防「漏挂一个引擎」的假绿）----
+// 行为面而非源码面：装一个含三类挂点的 DOM，加载生产入口 app.js，
+// 三个副作用必须都出现。只 import 不挂载（漏进 ENGINES 表）会红——
+// 源码扫描式的检查在这里不够：`import './x.js'` 也会命中。
+{
+  const dom = installDom(`
+    <div class="reveal" id="r13"></div>
+    <div class="mf-progress" aria-hidden="true"><span></span></div>
+    <div class="post-content">x</div>
+    ${sampleIndex(2, 'mf-idx-r13')}
+  `);
+  const content = dom.window.document.querySelector('.post-content');
+  content.getBoundingClientRect = () => ({ top: 0, height: 2000, bottom: 2000, left: 0, right: 0, width: 0 });
+  Object.defineProperty(dom.window, 'innerHeight', { value: 800, configurable: true });
+  Object.defineProperty(dom.window, 'scrollY', { value: 0, configurable: true, writable: true });
+  await loadFresh('assets/js/mf-reveal/app.js');
+  const doc = dom.window.document;
+  const lit = doc.getElementById('r13').classList.contains('is-in');
+  const counted = doc.querySelector('.mf-count').textContent === '显示 2 / 2';
+  const progress = doc.querySelector('.mf-progress').style.getPropertyValue('--mf-progress') !== '';
+  check(
+    'RGR-13 app.js 装配三个引擎（点亮 / 筛选计数 / 进度变量都出现）',
+    lit && counted && progress,
+    `lit=${lit} counted=${counted} progress=${progress}`,
+  );
 }
 
 finish();

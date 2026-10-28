@@ -75,6 +75,19 @@ export function loadFresh(rel) {
 }
 
 /**
+ * 加载并挂载（0084 决议）：cache-bust 重求值后调用挂载函数，返回模块。
+ * 引擎去自注册（0083 决议）后「加载」与「挂载」是两步——本 helper
+ * 把两步绑成一次调用，各用例不必各写两行，也让「加载了但忘了挂」这种
+ * 假绿难以发生（忘了挂时断言会红，而不是静默空跑）。
+ * 注意：mount 收到模块对象；少数用例还要读 computeProgress 之类，故返回模块。
+ */
+export async function loadMounted(rel, mount) {
+    const mod = await loadFresh(rel);
+    mount(mod);
+    return mod;
+}
+
+/**
  * 装配「真 document + 注入 location 桩」的 env 对象（入口引擎纯函数缝的模式）。
  * location 是注入桩——env 契约要求可替换，不是 dom.window.location。
  */

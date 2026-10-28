@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """站点契约的产物断言（原名 assert_product_states.py——2026-10 职责扩张后改名，
-ADR 与历史 handoff 里的旧名即本脚本）。覆盖十五类职责：
+ADR 与历史 handoff 里的旧名即本脚本）。覆盖十六类职责：
 产品状态模块（ADR-0004）· 产品索引接口（ADR-0006）· 主题契约 B7-B14（ADR-0008；
 B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构建）
 · reveal 产物面（ADR-0007）· 文章精选（候选 7 工单 0036-0040 决议）· 搜索索引投影
@@ -16,7 +16,9 @@ B14 为候选 12 工单 0050 决议④的搜索入口菜单文案，挂真实构
 不指向自身）· 分页页码（2026-10-24 D3：页码链 + aria-current、单页不出分页器）
 · 触屏搜索入口（2026-10-24 C 批：全站 .mf-search-link 图标链接 + href 指向
 search 页）· 搜索浮层（2026-10-24 ADR-0013：mf-search-overlay 构件全站恒加载 /
-两个注入 URL 的生产子路径 / 浮层骨架全站在且默认 hidden / fuse 配置 parity）。
+两个注入 URL 的生产子路径 / 浮层骨架全站在且默认 hidden / fuse 配置 parity）
+· 文章卡片单模块（2026-10 架构深化 0080-0082：四面同卡 / 单一类名 / 四段骨架 /
+父容器位置 / 跨面等价 / 类名↔CSS 落地牙）。
 
 测试缝（预先商定，勿在未确认的缝上写测试）：
   · 渲染产物 seam —— fixture 构建的 products.html（控件态 / 文案 / data-price）
@@ -45,6 +47,9 @@ search 页）· 搜索浮层（2026-10-24 ADR-0013：mf-search-overlay 构件全
   · 调用方 seam —— 经真实调用链（短代码 / 直接调 partial）触发的契约失败
   · 空态 seam —— 产品数据整体缺席时渲染「暂无资源」而非崩溃或静默空页
   · 真实数据 seam —— 生产配置构建的 products.html / index.html，线上回归守门
+  · 文章卡片 seam —— fixtures/content-card 独立构建（contentDir 覆盖）的四面：
+    首页网格 / /posts/ 列表 / 分类 term / 标签 term 的卡片类名、骨架段序、
+    父容器深度与跨面等价（草稿分支不测：生产构建排除 draft）。
   · 主题层契约 seam —— 全站 no-js 基线 / post_meta 显式时区格式 / 菜单渲染序 /
     RSS 只收 posts / search DOM 挂点 / ogImage 兜底 / 站点与主题同路径不变量
     （候选 6 工单 0032 决议；B7-B13，逐条变异检验）
@@ -174,6 +179,28 @@ POSTS_BADGE_PLAIN = ["fx-post-false", "fx-post-newest"]
 # 契约标记（契约定义处：themes/maplemod/layouts/partials/featured-badge.html docstring）；
 # 测试构建不带 --minify，属性带引号（同 B9 注释）。
 BADGE_SPAN_RE = re.compile(r'<span class="mf-featured" title="精选">')
+
+# 文章卡片契约（工单 0080/0081/0082 决议）：三面同卡、单一类名、四段结构、
+# 跨面骨架一致。期望值为独立字面量——fixture 四篇与它们的开关是手写事实，
+# 不从实现重算（防同义反复）。
+CARD_FIXTURE_CONTENT = "tests/fixtures/content-card"
+CARD_CLASS = "post-card"
+CARD_SLUGS = {
+    "plain": "fx-card-plain",
+    "featured": "fx-card-featured",
+    "cover": "fx-card-cover",
+    "nometa": "fx-card-nometa",
+}
+# 骨架段序（markup 顺序，非 CSS 序）：cover 在 header 之前；hideMeta 无 footer。
+CARD_SKELETON = {
+    "plain": ["entry-header", "entry-content", "entry-footer", "entry-link"],
+    "cover": ["entry-cover", "entry-header", "entry-content", "entry-footer", "entry-link"],
+    "nometa": ["entry-header", "entry-content", "entry-link"],
+}
+CARD_MARKERS = ["entry-cover", "entry-header", "entry-content", "entry-footer", "entry-link"]
+# 历史类名（0080 决议：一套类名后不得在产物里残留）。
+LEGACY_CARD_CLASSES = ['class="mf-post"', 'class="post-entry"', 'class="post-entry tag-entry"',
+                       'class="first-entry"']
 
 # 契约坏用例的逐条期望子串（0018 事实底座：旧判定只匹配模块统一前缀，偏弱；
 # 此表按用例钉归属，与 SOP 脚本的逐用例子串登记同型）。缺省沿用产品状态模块前缀。
@@ -354,19 +381,15 @@ def parse_badge_present(html):
     return bool(BADGE_SPAN_RE.search(html))
 
 
-def parse_card_badges(html, article_class):
+def parse_card_badges(html):
     """按文章卡片容器切块，返回 {slug: 是否带精选徽标}。
 
     entry-link 是整卡点击层（既有网格判定同款锚点）；徽标在卡片标题内、
-    entry-link 之前，故按 <article> 切块后可同块判定。article_class 传
-    "post-entry"（主题层列表卡）或 "mf-post"（站点层首页网格卡）。
+    entry-link 之前，故按 <article> 切块后可同块判定。
+    容器类名只走 CARD_CLASS 一个常量（0082 决议：类名不在断言里散落）——
+    三面同卡后不再需要按面传不同类名。
     """
-    cards = {}
-    for block in re.split(r'<article class="' + article_class + r'[\s"]', html)[1:]:
-        m = re.search(r'class="entry-link"[^>]*href="([^"]+)"', block)
-        if m:
-            cards[_post_slug(m.group(1))] = bool(BADGE_SPAN_RE.search(block))
-    return cards
+    return {c["slug"]: c["badge"] for c in parse_cards(html) if c["slug"]}
 
 
 def build(config, dest, flags=None):
@@ -662,10 +685,12 @@ def assert_theme_transition(report, dest):
     # 16d 用 var() 组合颜色项——这里同时守「变量含 transform（按压反馈）」与
     # 「卡片 transition 由变量 + background-color 组成」（结构即契约：变量存在
     # 是为了消除 15↔16d 的整份抄写，抄回去就红）。
+    # 类名只走 CARD_CLASS 一个常量（0082 决议）：这里也不写字面量。
+    card_sel = r"\." + re.escape(CARD_CLASS)
     report.check("卡片动效走 --card-motion 单一真源且追加 background-color",
-                 re.search(r"\.post-entry[^{]*\{[^}]*--card-motion:[^}]*transform[^}]*\}",
+                 re.search(card_sel + r"[^{]*\{[^}]*--card-motion:[^}]*transform[^}]*\}",
                            css_text) is not None
-                 and re.search(r"\.post-entry[^{]*\{transition:var\(--card-motion\)[^}]*background-color",
+                 and re.search(card_sel + r"[^{]*\{transition:var\(--card-motion\)[^}]*background-color",
                                css_text) is not None,
                  "card motion variable or composed transition missing")
     report.check("主题切换过渡包在 prefers-reduced-motion 守卫内",
@@ -811,14 +836,18 @@ def assert_featured_badge(report):
     for label, path in (("分类页", dest / "categories" / "fixture.html"),
                         ("标签页", dest / "tags" / "fixture.html"),
                         ("/posts/ 列表", dest / "posts" / "index.html")):
-        cards = parse_card_badges(path.read_text(encoding="utf-8"), "post-entry")
+        cards = parse_card_badges(path.read_text(encoding="utf-8"))
+        # 解析非空前置：下面两条反向断言（「不带徽标」）在 cards 为空时会假绿
+        # ——2026-10-28 类名收敛时实测过这个洞（grid={} 时反向断言通过）。
+        report.check(f"{label}：解析到卡片（反向断言的前置）", bool(cards), "no card parsed")
         bad_has = [s for s in POSTS_BADGE_FEATURED if not cards.get(s)]
         report.check(f"{label}：4 篇 featured 卡片带徽标", not bad_has, f"缺徽标: {bad_has}")
         bad_plain = [s for s in POSTS_BADGE_PLAIN if cards.get(s)]
         report.check(f"{label}：false/未声明卡片不带徽标", not bad_plain, f"误带: {bad_plain}")
     # ③ 首页网格卡片（站点层 index.html；被 limit 截断回落的 feat-a 是天然样本）
     home_html = (dest / "index.html").read_text(encoding="utf-8")
-    grid = parse_card_badges(home_html, "mf-post")
+    grid = parse_card_badges(home_html)
+    report.check("首页网格：解析到卡片（反向断言的前置）", bool(grid), "no card parsed")
     report.check("首页网格：截断回落的 featured（fx-post-feat-a）带徽标",
                  grid.get(POSTS_FIXTURE_TRUNCATED) is True, f"got {grid}")
     bad_plain = [s for s in POSTS_BADGE_PLAIN if grid.get(s)]
@@ -833,6 +862,140 @@ def assert_featured_badge(report):
     css_text = "\n".join(p.read_text(encoding="utf-8") for p in dest.rglob("*.css"))
     report.check("产物 CSS 含 .mf-featured 精选标识规则（视觉层落地）",
                  ".mf-featured" in css_text, "missing .mf-featured rule in built CSS")
+
+
+def parse_cards(html):
+    """按 <article> 切块，返回 [{classes, markers, href, slug, badge}]。
+
+    markers = 骨架标记在块内出现的先后（按位置排序），是「结构契约」的观测面；
+    href 取整卡点击层 entry-link，是「哪一篇」的锚点（既有网格判定同款）。
+    **本函数是卡片解析的唯一实现**：徽标断言经 parse_card_badges 复用本函数
+    （0082 决议「抽公共 helper」），不另起一套切块。
+    """
+    cards = []
+    for m in re.finditer(r'<article class="([^"]*)">(.*?)</article>', html, re.DOTALL):
+        classes, body = m.group(1), m.group(2)
+        href = re.search(r'class="entry-link"[^>]*href="([^"]+)"', body)
+        # 锚 class 属性而非裸词：摘要正文里出现「entry-footer」字样不算结构
+        # （fixture 的 nometa 篇正文就故意写了这个词，是真阴性样本）。
+        positions = sorted((body.find(f'class="{mk}"'), mk) for mk in CARD_MARKERS
+                           if f'class="{mk}"' in body)
+        cards.append({
+            "classes": classes,
+            "markers": [mk for _, mk in positions],
+            "href": href.group(1) if href else None,
+            "slug": _post_slug(href.group(1)) if href else None,
+            "badge": bool(BADGE_SPAN_RE.search(body)),
+        })
+    return cards
+
+
+def card_for(cards, slug):
+    """按 slug 取卡片（entry-link 的 href 含 slug）。"""
+    for c in cards:
+        if c["href"] and slug in c["href"]:
+            return c
+    return None
+
+
+def container_depth(html, needle):
+    """needle 首次出现处所在的 div/section 嵌套深度（0 = 容器直接子元素）。
+
+    父容器契约（0081 决议）是载重的：`main:has(> .post-card)` 靠「卡片是不是
+    main 的直接子元素」区分首页与列表。深度只数 div / section 的开闭净差——
+    0 即「main 的直接子元素」（main 自身不计），首页卡在 section > .mf-posts
+    里故为 2。不引 HTML 解析器（本套件刻意零依赖）。
+    """
+    idx = html.find(needle)
+    if idx < 0:
+        return None
+    head = html[:idx]
+    depth = 0
+    for m in re.finditer(r'<(/?)(div|section)\b', head):
+        depth += -1 if m.group(1) else 1
+    return depth
+
+
+def assert_post_card(report):
+    """文章卡片单模块（工单 0080/0081/0082 决议）。
+
+    fixture 独立构建（contentDir 覆盖，复用 posts 档位）：
+      ① 三面同卡：首页网格 / /posts/ 列表 / 分类 term 页的容器类名都是 post-card，
+         且产物里不再出现 mf-post / post-entry / first-entry 三个历史类名；
+      ② 结构契约：plain 四段、cover 五段（cover 在最前）、hideMeta 三段；
+      ③ 跨面等价：同一篇 plain 在首页网格与 /posts/ 的骨架段序完全一致——
+         这是「单模块」唯一的直接证据（两面各自正确 ≠ 同一模块）。
+    草稿标记分支不测：生产构建排除 draft，该分支只在 `hugo server -D` 下渲染
+    （0082 决议的已知限制）。
+    """
+    dest = harness.dest("posts-fixture-card")
+    proc = build(POSTS_FIXTURE_CONFIG, dest, ["--contentDir", CARD_FIXTURE_CONTENT])
+    report.check("卡片 fixture 构建成功", proc.returncode == 0,
+                 proc.stderr[-400:] if proc.returncode else "")
+    if proc.returncode != 0:
+        return
+
+    home_html = (dest / "index.html").read_text(encoding="utf-8")
+    list_html = (dest / "posts" / "index.html").read_text(encoding="utf-8")
+    term_html = (dest / "categories" / "fixture.html").read_text(encoding="utf-8")
+    tag_html = (dest / "tags" / "fixture.html").read_text(encoding="utf-8")
+
+    surfaces = [("首页网格", home_html), ("/posts/ 列表", list_html),
+                ("分类 term 页", term_html), ("标签 term 页", tag_html)]
+    parsed = {label: parse_cards(html) for label, html in surfaces}
+
+    for label, _ in surfaces:
+        report.check(f"{label}：渲染出卡片", bool(parsed[label]), f"got {len(parsed[label])}")
+
+    for label, _ in surfaces:
+        bad = [c["classes"] for c in parsed[label] if CARD_CLASS not in c["classes"].split()]
+        report.check(f"{label}：容器类名是 {CARD_CLASS}", not bad, f"got {bad}")
+
+    for label, html in surfaces:
+        hit = [legacy for legacy in LEGACY_CARD_CLASSES if legacy in html]
+        report.check(f"{label}：无历史卡片类名残留", not hit, f"got {hit}")
+
+    list_cards = parsed["/posts/ 列表"]
+    for kind, expected in CARD_SKELETON.items():
+        card = card_for(list_cards, CARD_SLUGS[kind])
+        if card is None:
+            report.check(f"{kind} 卡出现在 /posts/", False, f"missing {CARD_SLUGS[kind]}")
+            continue
+        report.check(f"{kind} 卡骨架 = {expected}", card["markers"] == expected,
+                     f"got {card['markers']}")
+
+    plain_home = card_for(parsed["首页网格"], CARD_SLUGS["plain"])
+    plain_list = card_for(list_cards, CARD_SLUGS["plain"])
+    report.check("跨面等价：同一篇在首页与 /posts/ 骨架一致",
+                 bool(plain_home) and bool(plain_list)
+                 and plain_home["markers"] == plain_list["markers"],
+                 f"home={plain_home and plain_home['markers']} "
+                 f"list={plain_list and plain_list['markers']}")
+
+    featured_card = card_for(list_cards, CARD_SLUGS["featured"])
+    report.check("featured 卡带精选徽标（卡片内徽标契约不因收敛丢失）",
+                 bool(featured_card and featured_card["badge"]),
+                 f"got {featured_card and featured_card['badge']}")
+
+    # ④ 父容器契约（0081 决议，载重）：首页卡在 .mf-posts 里、列表卡是 main 直接子项。
+    #    这两条正是 main:has(> .post-card) 能区分首页与列表的依据；只改其中一半
+    #    （例如退回后代选择器）会让首页 main 被误变网格，且没有别的断言能发现。
+    card_tag = f'<article class="{CARD_CLASS}">'
+    report.check("首页网格：卡片包在 .mf-posts 内（不是 main 直接子项）",
+                 container_depth(home_html, card_tag) == 2,
+                 f"depth={container_depth(home_html, card_tag)}")
+    report.check("/posts/ 列表：卡片是 main 的直接子元素",
+                 container_depth(list_html, card_tag) == 0,
+                 f"depth={container_depth(list_html, card_tag)}")
+    report.check("分类 term 页：卡片是 main 的直接子元素",
+                 container_depth(term_html, card_tag) == 0,
+                 f"depth={container_depth(term_html, card_tag)}")
+
+    # ⑤ 视觉层落地牙（0082 决议）：类名改了而产物 CSS 没跟上 = 裸卡片，
+    #    结构断言发现不了（同 assert_featured_badge ⑤ 的写法）。
+    css_text = "\n".join(p.read_text(encoding="utf-8") for p in dest.rglob("*.css"))
+    report.check(f"产物 CSS 含 .{CARD_CLASS} 规则（视觉层落地）",
+                 f".{CARD_CLASS}" in css_text, f"missing .{CARD_CLASS} rule in built CSS")
 
 
 def assert_post_reading_meta(report):
@@ -1607,6 +1770,7 @@ def checks(report, quick):
     assert_post_featured_bad_int(report)
     assert_post_grid_empty(report)
     assert_featured_badge(report)
+    assert_post_card(report)
     assert_post_reading_meta(report)
     assert_post_nav(report)
     # 目录空态只依赖 fixture 构建，--quick 也跑（空态是 A1 的明确要求）

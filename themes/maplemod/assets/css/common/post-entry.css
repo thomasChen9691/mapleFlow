@@ -33,7 +33,7 @@
     -webkit-line-clamp: unset;
 }
 
-.post-entry {
+.post-card {
     position: relative;
     margin-bottom: var(--gap);
     padding: var(--gap);
@@ -43,7 +43,7 @@
     border: 1px solid var(--border);
 }
 
-.post-entry:active {
+.post-card:active {
     transform: scale(0.96);
 }
 
