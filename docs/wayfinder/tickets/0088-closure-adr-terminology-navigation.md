@@ -1,0 +1,50 @@
+---
+id: "0088"
+title: 收口：ADR 切分、术语、导航与施工节奏
+type: grilling
+mode: HITL
+status: open
+blocked_by: ["0080", "0081", "0082", "0083", "0084", "0085", "0086", "0087"]
+assignee: agent
+claimed: 2026-10-27
+map: map-architecture-deepening.md
+created: 2026-10-27
+---
+
+## Question
+
+四件事的决策集怎么耐久化、术语与导航怎么同步、施工按什么节奏落地——本图收口票。前七票各定一块，本票定**它们如何变成可继承的资产**。
+
+要决策的面：
+
+1. **ADR 切分**：一份总 ADR（覆盖四区，条目多）还是按区分四份（0016 卡片 / 0017 注册缝 / 0018 死面 / 0019 parity）。判据参照 ADR-0004 的「决策集耐久化」先例与 ADR-0015 的「一图一 ADR、15 条决策各注工单号」形态。
+2. **旧 ADR 的指针行**：0007（reveal 协议）与 0008（分层判据）大概率需要加指针（正文不改）；0002 / 0012 / 0015 是否也需要。
+3. **术语表增删**：`CONTEXT.md` 新增哪些词条（「文章卡片」「注册缝」「死面」「影子契约」），哪些按 ADR-0015 决策 12 的「实现机制不是对外领域语言」先例不收；既有词条（「reveal 协议」「主题层/站点层」）是否要扩写。
+4. **AGENTS.md 同步**：§7 速查表新增行（卡片模块 / 注册缝 / parity 门）、坑点条目（死面判据、token 漂移）、核心命令段（若 `npm test` 链变成四段）。
+5. **施工节奏与分支**：四区是分四个 PR 还是一个批次；每批的门禁计数如何递增（site / sop / npm 三段各变多少）；gh-pages 是否允许中间态（死面删除后产物 CSS 变小属预期 diff）。
+6. **收口产物**：handoff 内容（当前状态 / 下一步 / 环境坑 / 建议 skill）、验证基线记录、以及本图 `status: closed` 的判据（frontier 空 + 施工全绿 + ADR 落档）。
+7. **回归风险登记**：四区共同触碰 `layouts/` / `assets/` / `tests/`，施工顺序若错会互相干扰（例如 parity 门先于死面删除会先红）——给出明确的施工序列与每步的回滚点。
+
+边界（不开票）：具体决策内容归各票；重开已锁 ADR 属 Out of scope。
+
+## Resolution（决议已定，施工未开始）
+
+2026-10-27 · grilling（HITL，一问定案 + 五项按先例推定）。
+
+**ADR 切分 = 一份 `ADR-0016`**：覆盖四区，预估 18–22 条决策，每条注工单号（0015「一图一 ADR」先例）。引用形态为「ADR-0016 决策 N」+ 工单号反查。
+
+**旧 ADR 指针行（正文不改）**：`0007`（reveal 协议——注册缝改了加载形态：引擎去自注册、`app.js` 装配、fail-open）、`0008`（分层判据——卡片落主题层的判据复用）。`0002` / `0009` / `0012` / `0015` 只在必要处加一句，不批量。
+
+**术语表**：`CONTEXT.md` **新增「文章卡片」**（内容形态概念，与「文章 (Post)」并列，承载「三面同卡、零参数、父容器契约」）；**「注册缝」「死面」「影子契约」不收**——实现机制不是对外领域语言（ADR-0015 决策 12 先例），归 AGENTS 速查表与 ADR。
+
+**AGENTS 同步**：§7 速查表加三行（`post-card.html` / `app.js` 注册表 / parity 门）；坑点新增两条（死面判据与三类假阳性；token 漂移与白名单）；核心命令段更新计数（`npm test` 8+23+41 → 9+24+41；site 套件十六类）。
+
+**施工节奏 = 两个 PR**（顺序即依赖）：
+- **PR① 呈现层收敛**：建 `themes/maplemod/layouts/partials/post-card.html`（含父容器契约 docstring）→ `index.html` / `list.html` 改调 + 类名统一 + 删 `first-entry` 分支 → `custom.css` 九组成对规则合并 + `:has()` 改直接子选择器 → 注册缝（`app.js` 装配、引擎去 `autoInit`、fail-open、逐个 `try/catch`）→ 测试（8 条改锚、新 `assert_post_card` + `content-card` fixture、`dom.mjs` mount helper + 13 处补挂载、注册完整性断言）。
+- **PR② CSS 契约治理**：删 `archive.css` / `profile-mode.css` → 删死选择器块（含 `var(--x)` 引用链检查）→ 删 `hugo.toml` 死配置与注释遗留键 → parity 门（`assert_reveal.mjs` 新节，基线取清理后现状）。
+
+**回归风险与回滚点**：PR① 的风险在类名统一（`:has()` 误命中首页）——回滚点 = 类名与 `:has()` 同进同退，不可只改一半；PR② 的风险在删块连带变量（`--theme` / `--entry` 等）——回滚点 = 逐块删、每块后跑一次 site 套件；产物 CSS 体积变小属**预期 diff**，gh-pages 允许中间态。
+
+**收口产物**：handoff（当前状态 / 下一步 / 环境坑 / 建议 skill）、地图 `status: closed`、Decisions so far 逐票一行 gist、ADR-0016 落档、README 计数更新。
+
+**施工状态**：**未开始**（本票是收口票，施工完成并验证后才关闭）。本票保持 open + 已认领。
