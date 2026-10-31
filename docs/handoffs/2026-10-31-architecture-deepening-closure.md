@@ -7,13 +7,18 @@
 - **地图已收口**：`map-architecture-deepening` 10/10 票 closed（0079–0088），frontier 空 = 目的地到达。决策集耐久化于 ADR-0016；ADR-0007 / 0008 各加一行指针（正文不改）。
 - **四件落地**：① 文章卡片单模块（主题层 `post-card.html`，三面同卡、零参数、父容器契约载明）；② 注册缝下沉（引擎去 `autoInit`，`app.js` 的 `ENGINES` 表是唯一挂载点，逐个 try/catch，`scroll-in` fail-open）；③ 死面删除（2 个整文件 + 23 个选择器块，−196 行，零断言改动）；④ CSS 影子契约 parity 门（`tests/tokens.mjs` + `assert_reveal.mjs` 的 RGR-14）。
 - **验证基线**：site **185/185** · npm **13+31+41** · sop **105/105** · 生产构建 **0 WARN** · 无 localhost 泄漏。
-- **分支与提交**：`refactor/card-registration`（自 `refactor/featured-guard-module` 尖 `13c8f4a` 起，共 5 笔）——`31117d5` 文档（地图 + 10 票）、`34e068b` PR①（卡片 + 注册缝）、`8e7b785` PR② 第一笔（死面）、`08f1280` PR② 第二笔（parity 门）、末笔收口（ADR-0016 + 术语 + AGENTS + 地图 + 本文件）。**分支未推**（GitHub auth-required）。
+- **分支与提交**：`refactor/card-registration`（自 `refactor/featured-guard-module` 尖 `13c8f4a` 起，共 5 笔）——`31117d5` 文档（地图 + 10 票）、`34e068b` PR①（卡片 + 注册缝）、`8e7b785` PR② 第一笔（死面）、`08f1280` PR② 第二笔（parity 门）、`bee9d32` 收口（ADR-0016 + 术语 + AGENTS + 地图 + 本文件）。
+- **三条分支均已推**（2026-10-31，SSH 可用）：`refactor/harness-convergence`（13 笔，先前已推）、`refactor/featured-guard-module`（22 笔）、`refactor/card-registration`（27 笔）。三者是**叠罗汉**：后者包含前者的全部提交。
 - **已知偏差（诚实入档）**：`hugo.toml` 的注释遗留键**未删**（0085 决策 13 的一半未执行——复核后判定它们已带「已删除」标注、删掉会掩盖历史）；ADR-0016 Consequences 已记。
 
 ## 下一步
 
-1. **推送与 PR**：`git push -u origin refactor/card-registration` → 开 PR → 门禁绿 → squash 合并。注意基数：本分支叠在未合并的 `refactor/featured-guard-module` 与 `refactor/harness-convergence` 之上，建议按 harness → featured-guard → card-registration 的顺序合，或先 `rebase --onto origin/main` 逐段落地。
-2. **0079 事实票仍 open**（唯一 frontier）：四区事实已在施工中逐条查实并写进各票，但系统性的「四区事实底座 + token 矩阵」从未单独成文。若认为已无价值，可**关票并在地图 Out of scope 记一行**；若要留档，按票内五项盘一次。
+1. **按叠罗汉顺序开 PR 并 squash 合并**（`gh` 未装、GitHub MCP 仍 auth-required，只能走网页）。**每一层的 base 选上一层分支**，合完再改下一层的 base 为 `main`——否则 diff 会把下面几层的提交一起算进来：
+   - ① harness：`https://github.com/thomasChen9691/mapleFlow/compare/main...refactor/harness-convergence?expand=1`
+   - ② featured-guard（base 选 ① 的分支）：`https://github.com/thomasChen9691/mapleFlow/compare/refactor/harness-convergence...refactor/featured-guard-module?expand=1`
+   - ③ card-registration（base 选 ② 的分支）：`https://github.com/thomasChen9691/mapleFlow/compare/refactor/featured-guard-module...refactor/card-registration?expand=1`
+   合并后本地 `git fetch origin && git rebase origin/main` 收干净。
+2. ~~0079 事实票~~ —— **已关闭（2026-10-31）**：五项事实以「指针表 + token 矩阵」收口（矩阵由 `tests/tokens.mjs` 现算，8 行 = 正向 0 违规 / 反向 0 孤儿）；缺口清单四条（无像素级对比、草稿分支不测、只守存在性、死面无守门）转后续。
 3. **PR② 可选延伸**：`hugo.toml` 注释键清理（0085 决策 13 的另一半）可另开一笔；死面无长期门，若日后回流明显，再评估守门。
 
 ## 环境坑（本图新增）

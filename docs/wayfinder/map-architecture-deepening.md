@@ -21,7 +21,7 @@ closed: 2026-10-31
 - **死面范围已定**（项目负责人 2026-10-27）：**配置 + CSS** 两类。模板可达性与 fork 形态不重开（0027/0029 已裁）、静态资产与 i18n 键不纳入、悬空 `google_analytics.html` 调用不处理。
 - **例外记录（2026-10-27）**：经项目负责人指示，本轮对「0079 五轴」（约束 / 依赖 / 模块形状 / seam 藏什么 / 测试存活）做了一次**跨票质询**，同场锁定 0080 / 0081 / 0083 全部决策 + 0082 / 0084 部分决策——「一会话一票」纪律的例外，同 `map-featured-type-guard` 0074–0077 先例。
 - **决议与施工分离（本图约定）**：本图含施工，故**决议已定但未施工的票保持 `open` + `assignee: agent`**（不是 frontier、不算完成），Resolution 段首行标明「决议已定，施工未开始」；施工完成并验证后才 `status: closed` 并进 Decisions so far。
-- **收口（2026-10-31）**：**10/10 票 closed**（0080–0088），frontier 空 = 目的地到达；决策集耐久化于 **ADR-0016**（四章 20 条，各注工单号），ADR-0007 / 0008 各加指针；收口 handoff 见 `docs/handoffs/2026-10-31-architecture-deepening-closure.md`。
+- **收口（2026-10-31）**：**10/10 票 closed**（0079–0088），frontier 空 = 目的地到达；决策集耐久化于 **ADR-0016**（四章 20 条，各注工单号），ADR-0007 / 0008 各加指针；收口 handoff 见 `docs/handoffs/2026-10-31-architecture-deepening-closure.md`。
 - **PR① 已施工（2026-10-28）**：0080–0084 五票 closed，施工与验证见各自 Resolution；验证基线 = site **185/185** · npm **9+28+41** · sop **105/105** · 生产构建 **0 WARN** · 无 localhost 泄漏。
 - **PR② 已施工（2026-10-31）**：0085–0088 四票 closed——死面删除（−196 行、零断言改动）+ parity 门（RGR-14 三节）+ ADR-0016 收口。验证 = site 185/185 · npm 13+31+41 · sop 105/105 · 构建 0 WARN。
 - **已锁定并施工的决策（PR② + 收口，详情见各票 Resolution）**：
@@ -54,6 +54,8 @@ closed: 2026-10-31
 - [CSS 影子契约的 token 清单与 parity 方向](tickets/0086-css-shadow-contract-token-set.md) — 源码双向抽取、不写 registry；**反向收窄到 `is-*` 六类、白名单为空**（mf-* 视觉类不进反向，否则等于死面守门）；抽取器独立 `tests/tokens.mjs`、带 file:line；首跑抓到「模板条件类写在动作外」的抽取 bug。
 - [parity 门的落点与强度](tickets/0087-parity-gate-placement-strength.md) — `assert_reveal.mjs` 的 RGR-14 三节（空集前置 / 正向 / 反向），强度 = 测试红，消息带四处定位；变异：抹 CSS 消费点 → 正向红，删模板生产者 → 反向红。
 - [收口：ADR 切分、术语、导航与施工节奏](tickets/0088-closure-adr-terminology-navigation.md) — 一份 ADR-0016（四章 20 条）；0007/0008 指针；术语只收「文章卡片」；AGENTS 三行 + 坑点 17/18；PR② 两笔（先删后门）。
+
+- [架构深化四区现状事实底座（盘点）](tickets/0079-architecture-deepening-facts.md) — 未单独成文：五项事实在施工中逐条查实，以「指针表 + token 矩阵」收口；矩阵由 `tests/tokens.mjs` 现算，8 行即全部（正向 0 违规、反向 0 孤儿）。
 
 ## Not yet specified
 

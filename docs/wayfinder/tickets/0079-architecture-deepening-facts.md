@@ -3,11 +3,12 @@ id: "0079"
 title: 架构深化四区现状事实底座（盘点）
 type: research
 mode: AFK
-status: open
+status: closed
 blocked_by: []
 assignee:
 map: map-architecture-deepening.md
 created: 2026-10-27
+closed: 2026-10-31
 ---
 
 ## Question
@@ -23,3 +24,37 @@ created: 2026-10-27
 产物：`docs/wayfinder/research/0079-architecture-deepening-facts.md`，第 1–5 项逐条带 `文件:行号` 证据；结尾给「缺口清单」（本图需要决策、而现有断言/文档未覆盖的问题面）。只查事实，不做决策，不给推荐。
 
 环境注意：本 shell 的 grep 对 `\|` 交替失效，内容搜索用 Grep 工具；除研究产物文件外不得修改任何仓库文件；不得执行 git 写操作；**不得运行 hugo 构建**（以读源码与既有 `public/` 产物为准，避免污染 `public/`）。
+
+## Resolution
+
+2026-10-31 · 事实已在施工中**逐条查实**，未单独成文——单独成文的边际价值低于分散记录的成本。以「指针表 + token 矩阵」收口，五项各有所归：
+
+| 票内项 | 事实落在哪 |
+|---|---|
+| ① 卡片全部渲染面与逐字段差异 | [0080](0080-card-module-surfaces-and-divergence.md) Resolution + 施工记录；`post-card.html` docstring（DOM 契约） |
+| ② 引擎注册面 | [0083](0083-registration-seam-shape.md) Resolution（含 `autoInit` 原形态与「对齐搜索入口」的判定）；`app.js` docstring |
+| ③ 测试加载面 | [0084](0084-registration-test-seam.md) Resolution（`loadFresh` 只 bust 自己、13 处直载点、假绿风险） |
+| ④ 死面清单 | [0085](0085-dead-surface-criteria-and-scope.md) Resolution 的实施细化（35 个零引用类名逐条归类：18 个构建期白名单 + 2 个整文件 + 9 个选择器块） |
+| ⑤ JS→CSS token 矩阵 | 下表（由 `tests/tokens.mjs` 现算，非手抄） |
+
+### token 矩阵（2026-10-31 现状）
+
+| token | 类型 | JS 写入点 | CSS 消费点 | 模板生产 |
+|---|---|---|---|---|
+| `is-hidden` | class | `filter.js:65` | `custom.css:216/237/692` | — |
+| `is-in` | class | `filter.js:71`、`scroll-in.js:35/42/53` | `custom.css:205` | — |
+| `is-morphing` | class | `filter.js:82` | `custom.css:216/237` | — |
+| `is-bump` | class | `filter.js:83` | `custom.css:226/238` | — |
+| `--mf-i` | var | `filter.js:68` | `custom.css:218` | — |
+| `--mf-progress` | var | `reading-progress.js:53` | `custom.css:1230` | — |
+| `is-free` | class | — | `custom.css:552` | 有（`product-index.html:76`） |
+| `is-current` | class | — | `custom.css:1197/1202` | 有（`pagination.html`） |
+
+八行即全部：**正向 0 违规、反向 0 孤儿**——这也是 RGR-14 首跑即绿的基线（ADR-0016 决策 17）。
+
+### 缺口清单（交后续，不属本图）
+
+- 卡片视觉零 diff 只有「类名 1:1 + 结构断言」的间接证据，无像素级对比。
+- 草稿卡片分支不测（生产不可达）。
+- parity 只守存在性，不守语义漂移（同名不同义发现不了）。
+- 死面无长期守门（判据是启发式，守门会误红）。
