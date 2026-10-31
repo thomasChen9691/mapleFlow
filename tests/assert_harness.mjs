@@ -136,6 +136,43 @@ function observeFinish(fn) {
         `mounted=${mounted} sameModule=${got === mod}`);
 }
 
+// ---- tokens.collect：词法抽取（机制自测；已知输入 → 已知 token 集）----
+// 抽取器不持期望值（见 tokens.mjs 头），所以它的「对不对」只能在这里用
+// 手写字面量钉：写面 / 读面 / 模板面各一例，外加「CSS 注释里的类名不算消费」。
+{
+    const { collect } = await import('./tokens.mjs');
+    const got = collect({
+        js: [{
+            file: 'x.js',
+            text: "el.classList.add('is-in');\nreplay(root, 'is-morphing', 520);\nbar.style.setProperty('--mf-i', 3);",
+        }],
+        css: [{
+            file: 'x.css',
+            text: '/* 旧实现叫 .ghost-class，别当真 */\n.is-in { opacity: 1 }\n.mf-row { width: var(--mf-i) }',
+        }],
+        markup: [{
+            file: 'x.html',
+            // 第二个元素是真实形态：条件类写在 Go 模板动作**外面**
+            // （`layouts/partials/product-index.html:76` 的 is-free 就是这样）
+            text: '<div class="mf-rows"></div><span class="mf-price{{ if $free }} is-free{{ end }}"></span>',
+        }],
+    });
+    check('tokens.collect 抽到 JS 写面（classList + helper 实参 + setProperty）',
+        'is-in' in got.writes.class && 'is-morphing' in got.writes.class && '--mf-i' in got.writes.var,
+        JSON.stringify(Object.keys(got.writes.class)));
+    check('tokens.collect 带定位（文件 + 1 基行号）',
+        got.writes.class['is-in'][0].file === 'x.js' && got.writes.class['is-in'][0].line === 1,
+        JSON.stringify(got.writes.class['is-in']));
+    check('tokens.collect 剥 CSS 注释（注释里的类名不算消费）',
+        'is-in' in got.reads.class && 'ghost-class' in got.reads.class === false
+        && '--mf-i' in got.reads.var,
+        JSON.stringify(Object.keys(got.reads.class).slice(0, 6)));
+    check('tokens.collect 抽到模板生产面（含模板动作里的条件类）',
+        'is-free' in got.markup.class && 'mf-rows' in got.markup.class
+        && 'mf-price' in got.markup.class,
+        JSON.stringify(Object.keys(got.markup.class)));
+}
+
 console.log(`\n${passed}/${passed + failed} passed`);
 if (failed) {
     console.log('RED — %d 个行为未满足', failed);

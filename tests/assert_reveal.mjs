@@ -394,4 +394,45 @@ console.log('reveal 行为断言（S1 seam，正式；CI 权威守门）');
   );
 }
 
+// ---- RGR-14：CSS 影子契约 parity（0086 / 0087 决议）----
+// 契约定义处仍是各引擎 docstring（ADR-0007），但 CSS 是它的**影子拷贝**：
+// JS 改了类名而 CSS 没跟上 → 动效静默失效；CSS 读了没人写的类 → 死样式。
+// 词法抽取归 tokens.mjs（机制），方向与范围归本文件（契约）：
+//   正向 = JS 写的 class / 变量都必须有 CSS 消费；
+//   反向 = CSS 消费的 is-* 状态类都必须有生产者（JS 写 或 模板 class 属性）。
+// mf-* 视觉类不进反向——它们的死样式归 0085 一次性清理，不开长期门（0086 细化）。
+{
+  const { collect, listFiles } = await import('./tokens.mjs');
+  const t = collect({
+    js: listFiles('assets/js', '.js'),
+    css: [...listFiles('assets/css', '.css'), ...listFiles('themes/maplemod/assets/css', '.css')],
+    markup: [...listFiles('layouts', '.html'), ...listFiles('themes/maplemod/layouts', '.html')],
+  });
+  const fmt = (hits) => hits.map((h) => `${h.file}:${h.line}`).join(', ');
+
+  // 前置：抽取结果非空——否则下面两条会在空集上假绿（2026-10-28 踩过的同款洞）。
+  check('RGR-14a 抽取器抽到三类面（空集会让下面两条假绿）',
+    Object.keys(t.writes.class).length >= 4
+    && Object.keys(t.reads.class).length >= 5
+    && Object.keys(t.markup.class).length >= 50,
+    `writes=${Object.keys(t.writes.class).length} reads=${Object.keys(t.reads.class).length} `
+    + `markup=${Object.keys(t.markup.class).length}`);
+
+  const unreadClass = Object.keys(t.writes.class).filter((k) => !(k in t.reads.class));
+  const unreadVar = Object.keys(t.writes.var).filter((k) => !(k in t.reads.var));
+  check('RGR-14b 正向：JS 写入的 class / 变量都有 CSS 消费',
+    unreadClass.length === 0 && unreadVar.length === 0,
+    [
+      ...unreadClass.map((k) => `${k} 被 ${fmt(t.writes.class[k])} 写入，但无 CSS 消费`),
+      ...unreadVar.map((k) => `${k} 被 ${fmt(t.writes.var[k])} 写入，但无 CSS 消费`),
+    ].join('; '));
+
+  const orphan = Object.keys(t.reads.class)
+    .filter((k) => k.startsWith('is-'))
+    .filter((k) => !(k in t.writes.class) && !(k in t.markup.class));
+  check('RGR-14c 反向：CSS 消费的 is-* 状态类都有生产者',
+    orphan.length === 0,
+    orphan.map((k) => `${k} 被 ${fmt(t.reads.class[k])} 消费，但无 JS / 模板生产者`).join('; '));
+}
+
 finish();
