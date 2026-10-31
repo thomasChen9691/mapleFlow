@@ -19,25 +19,6 @@
     font-size: 14px;
 }
 
-.breadcrumbs {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.i18n_list {
-    display: inline-flex;
-}
-
-.post-meta .i18n_list li {
-    list-style: none;
-    margin: auto 3px;
-}
-
-.breadcrumbs a {
-    font-size: 16px;
-}
-
 .post-content {
     color: var(--content);
     margin: 30px 0;
@@ -243,10 +224,6 @@
     margin: 1rem auto;
 }
 
-.post-content figure.align-center {
-    text-align: center;
-}
-
 .post-content figure>figcaption {
     color: var(--primary);
     font-size: 16px;
@@ -341,23 +318,6 @@
     background: var(--border);
 }
 
-.share-buttons {
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    overflow-x: auto;
-    gap: 10px;
-}
-
-.share-buttons li,
-.share-buttons a {
-    display: inline-flex;
-}
-
-.share-buttons a:not(:last-of-type) {
-    margin-inline-end: 12px;
-}
-
 h1:hover .anchor,
 h2:hover .anchor,
 h3:hover .anchor,
@@ -371,47 +331,6 @@ h6:hover .anchor {
     user-select: none;
 }
 
-.paginav {
-    display: flex;
-    line-height: 30px;
-}
-
-.paginav a {
-    padding-inline-start: 14px;
-    padding-inline-end: 14px;
-    border-radius: var(--radius);
-}
-
-.paginav .title {
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-size: small;
-    color: var(--secondary);
-}
-
-.paginav .prev,
-.paginav .next {
-    width: 50%;
-}
-
-.paginav span:hover:not(.title) {
-    box-shadow: 0 1px 0;
-}
-
-.paginav .next {
-    margin-inline-start: auto;
-    text-align: right;
-}
-
-[dir="rtl"] .paginav .next {
-    text-align: left;
-}
-
 h1>a>svg {
     display: inline;
-}
-
-img.in-text {
-    display: inline;
-    margin: auto;
 }

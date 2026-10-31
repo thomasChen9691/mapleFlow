@@ -856,7 +856,6 @@ main:has(> .post-card) {
   gap: 1rem;
   align-items: start;
 }
-main:has(> .post-card) .home-info { grid-column: 1 / -1; }
 main:has(> .post-card) .page-header { grid-column: 1 / -1; }
 main:has(> .post-card) .page-footer { grid-column: 1 / -1; }
 

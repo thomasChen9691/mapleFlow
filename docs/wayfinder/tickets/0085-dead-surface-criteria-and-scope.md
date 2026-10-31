@@ -43,3 +43,8 @@ created: 2026-10-27
 **顺序约束 = 先删死面、再上 parity 门**（→ [0086](0086-css-shadow-contract-token-set.md) / [0087](0087-parity-gate-placement-strength.md)）：门的 token 集合必须在清理后的基线上算，否则门会先红在一批即将被删的 token 上。
 
 **施工状态**：**未开始**。本票保持 open + 已认领。
+
+**实施细化（2026-10-31 grilling，PR② 开工前）**
+- **实测清单（PR① 后重扫）**：零引用类名 **35 个**，其中 **18 个**是 chroma/highlight 构建期类（`c1 cp cpf fm kc kp kr mh s1 s2 sb vm highlighttable linenodiv lnlinks lnt lntable lntd`）→ 白名单；文件级死面 = `archive.css`（44 行，含 9 个 `archive-*` 类）与 `profile-mode.css`（43 行，含 `profile_inner`）；选择器级死面 = `breadcrumbs` / `button-inner` / `home-info` / `i18n_list` / `in-text` / `paginav` / `share-buttons` / `align-center` / `social-icons`。
+- **删除笔的验收纪律 = 零断言改动**：删完跑 site 185/185 + npm 9+28+41 + sop 105/105，**断言文件一个字符都不改**；动了断言 = 删到了活的东西，回退重判。
+- **提交粒度 = 两笔**：第一笔纯删除、第二笔只加 parity 门。门其实不依赖删除（正向现状 0 违规、反向只守 6 个 `is-*` 且全有生产者），所以「先删后门」是**证据顺序**而非硬依赖——删完仍绿本身就是「没删到活的」的证据。

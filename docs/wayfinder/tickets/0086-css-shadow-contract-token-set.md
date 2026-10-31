@@ -43,3 +43,9 @@ CSS 影子契约的 token 集合怎么定义、parity 检查哪个方向——�
 **白名单形态**：位置随 [0087](0087-parity-gate-placement-strength.md) 的落点定（测试期 → 断言内常量；构建期 → 数据文件）。白名单每条必须带理由与归属文件，不设「看着像就放过」。
 
 **施工状态**：**未开始**。本票保持 open + 已认领。
+
+**实施细化（2026-10-31 grilling，PR② 开工前）**
+- **反向范围收窄到 `is-*` 状态词表**（6 个：`is-bump` / `is-current` / `is-free` / `is-hidden` / `is-in` / `is-morphing`），生产者面 = **模板 class 属性 + JS 写入**（`is-current` 由 `pagination.html`、`is-free` 由 `product-index.html` 生产）。**白名单为空**——`mf-*` 视觉类不进反向检查（它们的死样式归 0085 一次性清理，不开长期门）。这条同时解掉了「双向 ⇒ 等于死面守门」与 0085「不加死面守门」的冲突。
+- **抽取器独立成 `tests/tokens.mjs`**（机制层，零期望值）；断言与范围判断留在 `assert_reveal.mjs`；`assert_harness.mjs` 加抽取器自测（已知输入 → 已知 token 集）。
+- **接口 = 带定位的词法表**：`collect({js:[路径], css:[路径]}) → {writes:{token:[{file,line}]}, reads:{…}}`，class 与 var 分两类。抽取器不懂方向、不懂 `is-*` 范围、不持白名单。
+- **首跑基线已实测**：正向（JS 写 → CSS 读）**0 违规**；反向 6 个 `is-*` 全有生产者 → 门上线即绿，红只会在真漂移时出现。

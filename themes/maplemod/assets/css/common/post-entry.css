@@ -29,10 +29,6 @@
     font-size: 14px;
 }
 
-.home-info .entry-content {
-    -webkit-line-clamp: unset;
-}
-
 .post-card {
     position: relative;
     margin-bottom: var(--gap);

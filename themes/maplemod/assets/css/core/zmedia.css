@@ -14,15 +14,6 @@
         min-height: 260px;
     }
 
-    /* archive */
-    .archive-month {
-        flex-direction: column;
-    }
-
-    .archive-year {
-        margin-top: 20px;
-    }
-
     /* footer */
     .footer {
         padding: calc((var(--footer-height) - var(--gap) - 10px) / 2) var(--gap);
@@ -37,9 +28,6 @@
 }
 
 @media screen and (max-width: 340px) {
-    .share-buttons {
-        justify-content: unset;
-    }
 }
 
 @media (prefers-reduced-motion) {
