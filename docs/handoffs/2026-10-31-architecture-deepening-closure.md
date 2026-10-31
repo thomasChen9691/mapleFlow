@@ -1,5 +1,7 @@
 # 交接：架构深化收口（2026-10-31）
 
+> **2026-10-31 晚更新**：PR 流程已暂停（单人直推，见 `AGENTS.md` §2）——本文「下一步 1」的按序开 PR 作废；当前接力看 `docs/handoffs/2026-10-31-solo-direct-push.md`。
+
 > 决策与契约见 **ADR-0016**（`docs/adr/0016-architecture-deepening.md`，四章 20 条）与地图 `docs/wayfinder/map-architecture-deepening.md`（已 closed，10/10 票）。本文只记当前状态、下一步、环境坑与建议 skill。
 
 ## 当前状态
