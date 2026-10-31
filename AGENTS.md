@@ -10,22 +10,33 @@
 - **主题**：`themes/maplemod` 是**仓内第一方主题**（2026-10 自 PaperMod v8.0-55 fork 并修剪；无子模块、无上游同步义务）。
 - **内容方向**：运维开发 / SRE / DevOps 实战 SOP，覆盖 Kubernetes、Docker、CI/CD、AIOps、Prometheus、Grafana、Jenkins、GitLab、Ansible、SonarQube，见 `docs/sop/`。
 
-## 2. 分支模型（重要）
+## 2. 分支模型（单人直推；2026-10-31 起）
 
 | 分支 | 用途 | 操作权限 |
 |------|------|----------|
-| `main` | 源码与配置；**受规则集 `main-protection` 保护** | 只能经 PR 合入（squash），**直推会被拒绝** |
+| `main` | 源码与配置 | **直接 `git push origin main`**——单人项目，不走 PR |
 | `gh-pages` | 由 GitHub Actions 自动构建的静态站点产物 | **不要手动修改/提交** |
+| 特性分支 | 可选：大改动想留回滚点时用 | 合回 `main` 用 `git merge --ff-only` 或 `rebase`，**不开 PR** |
+
+- **日常流程**：改 → 本地跑门禁（`npm test` + 三个 Python 套件 + 生产构建零 WARN）→ `git add -A && git commit` → `git push origin main` → CI 自动 verify + deploy（push `main` 就触发，不需要 PR）。
+- **为什么改成直推**（2026-10-31，项目负责人）：仓库只有一个人用，PR + 按序 squash 的成本高于收益；此前那套流程是为「学习 PR 工作流」而搭的，目的已达到。
+- **若推送被拒**：说明服务端规则集 `main-protection` 仍启用——去 GitHub 仓库 Settings → Rules → Rulesets 停用它（或把当前账号加进 bypass list），即可直推。**不要用 `--force` 绕过**。
+- CI 仍是硬门禁的来源：verify job 在 push 到 `main` 后跑，红了就是红了，只是不再有「PR 阶段拦一道」。
+- 切勿直接编辑 `gh-pages` 或本地 `public/`（构建产物会覆盖）。
+
+<!-- ===== 以下为 2026-10-31 之前的 PR 流程，暂停使用；需要恢复时取消注释并按文中步骤重开规则集 =====
+
+| 分支 | 用途 | 操作权限 |
+|------|------|----------|
+| `main` | 源码与配置；受规则集 `main-protection` 保护 | 只能经 PR 合入（squash），直推会被拒绝 |
+| `gh-pages` | 由 GitHub Actions 自动构建的静态站点产物 | 不要手动修改/提交 |
 | 特性分支 | 日常开发落点 | 推送后开 PR → 门禁绿 → squash 合并 → 自动部署 |
 
-- **分支规则集（2026-10-24 配置，仓库 Settings → Rules → Rulesets）**：Target `main`，Active；启用 Require status checks to pass（唯一必需检查 = `验证（测试 + 构建 + 守门）`，即 verify job；Loose 模式——不要求分支最新）、Require a pull request before merging（**Required approvals = 0**——solo 仓库，设 1 以上自己的 PR 无人可批）、Allowed merge methods **仅 squash**（配合 Require linear history）、Block force pushes、Require linear history、Restrict deletions；Bypass list 留空。**直接 `git push origin main` 从此被拒**——这是预期行为，新流程见下。
-- 日常流程：`git checkout -b <type>/<topic>` → 提交 → `git push origin <branch>` → 开 PR（`pull_request` 触发即跑完整门禁）→ 验证绿 → **Squash and merge** → 合并动作触发部署（push main → verify → deploy）。本地合入前可用 `git fetch origin && git rebase origin/main` 同步。
+- 分支规则集（2026-10-24 配置，仓库 Settings → Rules → Rulesets）：Target `main`，Active；Require status checks to pass（唯一必需检查 = `验证（测试 + 构建 + 守门）`）；Require a pull request before merging（Required approvals = 0）；Allowed merge methods 仅 squash；Block force pushes；Require linear history；Restrict deletions；Bypass list 留空。
+- 日常流程：`git checkout -b <type>/<topic>` → 提交 → `git push origin <branch>` → 开 PR → 验证绿 → Squash and merge → 触发部署。
+- 恢复要点：先重开规则集，再把本段取消注释；叠罗汉分支的 PR base 要选上一层分支（见 `docs/handoffs/2026-10-31-architecture-deepening-closure.md`）。
 
-- CI/CD 流水线见 `.github/workflows/ci-cd.yml`（2026-10-24 由 `deploy.yml` 重建为双 job；历史文档里的 `deploy.yml` 指同一文件）：
-  - **verify job**（PR → main、push → main、手动触发都跑）：`npm test`（harness 自测 + reveal + 搜索前端行为断言）→ 生产构建（**零 WARN 守门**）→ `python3 tests/assert_harness.py` → `assert_site_contracts.py` → `assert_sop_pipeline.py` → **localhost 泄漏守门**（坑点 5b）；
-  - **deploy job**（`needs: verify`，仅 main 的 push / 手动触发）：重建 → `peaceiris/actions-gh-pages` 推 `gh-pages`。
-  - 即：**PR 阶段就有完整门禁**（此前只在 push 后验证，红提交先落 main 再失败）；且规则集把门禁变成硬约束——检查不绿的 PR 合不进去，验证不过的合并不可能发生。
-- 切勿直接编辑 `gh-pages` 或本地 `public/`（构建产物会覆盖）。
+-->
 
 ## 3. 核心命令
 
