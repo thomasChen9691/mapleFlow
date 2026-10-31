@@ -130,6 +130,10 @@ python3 tests/assert_site_contracts.py
 
 16. **测试基建纪律（harness，ADR-0014；工单 0061–0070 全决议）**：测试运行基建收敛为 **harness 一个概念、两个文件**——`tests/harness.py`（Python 侧：Report / 入口仪式 / tmp 分根 / build 旗标档位 / fixture 配置写入）+ `tests/dom.mjs`（Node 侧：check / jsdom 页面装配 / 汇总退出）；契约定义处 = 两份文件头 docstring；`tests/assert_harness.{py,mjs}` 是 harness 自测（牙临界行为，先于契约断言——harness 红时失败定位前移）。五条硬约束：① **seam 之后只有机制**——harness 禁存任何契约期望值 / fixture 数据 / 被测模块词表，字面量留在各套件（三层文档契约，ADR-0007）；② **坏用例 fixture 按模块子根**（`tests/fixtures/bad/products/` 与 `bad/sop/`），错放即本根卫生断言红（所有权从约定变为结构）；③ **tmp 按套件分根**（`tests/tmp/site`、`sop`、`capture`），串行约束已废、结构上可并行但 CI 暂不并行；④ **构建档位**（site-contracts 故意不 minify——断言解析带引号属性；sop-pipeline 与 CI 生产命令逐字一致——golden 按 minify 产物捕获）与 **配置写入四轴**（dataDir / contentDir / sopNotesDir / refLinksErrorLevel，全显式无缺省）的完整纪律在 harness.py docstring；⑤ **harness 自测独立记账**（不复用被测的 Report/check——复用即同义反复），每条以变异检验证牙。改 harness 先跑 `python3 tests/assert_harness.py` 与 `npm test`。
 
+17. **死面判据（ADR-0016；工单 0085）**：类名/变量在 **markup + JS + data + i18n** 四处均无字面出现即为死。三类假阳性必须排除，否则会误删：① **构建期生成**（chroma token `c1`/`kc`、highlight 行号表 `lnt`/`linenodiv`）；② **运行时拼接**（JS 里 `'is-' + x`）；③ **渲染器产出**（`.highlight` 结构）。删选择器块必须连带查 `var(--x)` 引用链。**不加死面守门断言**（启发式会误红）；防回流靠 review + parity 门覆盖 token 面。判据的动机是两次假阴性：shell 的 `grep` 对 `\|` 交替失效、以及只扫两个词就宣称「零引用」——**内容搜索一律用 Grep 工具并双向复核**。
+
+18. **CSS 影子契约 parity（ADR-0016；工单 0086/0087）**：JS 写的状态 token 与 CSS 消费侧不得静默漂移——`tests/tokens.mjs` 抽词法（带 `file:line`），`assert_reveal.mjs` 的 **RGR-14** 判方向：正向 = JS 写的 class/变量必须有 CSS 消费；反向 = CSS 消费的 `is-*` 必须有生产者（JS 写 或 模板 `class` 属性）。**`mf-*` 视觉类不进反向**（否则等于死面守门）。两个已踩的坑：① 模板里的条件类写在动作**外面**（`class="mf-price{{ if x }} is-free{{ end }}"`），抽取前必须剥 `{{ … }}`；② 空集会假绿——RGR-14a 有「抽取结果非空」前置。加新 token 时先跑 `npm test`。
+
 ## 5. 内容规范
 
 - 文章：`content/posts/<slug>.md`。新增：`hugo new posts/xxx.md`（套用 `archetypes/default.md`）。
@@ -155,6 +159,9 @@ python3 tests/assert_site_contracts.py
 | `content/about.md` | 简历/关于页 |
 | `assets/css/extended/custom.css` | 品牌样式（明暗双主题 CSS 变量） |
 | `static/img/avatar.svg` | 占位头像 |
+| `themes/maplemod/layouts/partials/post-card.html` | 文章卡片唯一实现（三面同卡、零参数、父容器契约在 docstring）；改类名 = 同步 `CARD_CLASS` 常量与 CSS，`assert_post_card` 会红 |
+| `assets/js/mf-reveal/app.js` | reveal 引擎**唯一注册点**（`ENGINES` 表 + 逐个 try/catch）；新增引擎 = 建文件 + 加一行，`RGR-13` 验装配 |
+| `tests/tokens.mjs` | CSS 影子契约的词法抽取器（机制层，带 file:line）；方向与 `is-*` 范围归 `assert_reveal.mjs` 的 RGR-14 |
 | `themes/maplemod/layouts/partials/post_meta.html` | 文章元信息（日期悬浮提示显式时区格式，消除「构建机器时区决定输出字节」）；主题层文件，无同步义务（0030 合并后站点层无覆盖） |
 | `.github/workflows/ci-cd.yml` | CI/CD 流水线（verify + deploy 双 job；PR 门禁 + 零 WARN / localhost 泄漏守门）。2026-10-24 前名 `deploy.yml`，`assert_sop_pipeline.py` 的 `assert_ci_wiring` 以 glob 守「工作流里必须跑 SOP 断言」 |
 | `docs/sop/` | 运维 SOP 源笔记 |

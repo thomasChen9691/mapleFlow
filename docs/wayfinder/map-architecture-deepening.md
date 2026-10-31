@@ -2,8 +2,9 @@
 id: map-architecture-deepening
 title: 架构深化图（候选 ③④⑤⑥）
 labels: [wayfinder:map]
-status: open
+status: closed
 created: 2026-10-27
+closed: 2026-10-31
 ---
 
 # 架构深化图（候选 ③④⑤⑥）
@@ -20,8 +21,10 @@ created: 2026-10-27
 - **死面范围已定**（项目负责人 2026-10-27）：**配置 + CSS** 两类。模板可达性与 fork 形态不重开（0027/0029 已裁）、静态资产与 i18n 键不纳入、悬空 `google_analytics.html` 调用不处理。
 - **例外记录（2026-10-27）**：经项目负责人指示，本轮对「0079 五轴」（约束 / 依赖 / 模块形状 / seam 藏什么 / 测试存活）做了一次**跨票质询**，同场锁定 0080 / 0081 / 0083 全部决策 + 0082 / 0084 部分决策——「一会话一票」纪律的例外，同 `map-featured-type-guard` 0074–0077 先例。
 - **决议与施工分离（本图约定）**：本图含施工，故**决议已定但未施工的票保持 `open` + `assignee: agent`**（不是 frontier、不算完成），Resolution 段首行标明「决议已定，施工未开始」；施工完成并验证后才 `status: closed` 并进 Decisions so far。
+- **收口（2026-10-31）**：**10/10 票 closed**（0080–0088），frontier 空 = 目的地到达；决策集耐久化于 **ADR-0016**（四章 20 条，各注工单号），ADR-0007 / 0008 各加指针；收口 handoff 见 `docs/handoffs/2026-10-31-architecture-deepening-closure.md`。
 - **PR① 已施工（2026-10-28）**：0080–0084 五票 closed，施工与验证见各自 Resolution；验证基线 = site **185/185** · npm **9+28+41** · sop **105/105** · 生产构建 **0 WARN** · 无 localhost 泄漏。
-- **已锁定待施工的决策（PR② + 收口，详情见各票 Resolution）**：
+- **PR② 已施工（2026-10-31）**：0085–0088 四票 closed——死面删除（−196 行、零断言改动）+ parity 门（RGR-14 三节）+ ADR-0016 收口。验证 = site 185/185 · npm 13+31+41 · sop 105/105 · 构建 0 WARN。
+- **已锁定并施工的决策（PR② + 收口，详情见各票 Resolution）**：
   - [0085](tickets/0085-dead-surface-criteria-and-scope.md) — 判据 = 四面零引用 + 三类白名单（构建期生成 / 运行时拼接 / 渲染器产出）；配置侧删零读取点与注释遗留键、**恒等默认保留**（`defaultTheme` 留，`socialIcons` 删）；粒度 = 文件 + 块级、**不加死面守门**；删块连带查 `var(--x)` 链；**先删死面、再上 parity 门**。
   - [0086](tickets/0086-css-shadow-contract-token-set.md) — 清单 = **源码双向抽取 + 白名单**（不手写 registry：会成为第二契约定义处）；方向 = 双向、范围 = **只 class 与 CSS 变量**（`aria-*` / `inert` / `hidden` 不进）；已知限制 = 只守存在性、不守语义漂移。
   - [0087](tickets/0087-parity-gate-placement-strength.md) — 落点 = `assert_reveal.mjs` 新节、强度 = 测试红（构建期 `errorf` 要在模板里正则解析 JS，不可维护）；失败消息按方向两种、带四处定位；新引擎零登记（抽取自动覆盖）。
@@ -46,6 +49,11 @@ created: 2026-10-27
 - [卡片单模块的测试缝与产物守门](tickets/0082-card-module-test-seam.md) — 新增 `assert_post_card`（第十六类，22 条）+ `content-card` fixture 四篇；解析唯一实现 `parse_cards`；类名只走一个常量；**跨面等价是「单模块」唯一直接证据**；五条变异全部可定位地红。附带抓到「反向断言在解析为空时假绿」并补前置。
 - [注册缝的形态与 API](tickets/0083-registration-seam-shape.md) — 对齐搜索入口的装配式：引擎去 `autoInit`、`app.js` 持 `ENGINES` 表显式挂载、逐个 `try/catch`；选择器留引擎（`filter` 因此导出 `mountFilter` 而非 `initX`）；顺序无关。
 - [注册缝改造后的测试加载面与降级语义](tickets/0084-registration-test-seam.md) — `loadMounted` helper + 11 处改造；**RGR-13 从源码扫描改为行为断言**（装三类挂点、载 `app.js`、验三个副作用）；`scroll-in` 内部 fail-open（异常走「无 IO」同一条路）；计数 9+28+41。
+
+- [死面的判据与删除边界](tickets/0085-dead-surface-criteria-and-scope.md) — 四面零引用 + 三类白名单（构建期生成 / 运行时拼接 / 渲染器产出）；删整文件 2 个 + 选择器块 23 处（−196 行），chroma/highlight 18 类走白名单；**删除笔零断言改动**（删完仍全绿 = 没删到活的）；不加死面守门。
+- [CSS 影子契约的 token 清单与 parity 方向](tickets/0086-css-shadow-contract-token-set.md) — 源码双向抽取、不写 registry；**反向收窄到 `is-*` 六类、白名单为空**（mf-* 视觉类不进反向，否则等于死面守门）；抽取器独立 `tests/tokens.mjs`、带 file:line；首跑抓到「模板条件类写在动作外」的抽取 bug。
+- [parity 门的落点与强度](tickets/0087-parity-gate-placement-strength.md) — `assert_reveal.mjs` 的 RGR-14 三节（空集前置 / 正向 / 反向），强度 = 测试红，消息带四处定位；变异：抹 CSS 消费点 → 正向红，删模板生产者 → 反向红。
+- [收口：ADR 切分、术语、导航与施工节奏](tickets/0088-closure-adr-terminology-navigation.md) — 一份 ADR-0016（四章 20 条）；0007/0008 指针；术语只收「文章卡片」；AGENTS 三行 + 坑点 17/18；PR② 两笔（先删后门）。
 
 ## Not yet specified
 

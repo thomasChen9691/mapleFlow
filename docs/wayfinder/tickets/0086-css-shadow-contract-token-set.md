@@ -3,10 +3,11 @@ id: "0086"
 title: CSS 影子契约的 token 清单与 parity 方向
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: ["0079", "0080", "0085"]
 assignee: agent
 claimed: 2026-10-27
+closed: 2026-10-31
 map: map-architecture-deepening.md
 created: 2026-10-27
 ---
@@ -42,7 +43,11 @@ CSS 影子契约的 token 集合怎么定义、parity 检查哪个方向——�
 
 **白名单形态**：位置随 [0087](0087-parity-gate-placement-strength.md) 的落点定（测试期 → 断言内常量；构建期 → 数据文件）。白名单每条必须带理由与归属文件，不设「看着像就放过」。
 
-**施工状态**：**未开始**。本票保持 open + 已认领。
+**施工（2026-10-31，PR② 第二笔 `08f1280`）**：`tests/tokens.mjs` 落地——`collect({js, css, markup})` 出 `{writes, reads, markup}` 三张表，每 token 带 `{file, line}`；`listFiles(dir, ext)` 供断言侧取文件清单；每项可为路径或 `{file, text}`（自测纯函数入口）。
+
+**门首跑抓到真问题**：`is-free` 的生产者写在模板动作**外面**（`class="mf-price{{ if $state.free }} is-free{{ end }}"`），按空白切 class 属性会把 token 粘成 `is-free{{` → 抽取器改为扫描前剥 `{{ … }}`，并把该形态钉进 `assert_harness` 自测。
+
+**白名单为空已兑现**：反向只查 `is-*` 六个，全部有生产者（4 个 JS 写 + `is-current`/`is-free` 模板写）。
 
 **实施细化（2026-10-31 grilling，PR② 开工前）**
 - **反向范围收窄到 `is-*` 状态词表**（6 个：`is-bump` / `is-current` / `is-free` / `is-hidden` / `is-in` / `is-morphing`），生产者面 = **模板 class 属性 + JS 写入**（`is-current` 由 `pagination.html`、`is-free` 由 `product-index.html` 生产）。**白名单为空**——`mf-*` 视觉类不进反向检查（它们的死样式归 0085 一次性清理，不开长期门）。这条同时解掉了「双向 ⇒ 等于死面守门」与 0085「不加死面守门」的冲突。

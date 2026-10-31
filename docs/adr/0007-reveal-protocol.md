@@ -40,3 +40,7 @@
 **不归 reveal**——它属搜索协议的动效（检索交互），与「搜索交互不并入 reveal」
 （本 ADR 决策 4 同款理由）一致；包在 prefers-reduced-motion: no-preference 内。
 浮层是站点层独立 bundle（mf-search-overlay*），不经本协议的 js.Build。
+
+**指针（2026-10-31，ADR-0016）**：注册缝下沉后，本协议的引擎**不再 import 自注册**——
+`autoInit()` 已删，挂载统一由 `assets/js/mf-reveal/app.js` 的 `ENGINES` 表显式发起
+（决策 7–10）；「DOM 契约定义处 = 引擎 docstring」不变，但选择器留引擎、注册点唯一。

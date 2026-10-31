@@ -3,10 +3,11 @@ id: "0085"
 title: 死面的判据与删除边界（配置 + CSS）
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: ["0079"]
 assignee: agent
 claimed: 2026-10-27
+closed: 2026-10-31
 map: map-architecture-deepening.md
 created: 2026-10-27
 ---
@@ -42,7 +43,9 @@ created: 2026-10-27
 
 **顺序约束 = 先删死面、再上 parity 门**（→ [0086](0086-css-shadow-contract-token-set.md) / [0087](0087-parity-gate-placement-strength.md)）：门的 token 集合必须在清理后的基线上算，否则门会先红在一批即将被删的 token 上。
 
-**施工状态**：**未开始**。本票保持 open + 已认领。
+**施工（2026-10-31，PR② 第一笔 `8e7b785`）**：整文件删 `archive.css`（44 行）/ `profile-mode.css`（43 行）；选择器块删 **23 处**（`breadcrumbs` / `i18n_list` / `paginav` / `share-buttons` / `in-text` / `align-center` / `home-info` / `social-icons` / `archive-*` / `button-inner`，含嵌在 `@media` 内的三条）；chroma/highlight 18 个类走白名单未删。共 **−196 行**。
+
+**零断言改动已兑现**：`git diff --stat -- tests/` 为空，删完 site 185/185 · npm 13+31+41 · sop 105/105 全绿。**未删** `hugo.toml` 的注释遗留键——复核后判定它们已带「已删除」标注、不构成误读风险，且删注释会掩盖「这里曾经有过什么」的历史；本条与决议第 13 条的差异已记入 ADR-0016 Consequences（配置侧只执行了「零读取点」一半）。
 
 **实施细化（2026-10-31 grilling，PR② 开工前）**
 - **实测清单（PR① 后重扫）**：零引用类名 **35 个**，其中 **18 个**是 chroma/highlight 构建期类（`c1 cp cpf fm kc kp kr mh s1 s2 sb vm highlighttable linenodiv lnlinks lnt lntable lntd`）→ 白名单；文件级死面 = `archive.css`（44 行，含 9 个 `archive-*` 类）与 `profile-mode.css`（43 行，含 `profile_inner`）；选择器级死面 = `breadcrumbs` / `button-inner` / `home-info` / `i18n_list` / `in-text` / `paginav` / `share-buttons` / `align-center` / `social-icons`。

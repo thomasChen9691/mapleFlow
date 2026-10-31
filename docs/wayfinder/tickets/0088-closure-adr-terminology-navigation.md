@@ -3,10 +3,11 @@ id: "0088"
 title: 收口：ADR 切分、术语、导航与施工节奏
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: ["0080", "0081", "0082", "0083", "0084", "0085", "0086", "0087"]
 assignee: agent
 claimed: 2026-10-27
+closed: 2026-10-31
 map: map-architecture-deepening.md
 created: 2026-10-27
 ---

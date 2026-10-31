@@ -36,3 +36,7 @@
 **轻笔（2026-10-24，ADR-0013）**：站点层交互引擎实践增至三例——mf-reveal（动效）、
 mf-search-entry（快捷键）、mf-search-overlay（浮层）；浮层 DOM 骨架按分层判据落主题层
 （`partials/search-overlay.html`，因视觉 / 骨架而变 → 主题层），行为引擎落站点层。
+
+**指针（2026-10-31，ADR-0016）**：文章卡片按同一判据落**主题层**
+（`partials/post-card.html`，视觉骨架），站点层首页调用它（site→theme 有先例）；
+**未选站点层**，故 ADR-0012 对 theme→site 的否决不必重开（决策 4）。

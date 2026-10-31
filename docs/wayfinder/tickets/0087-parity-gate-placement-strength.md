@@ -3,10 +3,11 @@ id: "0087"
 title: parity 门的落点与强度
 type: grilling
 mode: HITL
-status: open
+status: closed
 blocked_by: ["0086"]
 assignee: agent
 claimed: 2026-10-27
+closed: 2026-10-31
 map: map-architecture-deepening.md
 created: 2026-10-27
 ---
@@ -42,7 +43,9 @@ parity 门放在哪、失败时是红还是构建失败——「门装在哪面�
 
 **已知限制**：只守存在性、不守语义漂移（0086 已记）；白名单为断言内常量（带理由注释），不设独立数据文件。
 
-**施工状态**：**未开始**。本票保持 open + 已认领。
+**施工（2026-10-31，PR② 第二笔 `08f1280`）**：`assert_reveal.mjs` 新增 **RGR-14** 三节——14a 抽取结果非空前置（防空集假绿）、14b 正向、14c 反向；消息带 `file:line` 四处定位，形态按本票定型。强度 = 测试红（npm 链）。
+
+**变异检验（门自身的牙）**：① 把 `.reveal.is-in` 改名 → 14b 红，消息列出 `filter.js:71` / `scroll-in.js:35` 三处写入点，同时 14c 因新名无生产者而红；② 删掉 `is-free` 的模板生产者 → 14c 红，消息指向 `custom.css:552`。
 
 **实施细化（2026-10-31 grilling，PR② 开工前）**
 - 落点不变（`assert_reveal.mjs` 新增一节），但**词法抽取下沉到 `tests/tokens.mjs`**，本套件只持断言、范围（`is-*`）与消息。

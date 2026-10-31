@@ -8,6 +8,12 @@ MapleFlow 是一个运维 / SRE / DevOps 实战内容站，另有一组对外交
 content/posts 下的内容单元，站点的基本组成。手写文章是 Markdown 文件；SOP 文由 SOP 发布管线在构建期派生，磁盘上无 .md（见「发布管线」）。
 _Avoid_: 博文、博客、日志
 
+**文章卡片 (Post Card)**：
+文章在列表面上的呈现单元——`themes/maplemod/layouts/partials/post-card.html` 是唯一实现，
+首页网格 / section 列表 / term 列表三面同卡、单一类名、零参数（只收一个 Page）。
+卡片不自带布局：**必须是网格容器的直接子元素**（父容器契约，ADR-0016 决策 5）。
+_Avoid_: 列表项、条目卡、entry
+
 **页面 (Page)**：
 content/ 下不属于文章分区的独立页（关于、产品、搜索）。
 _Avoid_: 单页、静态页
