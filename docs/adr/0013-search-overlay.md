@@ -37,3 +37,7 @@ ADR-0010 的 2026-10-23 指针（一）给「不重写 fastsearch」挂了两个
 - 术语：CONTEXT.md「搜索入口」条更新（两条路由 + 动作改为开浮层）、新增「搜索浮层」条；AGENTS.md 落 §3 注释 / §7 速查行 / 坑点 14 修订（「第二个消费方」从「守门观测牙」变为「已实现的第二加载面」——加载面双向断言的语义改为：fastsearch 仍仅 search 页、新 bundle 全站）。
 - 已知限制（诚实入档）：浮层键盘导航（ArrowUp/Down 选择结果）v1 不做——Tab / Enter / Esc 覆盖基本路径，完整方向键导航留在 search 页（fastsearch 已有）；命中高亮不做（ADR-0011 决策 2 同款理由：不动 fuse matches）。
 - **已知限制（fastsearch 冻结的代价）**：`fastsearch.js` docstring 的指针段仍写着「入口只负责跳转 / 聚焦」——该文件按本 ADR 决策 1 **一字不改**（快照契约冻结），故这句已过时；入口的真实行为以 `mf-search-entry-engine.js` 新 docstring 与本 ADR 为准。检索契约条款不受影响。
+
+---
+
+**2026-11-15 指针（ADR-0017 / 搜索浮层 v2）**：本 ADR Consequences 的两条「v1 不做」已被正式重评——**方向键补入 v2**（ArrowUp/Down 选中结果、clamp 不循环、Enter 选中项优先，MFO-15 的无选中项路径存活），**命中高亮维持不做**并作为负向边界附重开触发条件；决策 6 的可见错误态文案删去「引导去 search 页」（所引导页同样会静默失效），且不自动重试、失败不缓存。docstring 里已过时的 `isOpen` 返回键由「删文档对齐实现 + 补返回形状断言」消解。三协议并列、六字段冻结、fuse parity 四元组、fastsearch 一字不改均不变。决策全文见 `docs/adr/0017-search-overlay-v2.md`。本 ADR 正文不改。

@@ -97,7 +97,7 @@ _Avoid_: 前后文章、相关阅读
 _Avoid_: 进度环、reading progress bar
 
 **搜索浮层 (Search Overlay)**：
-全站就地检索面（ADR-0013）：点头部图标或按 `/` 打开，输入即检索（懒加载索引、失败有可见错误态），Esc / 背景 / 关闭按钮 / 选中结果即关。契约（开关 / 焦点 / 键盘 / 渲染 / fuse 配置）的定义处是 `assets/js/mf-search-overlay-engine.js` 文件头 docstring；DOM 骨架在主题层 `partials/search-overlay.html`（默认 hidden）。**它是 index.json 投影的第二个消费方、fastsearch 之外的第二个搜索加载面**——ADR-0010「不重写」结论因此正式重评，结论与设计见 ADR-0013。search 页仍是完整检索落点。
+全站就地检索面（ADR-0013）：点头部图标或按 `/` 打开，输入即检索（懒加载索引、失败有可见错误态），Esc / 背景 / 关闭按钮 / 选中结果即关。契约（开关 / 焦点 / 键盘 / 渲染 / fuse 配置）的定义处是 `assets/js/mf-search-overlay-engine.js` 文件头 docstring；DOM 骨架在主题层 `partials/search-overlay.html`（默认 hidden）。**它是 index.json 投影的第二个消费方、fastsearch 之外的第二个搜索加载面**——ADR-0010「不重写」结论因此正式重评，结论与设计见 ADR-0013。search 页仍是完整检索落点。**2026-11-15 ADR-0017（v2）**：浮层内 ArrowUp/Down 选择结果、Enter 打开选中项（无选中项时打开首条），到顶/到底不循环；选中态由 `aria-selected` 表达、焦点恒在输入框；重检索与关闭清空选中。契约定义处仍是该引擎文件头 docstring，导航落点在 `AGENTS.md` §7 与坑点 14·18。
 _Avoid_: 搜索弹窗、搜索模态框、command palette
 
 **分页器 (Paginator)**：
