@@ -11,7 +11,7 @@
 - **验证基线**：site **185/185** · npm **13+31+41** · sop **105/105** · 生产构建 **0 WARN** · 无 localhost 泄漏。
 - **分支与提交**：`refactor/card-registration`（自 `refactor/featured-guard-module` 尖 `13c8f4a` 起，共 5 笔）——`31117d5` 文档（地图 + 10 票）、`34e068b` PR①（卡片 + 注册缝）、`8e7b785` PR② 第一笔（死面）、`08f1280` PR② 第二笔（parity 门）、`bee9d32` 收口（ADR-0016 + 术语 + AGENTS + 地图 + 本文件）。
 - **三条分支均已推**（2026-10-31，SSH 可用）：`refactor/harness-convergence`（13 笔，先前已推）、`refactor/featured-guard-module`（22 笔）、`refactor/card-registration`（27 笔）。三者是**叠罗汉**：后者包含前者的全部提交。
-- **已知偏差（诚实入档）**：`hugo.toml` 的注释遗留键**未删**（0085 决策 13 的一半未执行——复核后判定它们已带「已删除」标注、删掉会掩盖历史）；ADR-0016 Consequences 已记。
+- **已知偏差（诚实入档；2026-11-15 重审后已闭环）**：`hugo.toml` 的注释遗留键当时**未删**（0085 决策 13 的一半未执行）；偏差实际记在 `0085` Resolution 与本文件，**ADR-0016 Consequences 从未记录**——本句原写「Consequences 已记」为失实，已于重审时更正。2026-11-15 重审裁定：删 A 类注释掉的遗留键、保留 B 类「已删除」说明性注释，结论见 ADR-0016 末尾的 2026-11-15 重审指针。
 
 ## 下一步
 

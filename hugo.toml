@@ -33,24 +33,10 @@ copyright = "© 2019 - 2026 thomasChen"
 startLevel = 2
 endLevel = 2
 
-# ================= 服务设置 =================
-# [services]
-#   [services.disqus]
-#     shortname = ""
-#   [services.googleAnalytics]
-#     ID = ""
-
 # ================= 主题参数设置 =================
 [params]
-# 禅模式 (默认关闭。开启后变为双栏布局，关闭为翻转卡片)
-# zenMode = true
-
 # 配色方案：由 defaultTheme 控制（PaperMod 不读取 lightTheme/darkTheme，已删除）
 defaultTheme = "auto"
-
-# 背景图（PaperMod 主题推荐用 cover 配置，此处注释避免冲突）
-# backgroundImage = "img/global-background.jpg"
-# backgroundImageDark = ""
 
 author = "thomasChen"
 description = "运维开发 / SRE / DevOps 实战 SOP：Kubernetes、Docker、CI/CD、AIOps 与可观测性"
@@ -67,18 +53,6 @@ sopNotesDir = "docs/sop"
 # 必须无前导斜杠，Hugo 会用 .Permalink 自动带 /mapleFlow/ 子路径，避免 404
 ogImage = "img/og-cover.png"
 # headerTitle 为无效字段（PaperMod 不识别），已移除
-# motto = ""
-
-# 页脚自定义文字
-# footerBottomText = ""
-
-# 评论系统 (按需打开)
-# utterancesRepo = ""
-# valine = true
-# LEANCLOUD_APP_ID = ""
-# LEANCLOUD_APP_KEY = ""
-# waline = true
-# walineServer = ""
 
 # ================= 社交图标（socialIcons） =================
 [[params.socialIcons]]

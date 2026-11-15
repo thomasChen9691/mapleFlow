@@ -47,6 +47,8 @@ created: 2026-10-27
 
 **零断言改动已兑现**：`git diff --stat -- tests/` 为空，删完 site 185/185 · npm 13+31+41 · sop 105/105 全绿。**未删** `hugo.toml` 的注释遗留键——复核后判定它们已带「已删除」标注、不构成误读风险，且删注释会掩盖「这里曾经有过什么」的历史；本条与决议第 13 条的差异已记入 ADR-0016 Consequences（配置侧只执行了「零读取点」一半）。
 
+> **2026-11-15 重审指针**：上述「已记入 ADR-0016 Consequences」为失实（该 Consequences 从未记录此偏差）。重审查明 A 类「注释掉的遗留键」并无「已删除」标注、B 类说明性注释才有；施工期复核把两类混同。裁定：**删 A 类、保留 B 类**，决策 13 后半已执行，结论见 ADR-0016 末尾重审指针。本票正文按历史记录保留不改。
+
 **实施细化（2026-10-31 grilling，PR② 开工前）**
 - **实测清单（PR① 后重扫）**：零引用类名 **35 个**，其中 **18 个**是 chroma/highlight 构建期类（`c1 cp cpf fm kc kp kr mh s1 s2 sb vm highlighttable linenodiv lnlinks lnt lntable lntd`）→ 白名单；文件级死面 = `archive.css`（44 行，含 9 个 `archive-*` 类）与 `profile-mode.css`（43 行，含 `profile_inner`）；选择器级死面 = `breadcrumbs` / `button-inner` / `home-info` / `i18n_list` / `in-text` / `paginav` / `share-buttons` / `align-center` / `social-icons`。
 - **删除笔的验收纪律 = 零断言改动**：删完跑 site 185/185 + npm 9+28+41 + sop 105/105，**断言文件一个字符都不改**；动了断言 = 删到了活的东西，回退重判。
