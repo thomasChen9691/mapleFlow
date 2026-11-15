@@ -57,7 +57,7 @@ ogImage = "img/og-cover.png"
 # ================= 社交图标（socialIcons） =================
 [[params.socialIcons]]
 icon = "email"
-url = "mailto:test@example.com"
+url = "mailto:demo@example.com"
 title = "Email"
 
 [[params.socialIcons]]
@@ -163,7 +163,7 @@ weight = 9
 [[menu.main]]
 identifier = "email"
 name = "Email"
-url = "mailto:test@example.com"
+url = "mailto:demo@example.com"
 weight = 10
 
 # 分页配置

@@ -1,21 +1,21 @@
 +++
 title = "关于我"
-description = "运维开发 / SRE 实战派：Kubernetes、CI/CD、可观测性与自动化（TEST 测试占位内容，上线前请替换为真实信息）"
+description = "运维开发 / SRE 实战派：Kubernetes、CI/CD、可观测性与自动化（MOCK 演示内容，开发完成后替换为真实信息）"
 draft = false
 layout = "single"
 +++
 
 <!-- ============================================================
-     TEST DATA —— 本页为「测试用」占位内容（非真实信息）。
-     所有姓名 / 邮箱 / GitHub / 地点 / 公司 / 微信均为测试值，用于验证页面渲染。
-     上线前请整体替换为你的真实信息；结构（HTML 标签与 CSS 类名）已调好，改文字即可。
+     MOCK DATA —— 本页为「演示用」模拟内容（非真实信息，2026-11-15）。
+     姓名 / 邮箱 / GitHub / 地点 / 公司 / 微信均为 example.com 系列的演示值。
+     开发完成后整体替换为真实信息；结构（HTML 标签与 CSS 类名）已调好，只改文字。
      ============================================================ -->
 
 <div class="resume">
 
   <header class="resume-hero">
     <!-- 头像使用内联 SVG，避免子路径（GitHub Pages 项目站）下的静态资源引用问题 -->
-    <svg class="resume-avatar" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="头像占位">
+    <svg class="resume-avatar" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="演示头像">
       <defs>
         <linearGradient id="av" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#3f56c9"/>
@@ -23,16 +23,16 @@ layout = "single"
         </linearGradient>
       </defs>
       <circle cx="60" cy="60" r="60" fill="url(#av)"/>
-      <text x="60" y="60" dy=".35em" text-anchor="middle" fill="#ffffff" font-size="44" font-family="sans-serif" font-weight="700">测</text>
+      <text x="60" y="60" dy=".35em" text-anchor="middle" fill="#ffffff" font-size="44" font-family="sans-serif" font-weight="700">演</text>
     </svg>
     <div class="resume-id">
-      <h1>测试用户（TEST）</h1>
+      <h1>演示用户</h1>
       <p class="resume-role">高级运维开发工程师 / SRE / DevOps Engineer</p>
       <p class="resume-tagline">把重复的劳动自动化，把不可控的故障变成可观测的指标。</p>
       <ul class="resume-contact">
-        <li><span>📧</span> <a href="mailto:test@example.com">test@example.com</a></li>
-        <li><span>💻</span> <a href="https://github.com/test-user" target="_blank" rel="noopener">github.com/test-user</a></li>
-        <li><span>📍</span> 测试城市</li>
+        <li><span>📧</span> <a href="mailto:demo@example.com">demo@example.com</a></li>
+        <li><span>💻</span> <a href="https://github.com/example/demo" target="_blank" rel="noopener">github.com/example/demo</a></li>
+        <li><span>📍</span> 示例市</li>
       </ul>
     </div>
   </header>
@@ -64,16 +64,16 @@ layout = "single"
         <span class="timeline-dot"></span>
         <div class="timeline-body">
           <p class="timeline-date">2022 — 至今</p>
-          <h3>高级运维开发工程师 · 测试公司 A（TEST）</h3>
-          <p>TEST 占位：负责 Kubernetes 多集群治理、CI/CD 流水线平台化与可观测性体系建设；示例指标仅供渲染验证，非真实业绩。</p>
+          <h3>高级运维开发工程师 · 示例科技 A</h3>
+          <p>MOCK 演示：负责 Kubernetes 多集群治理、CI/CD 流水线平台化与可观测性体系建设；本段为演示文案，非真实业绩。</p>
         </div>
       </div>
       <div class="timeline-item">
         <span class="timeline-dot"></span>
         <div class="timeline-body">
           <p class="timeline-date">2019 — 2022</p>
-          <h3>运维工程师 · 测试公司 B（TEST）</h3>
-          <p>TEST 占位：负责生产环境稳定性保障、自动化运维平台开发与监控告警治理；示例描述仅供渲染验证。</p>
+          <h3>运维工程师 · 示例科技 B</h3>
+          <p>MOCK 演示：负责生产环境稳定性保障、自动化运维平台开发与监控告警治理；本段为演示文案。</p>
         </div>
       </div>
     </div>
@@ -104,9 +104,9 @@ layout = "single"
   <section class="resume-section" id="contact">
     <h2>联系方式</h2>
     <ul class="contact-list">
-      <li>邮箱：<a href="mailto:test@example.com">test@example.com</a></li>
-      <li>GitHub：<a href="https://github.com/test-user" target="_blank" rel="noopener">github.com/test-user</a></li>
-      <li>微信：test_wechat_id（TEST）</li>
+      <li>邮箱：<a href="mailto:demo@example.com">demo@example.com</a></li>
+      <li>GitHub：<a href="https://github.com/example/demo" target="_blank" rel="noopener">github.com/example/demo</a></li>
+      <li>微信：demo_wechat（MOCK）</li>
     </ul>
   </section>
 

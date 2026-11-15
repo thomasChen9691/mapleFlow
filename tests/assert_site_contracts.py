@@ -152,7 +152,15 @@ FIXTURE_HOME_FEATURED_IDS = ["fx-listed-paid", "fx-listed-free", "fx-unlisted-pa
 FIXTURE_HOME_TRUNCATED_ID = "fx-unlisted-free"  # featured=true 但被 limit=3 截断，必须不上首页
 EMPTY_STATE_TEXT = "暂无资源"  # 渲染 seam 的空态文案（空 slice 时；存量 UI 文案）
 REAL_ROW_COUNT = 5         # data/products.yaml 现有 5 个产品
-REAL_LISTED_COUNT = 0      # 迁移后全部未上架（占位），可下载产品为 0（工单 0004：显示 0）
+REAL_LISTED_COUNT = 5      # MOCK 演示数据（2026-11-15）：5 条全上架；贴真实数据时同步改
+# MOCK 阶段逐条期望（独立字面量）：id -> (控件形态, 文案)。付费 -> 购买 / 免费 -> 免费获取。
+REAL_ROW_EXPECT = {
+    "n8n-dify-workflows": ("link", "购买"),
+    "sre-learning-docs": ("link", "购买"),
+    "sre-interview-bank": ("link", "购买"),
+    "prometheus-alert-cheatsheet": ("link", "免费获取"),
+    "aiops-anomaly-lab": ("link", "免费获取"),
+}
 # 真实数据首页精选（0019 评审补漏）：fixture 改全 featured 后 where featured 分支
 # 只剩真实数据这一层回归保护——3 条 featured（yaml 序），limit=3 不截断但保过滤。
 REAL_HOME_FEATURED_IDS = ["n8n-dify-workflows", "sre-learning-docs", "sre-interview-bank"]
@@ -259,7 +267,7 @@ POST_META_TITLE_RE = re.compile(r"title='\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-
 # 故子项配置零读取点）。期望值 = 实际渲染的 9 项，按 weight 序；内部链接符合 uglyURLs 形态。
 MENU_RENDERED_KEYS = [
     "/", "/posts/", "/categories/", "/tags/", "/about.html", "/search.html",
-    "/products.html", "https://github.com/thomasChen9691", "mailto:test@example.com",
+    "/products.html", "https://github.com/thomasChen9691", "mailto:demo@example.com",
 ]
 
 
@@ -1579,10 +1587,13 @@ def assert_real(report):
     if proc.returncode != 0:
         return
     rows = parse_rows(dest / "products.html")
-    all_unlisted = len(rows) == REAL_ROW_COUNT and all(
-        r["control"] == "disabled" and r["label"] == "即将上架" and r["aria_disabled"] == "true"
-        for r in rows.values())
-    report.check(f"真实数据 {REAL_ROW_COUNT} 条全部「即将上架」", all_unlisted,
+    all_listed = len(rows) == REAL_ROW_COUNT and all(
+        k in REAL_ROW_EXPECT
+        and r["control"] == REAL_ROW_EXPECT[k][0]
+        and r["label"] == REAL_ROW_EXPECT[k][1]
+        and r["aria_disabled"] != "true"
+        for k, r in rows.items())
+    report.check(f"真实数据 {REAL_ROW_COUNT} 条均为已上架（MOCK；控件语义按价格逐条钉）", all_listed,
                  f"got {len(rows)} rows: " + ", ".join("%s=%s/%s" % (k, v["control"], v["label"]) for k, v in rows.items()))
     count = parse_spec_count((dest / "index.html").read_text(encoding="utf-8"), "可下载产品")
     report.check(f"真实数据可下载产品计数 = {REAL_LISTED_COUNT}", count == REAL_LISTED_COUNT, f"got {count}")

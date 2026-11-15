@@ -20,8 +20,10 @@
 #   buy_url  面包多商品页 URL（真实领取入口；与 listed 必须同时改，违约即构建失败）
 #   featured 是否进入首页精选（true/false）
 #
-# ⚠️ 当前 5 条均为开发中的占位产品（listed: false，不提供下载链接）。
-#    拿到真实商品页地址后：填 buy_url 并把 listed 改为 true——两个字段必须同时改。
+# ⚠️ MOCK 演示数据（2026-11-15）：5 条均为「已上架」，但 buy_url 全部是
+#    example.com 的占位地址，**不是真实领取入口**，仅用于验证上架 / 计数 / 控件链路。
+#    贴真实数据时把 buy_url 与 listed 成对替换（违约即构建失败），并同步更新
+#    tests/assert_site_contracts.py 的 REAL_LISTED_COUNT 与 assert_real 的期望。
 # ============================================================
 
 - id: n8n-dify-workflows
@@ -32,8 +34,8 @@
   scale: 12 个模板
   updated: 2026-08-20
   price: 39
-  listed: false
-  buy_url: ""
+  listed: true
+  buy_url: "https://example.com/mock/n8n-dify-workflows"
   featured: true
 
 - id: sre-learning-docs
@@ -44,8 +46,8 @@
   scale: 约 180 页
   updated: 2026-08-12
   price: 29
-  listed: false
-  buy_url: ""
+  listed: true
+  buy_url: "https://example.com/mock/sre-learning-docs"
   featured: true
 
 - id: sre-interview-bank
@@ -56,8 +58,8 @@
   scale: 200+ 题
   updated: 2026-08-05
   price: 49
-  listed: false
-  buy_url: ""
+  listed: true
+  buy_url: "https://example.com/mock/sre-interview-bank"
   featured: true
 
 - id: prometheus-alert-cheatsheet
@@ -68,8 +70,8 @@
   scale: 8 页
   updated: 2026-07-28
   price: 0
-  listed: false
-  buy_url: ""
+  listed: true
+  buy_url: "https://example.com/mock/prometheus-alert-cheatsheet"
   featured: false
 
 - id: aiops-anomaly-lab
@@ -80,6 +82,6 @@
   scale: 4 个实验
   updated: 2026-08-26
   price: 0
-  listed: false
-  buy_url: ""
+  listed: true
+  buy_url: "https://example.com/mock/aiops-anomaly-lab"
   featured: false
