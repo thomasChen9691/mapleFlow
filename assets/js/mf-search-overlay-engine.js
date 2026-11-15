@@ -46,7 +46,19 @@
  *                                       除浮层外的所有子节点 setAttribute
  *                                       ('inert','')，关闭时移除（焦点与指针
  *                                       一起被浏览器挡住，比手写困排彻底）
- *   键盘 Escape 关（浮层开时）；Enter 导航首条结果（有结果时）；
+ *       .mf-search-link[aria-expanded] 引擎在 init 写 false、open 写 true、
+ *                                       close 写 false（触发器在主题层 header，
+ *                                       由引擎写属性，不新增主题层脚本）
+ *       #mfSearchInput[aria-activedescendant] 选中时指向该 li 的 id，清空时
+ *                                       移除；**焦点恒在 input**，不转移到 <a>
+ *       #mfSearchResults li            id=mfSearchResult-{i} / role=option /
+ *                                       aria-selected=true|false（选中态视觉
+ *                                       反馈走属性选择器，不新增 is-* class——
+ *                                       parity 门 RGR-14 正向会红）
+ *   键盘 Escape 关（浮层开时）；ArrowDown / ArrowUp 在结果间移动选中项，
+ *       **到顶/到底 clamp 不循环**（与 fastsearch 快照一致；不消费 fuse
+ *       matches）；Enter 导航**选中项**，无选中项时导航首条（MFO-15 原样）；
+ *       重检索（input 事件）与 close 都清空选中索引。
  *       Tab 困排**仅兜底路径**：不支持 inert 的浏览器才在 doc keydown 里手写
  *       循环（支持 inert 时背景已钉住，两个机制不同时开——会抢两轮焦点）。
  *
@@ -60,20 +72,22 @@
  *
  * 容错 UX（ADR-0013 决策 6——快照的「XHR 失败仅 console.log」静默失效在新引擎
  *   不继承）：fetch 抛错 / 返回非 ok / JSON.parse 失败 → .mf-search-error 显示
- *   （可见错误态 + 引导去 search 页）；无结果 → .mf-search-empty 显示。
+ *   （可见错误态；文案不引导去同样会静默失效的 search 页，见 0093 决议）；
+ *   无结果 → .mf-search-empty 显示。
  *   懒加载：打开时不预拉，首次输入才 fetch，之后缓存（索引 17 条，一次拉取）。
  *
  * 降级：缺 #mfSearchOverlay / #mfSearchInput / .mf-search-link / indexUrl
  *   任一 → init 返回 null（调用方据此不装 openSearch 钩子，入口回落跳转）。
  *
- * 测试：tests/assert_search.mjs（MFO-1..16+：降级 / 开关与焦点 / 三路关闭 /
- *   懒加载与 parity / 渲染结构 / 空态 / 错误态 / Enter / Tab 困排兜底 /
- *   iOS 双机制滚锁 / inert 分支——后者经 config.supportsInert 注入 true 走
- *   inert 路径，jsdom 无原生 inert、特性检测恒 false，不注入就测不到）。
+ * 测试：tests/assert_search.mjs（MFO-1..28：降级 / 开关与焦点 / 三路关闭 /
+ *   懒加载与 parity / 渲染结构 / 空态 / 错误态 / Enter 首条 / Tab 困排兜底 /
+ *   iOS 双机制滚锁 / inert 分支；v2 的 MFO-20..28 守返回形状、触发器
+ *   aria-expanded、选中态三属性、clamp 两向、Enter 选中项、重检索/close 清空）。
+ *   inert 分支经 config.supportsInert 注入 true 走（jsdom 无原生 inert）。
  */
 
 /**
- * 装配浮层。返回 { open, close, isOpen } 或 null（挂点缺失即降级）。
+ * 装配浮层。返回 { open, close } 或 null（挂点缺失即降级）。
  *
  * @param doc  Document
  * @param win  Window（事件宿主；滚动位置与 location 的来源）
@@ -96,6 +110,9 @@ export function initSearchOverlay(doc, win, config) {
     const backdrop = doc.querySelector('.mf-search-backdrop');
     const triggers = [...doc.querySelectorAll('.mf-search-link')];
     if (!indexUrl || !overlay || !input || !results || !triggers.length) { return null; }
+    // aria 配套：触发器状态由引擎维护（主题层骨架不写行为属性）；
+    // input 的 combobox 语义与 ul 的 listbox 由骨架静态提供。
+    for (const t of triggers) { t.setAttribute('aria-expanded', 'false'); }
 
     const fetchImpl = config.fetchImpl || ((...a) => win.fetch(...a));
     const fuseFactory = config.fuseFactory || ((...a) => new win.Fuse(...a));
@@ -112,6 +129,7 @@ export function initSearchOverlay(doc, win, config) {
     let prevOverflow = '';   // 打开前的 body overflow（关闭时还原）
     let savedScrollY = 0;    // 打开时的滚动位置（关闭时还原）
     let inerted = [];        // 打开时被钉 inert 的背景节点（关闭时还原）
+    let selected = -1;       // 当前选中结果索引（-1 = 无选中；重检索/close 清空）
 
     const setOpen = (next) => {
         opened = next;
@@ -162,6 +180,8 @@ export function initSearchOverlay(doc, win, config) {
     function open() {
         if (opened) { return; }
         lastFocus = doc.activeElement;
+        clearSelection();
+        for (const t of triggers) { t.setAttribute('aria-expanded', 'true'); }
         setOpen(true);
         lockScroll();
         if (supportsInert) { setBackgroundInert(true); }
@@ -170,6 +190,8 @@ export function initSearchOverlay(doc, win, config) {
 
     function close() {
         if (!opened) { return; }
+        clearSelection();
+        for (const t of triggers) { t.setAttribute('aria-expanded', 'false'); }
         setOpen(false);
         unlockScroll();
         if (supportsInert) { setBackgroundInert(false); }
@@ -198,17 +220,44 @@ export function initSearchOverlay(doc, win, config) {
         return loading;
     }
 
+    /* 选中态：焦点恒在 input（不复刻 fastsearch 的 .focus 焦点转移），
+       用 aria-activedescendant 指向 li；aria-selected 挂在 li 上、CSS 用属性
+       选择器反馈——不新增 is-* class（parity 门 RGR-14 正向会红）。 */
+    const clearSelection = () => {
+        selected = -1;
+        input.removeAttribute('aria-activedescendant');
+        for (const li of results.querySelectorAll('li')) {
+            li.setAttribute('aria-selected', 'false');
+        }
+    };
+    const setSelected = (next) => {
+        const items = [...results.querySelectorAll('li')];
+        if (!items.length) { clearSelection(); return; }
+        selected = Math.max(0, Math.min(next, items.length - 1));   // clamp 到顶/到底
+        for (let i = 0; i < items.length; i += 1) {
+            items[i].setAttribute('aria-selected', i === selected ? 'true' : 'false');
+        }
+        input.setAttribute('aria-activedescendant', items[selected].id);
+    };
+
     function render(items) {
+        clearSelection();
         results.innerHTML = '';
         if (!items.length) {
             if (emptyHint) { emptyHint.hidden = false; }
             return;
         }
-        if (emptyHint) { emptyHint.hidden = true; }        const frag = doc.createDocumentFragment();
+        if (emptyHint) { emptyHint.hidden = true; }
+        const frag = doc.createDocumentFragment();
+        let i = 0;
         for (const hit of items) {
             const it = hit && hit.item ? hit.item : hit;
             const li = doc.createElement('li');
             li.className = 'mf-search-item';
+            li.id = `mfSearchResult-${i}`;
+            li.setAttribute('role', 'option');
+            li.setAttribute('aria-selected', 'false');
+            i += 1;
             const a = doc.createElement('a');
             a.href = it.permalink || '#';
             const title = doc.createElement('span');
@@ -239,6 +288,7 @@ export function initSearchOverlay(doc, win, config) {
             // 错误态与空态**互斥**：拉取失败时清结果但不显示「没有匹配」——
             // 换关键词修不了网络失败，两句同时出现会误导（2026-10-24 评审抓出）
             results.innerHTML = '';
+            clearSelection();
             if (emptyHint) { emptyHint.hidden = true; }
             if (errorHint) { errorHint.hidden = false; }
             return;
@@ -263,9 +313,16 @@ export function initSearchOverlay(doc, win, config) {
     input.addEventListener('input', () => { runSearch(); });
 
     input.addEventListener('keydown', (e) => {
+        const links = [...results.querySelectorAll('li a')];
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            if (!links.length) { return; }
+            e.preventDefault();
+            setSelected(selected < 0 ? 0 : selected + (e.key === 'ArrowDown' ? 1 : -1));
+            return;
+        }
         if (e.key === 'Enter') {
-            const first = results.querySelector('li a');
-            if (first) { e.preventDefault(); navigate(first.getAttribute('href')); close(); }
+            const target = selected >= 0 ? links[selected] : links[0];
+            if (target) { e.preventDefault(); navigate(target.getAttribute('href')); close(); }
         }
     });
 

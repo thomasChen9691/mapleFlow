@@ -1375,6 +1375,13 @@ main:has(> .post-card + .post-card) > .post-card,
 }
 .mf-search-item a:hover,
 .mf-search-item a:focus-visible { background: var(--primary-soft); }
+/* v2 选中态：aria-selected 是唯一真源（引擎写），不新增 is-* class——
+   parity 门 RGR-14 正向要求 JS 写的状态 token 必须有 CSS 消费。 */
+.mf-search-item[aria-selected="true"] a {
+    background: var(--primary-soft);
+    outline: 1px solid currentColor;
+    outline-offset: -1px;
+}
 .mf-search-title { font-size: .95rem; font-weight: 600; color: var(--content); }
 .mf-search-summary {
   font-size: .82rem;

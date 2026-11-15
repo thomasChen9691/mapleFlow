@@ -23,6 +23,7 @@
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input id="mfSearchInput" type="search" maxlength="64" aria-label="搜索"
+                role="combobox" aria-controls="mfSearchResults" aria-autocomplete="list"
                 placeholder="搜索文章、命令、配置…" autocomplete="off" spellcheck="false">
             <button type="button" class="mf-search-close" aria-label="关闭搜索">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -33,8 +34,8 @@
                 </svg>
             </button>
         </div>
-        <ul class="mf-search-results" id="mfSearchResults" aria-label="搜索结果"></ul>
+        <ul class="mf-search-results" id="mfSearchResults" role="listbox" aria-label="搜索结果"></ul>
         <p class="mf-search-empty" hidden>没有匹配的结果——换个关键词，或到搜索页浏览全部。</p>
-        <p class="mf-search-error" hidden>索引加载失败，请稍后重试或前往搜索页。</p>
+        <p class="mf-search-error" hidden>索引加载失败，请稍后重试。</p>
     </div>
 </div>

@@ -13,7 +13,7 @@
  *   assets/js/mf-search-overlay-engine.js
  *     initSearchOverlay(doc, win, config) —— 浮层引擎纯函数 seam（ADR-0013
  *     决策 3）：config 注入 indexUrl / fetchImpl / fuseFactory / navigate，
- *     返回 { open, close, isOpen } 或 null（挂点缺失即降级）。
+ *     返回 { open, close } 或 null（挂点缺失即降级）。
  * 断言方式：每个行为一个用例——装样本 DOM → 调 register → 派发键盘事件 →
  *   断言可观测效果（location.href 跳转 / 焦点落点 / 事件是否被 prevent）。
  *
@@ -164,7 +164,7 @@ function overlaySample() {
       <input id="mfSearchInput" type="search" maxlength="64" aria-label="搜索" autocomplete="off">
       <button type="button" class="mf-search-close" aria-label="关闭搜索">×</button>
     </div>
-    <ul class="mf-search-results" id="mfSearchResults" aria-label="搜索结果"></ul>
+    <ul class="mf-search-results" id="mfSearchResults" role="listbox" aria-label="搜索结果"></ul>
     <p class="mf-search-empty" hidden>没有匹配的结果</p>
     <p class="mf-search-error" hidden>索引加载失败</p>
   </div>
@@ -428,6 +428,112 @@ async function typeQuery(doc, value) {
     check('MFO-19 inert 路径下 Tab 不触发手写循环（焦点留在末元素，困排交给 inert）',
         x.doc.activeElement === last,
         `got ${x.doc.activeElement && (x.doc.activeElement.id || x.doc.activeElement.className)}`);
+}
+
+// ---- MFO-20..28：搜索浮层 v2 契约（工单 0090/0091/0092 决议；契约与断言 TDD 出生）----
+{
+    const { initSearchOverlay } = await import(pathToFileURL(OVERLAY_ENGINE).href);
+
+    // 返回形状：{ open, close }（零消费方的多余键已删，契约文本与实现对齐）
+    const shape = installOverlay({ records: [] });
+    const api = initSearchOverlay(shape.doc, shape.dom.window, {
+        indexUrl: INDEX_URL, fetchImpl: shape.fetchImpl, fuseFactory: shape.fuseFactory,
+        navigate: () => {},
+    });
+    check('MFO-20 返回形状恰为 { open, close }（无多余键）',
+        !!api && JSON.stringify(Object.keys(api).sort()) === JSON.stringify(['close', 'open']),
+        `got ${api ? JSON.stringify(Object.keys(api)) : 'null'}`);
+
+    // aria-expanded 由引擎在开关时写到触发器节点（不新增主题层脚本）
+    const ax = installOverlay({ records: [] });
+    const axApi = initSearchOverlay(ax.doc, ax.dom.window, {
+        indexUrl: INDEX_URL, fetchImpl: ax.fetchImpl, fuseFactory: ax.fuseFactory,
+        navigate: () => {},
+    });
+    const trigger = ax.doc.querySelector('.mf-search-link');
+    axApi.open();
+    const expandedOpen = trigger.getAttribute('aria-expanded');
+    axApi.close();
+    const expandedClose = trigger.getAttribute('aria-expanded');
+    check('MFO-21 引擎在 open/close 时给触发器写 aria-expanded=true/false',
+        expandedOpen === 'true' && expandedClose === 'false',
+        `open=${expandedOpen} close=${expandedClose}`);
+
+    const TWO = [
+        { item: { title: 'A', permalink: '/a/', summary: 'sa' } },
+        { item: { title: 'B', permalink: '/b/', summary: 'sb' } },
+    ];
+    const sel = installOverlay({ records: [], fuseImpl: { search: () => TWO } });
+    initSearchOverlay(sel.doc, sel.dom.window, {
+        indexUrl: INDEX_URL, fetchImpl: sel.fetchImpl, fuseFactory: sel.fuseFactory,
+        navigate: (u) => sel.navigated.push(u),
+    }).open();
+    await typeQuery(sel.doc, 'q');
+    const selInput = sel.doc.getElementById('mfSearchInput');
+    const selUl = sel.doc.getElementById('mfSearchResults');
+    const lis = () => [...selUl.querySelectorAll('li')];
+    const press = (key) => selInput.dispatchEvent(new sel.dom.window.KeyboardEvent(
+        'keydown', { key, bubbles: true, cancelable: true }));
+
+    press('ArrowDown');
+    check('MFO-22 ArrowDown 选中首条：li id/role/aria-selected + input aria-activedescendant + ul role',
+        lis().length === 2 && !!lis()[0].id
+        && lis()[0].getAttribute('role') === 'option'
+        && lis()[0].getAttribute('aria-selected') === 'true'
+        && selInput.getAttribute('aria-activedescendant') === lis()[0].id
+        && selUl.getAttribute('role') === 'listbox',
+        `got ${selUl.innerHTML.slice(0, 160)}`);
+
+    press('ArrowUp');
+    check('MFO-23 clamp 到顶：ArrowUp 从首条不改变选中',
+        selInput.getAttribute('aria-activedescendant') === lis()[0].id
+        && lis()[0].getAttribute('aria-selected') === 'true');
+
+    press('ArrowDown');
+    check('MFO-24 ArrowDown 移到第二条且互斥（首条 aria-selected=false）',
+        selInput.getAttribute('aria-activedescendant') === lis()[1].id
+        && lis()[1].getAttribute('aria-selected') === 'true'
+        && lis()[0].getAttribute('aria-selected') === 'false');
+
+    let clampedAtEnd = true;
+    for (let i = 0; i < 3; i += 1) {
+        press('ArrowDown');
+        if (selInput.getAttribute('aria-activedescendant') !== lis()[1].id) { clampedAtEnd = false; }
+    }
+    check('MFO-25 clamp 到底：连续 ArrowDown 始终停在末条（不循环回首条）',
+        clampedAtEnd, `got ${selInput.getAttribute('aria-activedescendant')}`);
+
+    press('Enter');
+    check('MFO-26 Enter 导航选中项（非首条）',
+        sel.navigated.length === 1 && sel.navigated[0] === '/b/',
+        `got ${JSON.stringify(sel.navigated)}`);
+
+    // 重检索 / close 清空选中索引
+    const clr = installOverlay({ records: [], fuseImpl: { search: () => TWO } });
+    const clrApi = initSearchOverlay(clr.doc, clr.dom.window, {
+        indexUrl: INDEX_URL, fetchImpl: clr.fetchImpl, fuseFactory: clr.fuseFactory,
+        navigate: () => {},
+    });
+    clrApi.open();
+    await typeQuery(clr.doc, 'q');
+    const clrInput = clr.doc.getElementById('mfSearchInput');
+    clrInput.dispatchEvent(new clr.dom.window.KeyboardEvent('keydown',
+        { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    const hadSelection = !!clrInput.getAttribute('aria-activedescendant');
+    await typeQuery(clr.doc, 'q2');
+    check('MFO-27 重检索（input 事件）清空选中索引',
+        hadSelection && !clrInput.getAttribute('aria-activedescendant')
+        && ![...clr.doc.querySelectorAll('#mfSearchResults li')]
+            .some((li) => li.getAttribute('aria-selected') === 'true'),
+        `had=${hadSelection} active=${clrInput.getAttribute('aria-activedescendant')}`);
+
+    clrInput.dispatchEvent(new clr.dom.window.KeyboardEvent('keydown',
+        { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    const hadBeforeClose = !!clrInput.getAttribute('aria-activedescendant');
+    clrApi.close();
+    check('MFO-28 close 清空选中索引',
+        hadBeforeClose && !clrInput.getAttribute('aria-activedescendant'),
+        `had=${hadBeforeClose} active=${clrInput.getAttribute('aria-activedescendant')}`);
 }
 
 finish();

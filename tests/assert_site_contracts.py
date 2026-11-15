@@ -1437,6 +1437,15 @@ def assert_search_entry_artifacts(report, dest):
                                    p.read_text(encoding="utf-8"))]
     report.check("浮层骨架默认 hidden（无 JS 不可见，no-js 基线）", not not_hidden,
                  f"未隐藏: {not_hidden[:3]}")
+    # 搜索浮层 v2（工单 0092/0093 决议）：错误文案不误导 + listbox 宿主静态在场
+    skeleton = pages[0].read_text(encoding="utf-8") if pages else ""
+    report.check("浮层错误文案不含「前往搜索页」（0093：不引导去同样静默失效的页）",
+                 "或前往搜索页" not in skeleton
+                 and "索引加载失败，请稍后重试。" in skeleton,
+                 "error copy drifted")
+    report.check("浮层骨架 ul 带 role=listbox（0092：aria 选中态的宿主）",
+                 bool(re.search(r'id="?mfSearchResults"?[^>]*role="?listbox"?', skeleton)),
+                 "listbox role missing in skeleton")
     # 反向牙（决议⑧③的 fixture 侧）：fastsearch 构件不得出现在非 search 页——
     # ADR-0010「第二个消费方」触发条件的观测面；fixture 恒跑（--quick 也在），
     # 与 assert_real 的同名检查各守一层（CI 全量 + 本地快速迭代都不缺席）。
@@ -1662,6 +1671,11 @@ def assert_search_entry_real(report, dest):
     report.check("浮层 fuse 配置与 fastsearch 快照 parity（distance/threshold/ignoreLocation/keys）",
                  _fuse_cfg(fast_txt) == _fuse_cfg(overlay_txt),
                  f"fastsearch={_fuse_cfg(fast_txt)} overlay={_fuse_cfg(overlay_txt)}")
+    # v2 契约（0090 决议）：返回形状文档与实现对齐，两处契约文本不得再声明该键
+    search_src = (REPO / "tests/assert_search.mjs").read_text(encoding="utf-8")
+    report.check("v2 契约：引擎 docstring 与测试头均不再声明 isOpen 返回键（0090 决议）",
+                 "isOpen" not in overlay_txt and "isOpen" not in search_src,
+                 "isOpen still declared in contract text")
     # 浮层骨架：真实构建同样全站在场且默认 hidden
     no_overlay = [p.relative_to(dest).as_posix() for p in pages
                   if 'id="mfSearchOverlay"' not in p.read_text(encoding="utf-8")]
