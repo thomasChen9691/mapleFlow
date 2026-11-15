@@ -1,5 +1,7 @@
 # 交接：架构深化收口 + 单人直推切换（2026-10-31）
 
+> **2026-11-15 指针**：本文「下一步」四项已全部完成（直推 / CI 双 job 绿 / 三条 refactor 分支清理 / main 跟踪恢复），证据与后续见 `docs/handoffs/2026-11-15-direct-push-verified.md`。本文正文不改（历史记录）。
+
 > 只写当前状态、下一步、建议 skill。决策与契约见 `docs/adr/0016-architecture-deepening.md`，术语见 `CONTEXT.md`，工单链见 `docs/wayfinder/map-architecture-deepening.md`（已 closed）——本文不重复。
 
 ## 当前状态
