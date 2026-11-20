@@ -29,7 +29,7 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
-          hugo-version: '0.164.0'   # CI 钉版（ADR-0004：0.166+ 条件多 return 本地过 CI 红）
+          hugo-version: '0.167.0'   # CI 钉版（2026-11-20 与本机对齐，skew 已消除；升级节奏见 ADR-0004 指针）
           extended: true
 
       - name: Setup Node
@@ -130,7 +130,7 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
-          hugo-version: '0.164.0'
+          hugo-version: '0.167.0'
           extended: true
 
       - name: Build Hugo site

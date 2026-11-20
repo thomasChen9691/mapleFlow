@@ -17,7 +17,7 @@ canonifyURLs = false
 uglyURLs = true
 absoluteURLs = false
 defaultContentLanguage = "zh-cn"
-# locale 取代已废弃的 languageCode（Hugo v0.158.0 起 languageCode 弃用；CI 使用 0.164.0）
+# locale 取代已废弃的 languageCode（Hugo v0.158.0 起 languageCode 弃用；CI 使用 0.167.0）
 locale = "zh-CN"
 title = "MapleFlow"
 theme = "maplemod"

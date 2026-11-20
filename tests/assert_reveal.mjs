@@ -13,8 +13,8 @@
  *   依赖由 package.json 声明（jsdom devDependency），CI 以 npm ci + 本文件为
  *   权威守门（0023 决议①），本地跑同一命令即可复现。
  *
- * 与 Hugo 版本 skew 的关系：断言只消费引擎源码，不经 Hugo 构建，
- *   与 CI 钉版 0.164 / 本机 0.167 无关。
+ * 与 Hugo 版本的关系：断言只消费引擎源码，不经 Hugo 构建，
+ *   与本机/CI 的 Hugo 版本无关（2026-11-20 起两端同为 0.167）。
  *
  * 跑法：
  *   npm ci && node tests/assert_reveal.mjs

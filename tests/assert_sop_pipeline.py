@@ -25,9 +25,9 @@
   python3 tests/assert_sop_pipeline.py          # 全套
   python3 tests/assert_sop_pipeline.py --quick  # 只跑契约/draft/CI（本地快速迭代）
 
-Hugo 版本纪律：适配器按 0.164 语义编写（dates 嵌套 dict、params 承载
-categories/tags、description 顶层）。本机 hugo 可能为 0.167 而 CI 钉
-0.164——本脚本只消费构建产物，与 Hugo 版本无关。
+Hugo 版本纪律：适配器按 0.164 兼容写法编写（dates 嵌套 dict、params 承载
+categories/tags、description 顶层）——该写法在 0.167 下仍有效。CI 与本机
+自 2026-11-20 起同为 0.167（skew 已消除）；本脚本只消费构建产物，与版本无关。
 
 期望值独立于实现：标题直读源笔记；日期由注册表 date 独立格式化；golden
 为迁移前线上页面的直捕（出处见 tests/fixtures/sop-golden/README.md）。
